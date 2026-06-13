@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agenda — Evolução Fit</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
 :root{
   --black:#0F0F0F;--white:#FFFFFF;--off:#F7F7F5;--off2:#EFEFEC;
@@ -21,18 +19,14 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .screen.hidden-up{transform:translateY(-100%);pointer-events:none}
 .screen.hidden-down{transform:translateY(100%);pointer-events:none}
 .screen.visible{transform:translateY(0)}
-
-/* ── SPLASH ── */
-#screen-splash{background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;transition:transform 0.5s cubic-bezier(0.76,0,0.24,1),opacity 0.5s ease}
+#screen-splash{background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50}
 .splash-letters{display:flex;align-items:baseline;margin-bottom:8px}
 .splash-letter{font-size:52px;font-weight:900;letter-spacing:-2.5px;color:var(--white);opacity:0;transform:translateY(20px);transition:opacity 0.3s ease,transform 0.3s ease}
 .splash-dot{width:11px;height:11px;border-radius:50%;background:var(--orange);margin-left:4px;margin-bottom:10px;opacity:0;transform:scale(0);transition:opacity 0.3s,transform 0.4s cubic-bezier(0.34,1.56,0.64,1)}
 .splash-sub{font-size:11px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--g3);opacity:0;transition:opacity 0.5s ease;margin-top:4px}
 .splash-bar{width:0;height:2px;background:var(--orange);border-radius:2px;margin-top:36px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);max-width:120px}
-
-/* ── LOGIN ── */
 #screen-login{background:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
-.login-company{font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--g4);margin-bottom:18px;text-align:center}
+.login-company{font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--g4);margin-bottom:16px;text-align:center}
 .login-heading{font-size:46px;font-weight:900;line-height:1;letter-spacing:-2.5px;text-align:center}
 .login-heading span{color:var(--orange)}
 .login-sub{font-size:14px;color:var(--g3);margin-top:10px;margin-bottom:36px;text-align:center}
@@ -55,15 +49,12 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .num-key:hover{border-color:var(--g4);background:var(--off)}
 .num-key:active{transform:scale(0.91)}
 .pin-hint{font-size:11px;color:var(--g5);margin-top:14px}
-
-/* ── MAIN APP ── */
 #screen-app{background:var(--off);display:flex;flex-direction:column}
 .notif-banner{background:var(--black);color:var(--white);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:500;flex-shrink:0;overflow:hidden;max-height:44px;transition:max-height 0.35s ease,padding 0.35s,opacity 0.3s}
 .notif-banner.hidden{max-height:0;padding-top:0;padding-bottom:0;opacity:0;pointer-events:none}
 .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);margin-right:10px;flex-shrink:0;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
 .notif-close{background:none;border:none;color:var(--g4);cursor:pointer;font-size:18px;line-height:1}
-.notif-close:hover{color:var(--white)}
 .topbar{background:var(--white);border-bottom:1px solid var(--bd);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .tb-left{display:flex;align-items:center;gap:14px}
 .tb-wordmark{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase}
@@ -83,13 +74,9 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .page.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-/* LOADING */
 .loading-state{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--g4);font-size:13px;gap:10px}
 .spinner{width:18px;height:18px;border:2px solid var(--bd);border-top-color:var(--orange);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
 .stat{background:var(--white);border:1px solid var(--bd);border-radius:12px;padding:16px 18px}
 .stat-n{font-size:30px;font-weight:900;letter-spacing:-1px;line-height:1}
@@ -100,8 +87,6 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .sec-actions{display:flex;gap:8px}
 .btn-add{background:var(--orange);color:var(--white);border:none;padding:8px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
 .btn-add:hover{background:#e0521f}
-.btn-sec{background:var(--white);color:var(--g2);border:1.5px solid var(--bd);padding:8px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;transition:all 0.15s}
-.btn-sec:hover{border-color:var(--g4);color:var(--black)}
 .lock-notice{display:flex;align-items:center;gap:8px;background:var(--off2);border:1px solid var(--bd);border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:var(--g3)}
 .filter-chips{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .chip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--bd);color:var(--g3);background:var(--white);transition:all 0.15s}
@@ -111,8 +96,6 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .view-toggle{display:flex;background:var(--off2);border-radius:8px;padding:3px;gap:3px}
 .view-btn{padding:4px 11px;border-radius:6px;border:none;background:none;font-family:'Inter',sans-serif;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--g3);transition:all 0.15s}
 .view-btn.active{background:var(--white);color:var(--black);box-shadow:0 1px 3px rgba(0,0,0,0.08)}
-
-/* EVENTS */
 .events-grid{display:flex;flex-direction:column;gap:8px}
 .ev-card{background:var(--white);border:1px solid var(--bd);border-radius:11px;padding:14px 16px;display:flex;align-items:center;gap:14px;transition:all 0.18s;animation:cardIn 0.32s ease both}
 .ev-card:hover{border-color:var(--g5);transform:translateX(3px)}
@@ -125,21 +108,11 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .ev-status{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;white-space:nowrap}
 .ev-btn{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--bd);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--g4);transition:all 0.15s}
 .ev-btn:hover{border-color:var(--red);color:var(--red)}
-.cat-reuniao .ev-stripe{background:var(--orange)}
-.cat-reuniao .ev-type-lbl{color:var(--orange)}
-.cat-reuniao .ev-status{background:var(--orange-l);color:#C24510}
-.cat-entrevista .ev-stripe{background:var(--black)}
-.cat-entrevista .ev-type-lbl{color:var(--black)}
-.cat-entrevista .ev-status{background:var(--off2);color:var(--g2)}
-.cat-rodizio .ev-stripe{background:var(--amber)}
-.cat-rodizio .ev-type-lbl{color:#A07010}
-.cat-rodizio .ev-status{background:#FEF6E8;color:#A07010}
-.cat-outro .ev-stripe{background:var(--g4)}
-.cat-outro .ev-type-lbl{color:var(--g3)}
-.cat-outro .ev-status{background:var(--off2);color:var(--g3)}
+.cat-reuniao .ev-stripe{background:var(--orange)}.cat-reuniao .ev-type-lbl{color:var(--orange)}.cat-reuniao .ev-status{background:var(--orange-l);color:#C24510}
+.cat-entrevista .ev-stripe{background:var(--black)}.cat-entrevista .ev-type-lbl{color:var(--black)}.cat-entrevista .ev-status{background:var(--off2);color:var(--g2)}
+.cat-rodizio .ev-stripe{background:var(--amber)}.cat-rodizio .ev-type-lbl{color:#A07010}.cat-rodizio .ev-status{background:#FEF6E8;color:#A07010}
+.cat-outro .ev-stripe{background:var(--g4)}.cat-outro .ev-type-lbl{color:var(--g3)}.cat-outro .ev-status{background:var(--off2);color:var(--g3)}
 .empty{padding:40px;text-align:center;color:var(--g4);font-size:13px}
-
-/* TIMELINE */
 #timeline-view{display:none}
 #timeline-view.show{display:block}
 .tl-month-block{margin-bottom:10px}
@@ -148,12 +121,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .tl-items::before{content:'';position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--bd)}
 .tl-item{position:relative;margin-bottom:8px;animation:cardIn 0.32s ease both}
 .tl-dot{position:absolute;left:-26px;top:14px;width:10px;height:10px;border-radius:50%;border:2px solid var(--white);z-index:1}
-.cat-reuniao .tl-dot{background:var(--orange)}
-.cat-entrevista .tl-dot{background:var(--black)}
-.cat-rodizio .tl-dot{background:var(--amber)}
-.cat-outro .tl-dot{background:var(--g4)}
-.tl-card{background:var(--white);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:border-color 0.15s}
-.tl-card:hover{border-color:var(--g5)}
+.cat-reuniao .tl-dot{background:var(--orange)}.cat-entrevista .tl-dot{background:var(--black)}.cat-rodizio .tl-dot{background:var(--amber)}.cat-outro .tl-dot{background:var(--g4)}
+.tl-card{background:var(--white);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px}
 .tl-date-col{text-align:center;min-width:32px;flex-shrink:0}
 .tl-day{font-size:20px;font-weight:900;letter-spacing:-1px;line-height:1}
 .tl-dayname{font-size:9px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:0.5px}
@@ -163,38 +132,20 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .tl-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-meta{font-size:11px;color:var(--g4);margin-top:2px;display:flex;gap:10px}
 .tl-recur{font-size:9px;background:var(--orange-l);color:#C24510;padding:2px 7px;border-radius:6px;font-weight:700;flex-shrink:0;align-self:center}
-
-/* RODIZIO */
 .rodizio-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .rodo-card{background:var(--white);border:1px solid var(--bd);border-radius:12px;padding:16px;animation:cardIn 0.32s ease both}
 .rodo-week{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--g4);margin-bottom:12px}
 .rodo-row{display:flex;flex-direction:column;gap:8px}
-.rodo-person{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--bd);border-radius:9px;transition:all 0.15s}
-.rodo-person:hover{border-color:var(--g5)}
-.avatar-wrap{position:relative;flex-shrink:0}
-.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:pointer;transition:all 0.15s;border:2px solid transparent}
-.avatar:hover{transform:scale(1.08)}
-.av-edit{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:var(--orange);border-radius:50%;border:2px solid var(--white);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--white);pointer-events:none}
+.rodo-person{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--bd);border-radius:9px}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;border:2px solid transparent}
 .rodo-info{flex:1}
 .rodo-name{font-size:13px;font-weight:700}
 .rodo-role-tag{font-size:10px;font-weight:600;color:var(--g4);text-transform:uppercase;letter-spacing:0.5px}
-.rodo-type-badge{margin-left:auto;font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
+.rodo-type-badge{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px;flex-shrink:0}
 .rodo-type-badge.prof{background:var(--orange-l);color:#C24510}
 .rodo-type-badge.rec{background:var(--off2);color:var(--g2)}
 .rodo-del{width:24px;height:24px;border-radius:5px;border:1.5px solid var(--bd);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--g5);transition:all 0.15s}
 .rodo-del:hover{border-color:var(--red);color:var(--red)}
-.avatar-picker{display:none;position:absolute;background:var(--white);border:1px solid var(--bd);border-radius:10px;padding:12px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.12);top:44px;left:-10px;width:168px}
-.avatar-picker.open{display:block}
-.pk-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--g4);margin-bottom:8px}
-.pk-colors{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.pk-color{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s}
-.pk-color:hover,.pk-color.sel{border-color:var(--black);transform:scale(1.15)}
-.pk-initials{border:1.5px solid var(--bd);border-radius:7px;padding:6px 8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;width:100%;outline:none;text-align:center;margin-bottom:8px;transition:border-color 0.15s;letter-spacing:2px;text-transform:uppercase}
-.pk-initials:focus{border-color:var(--orange)}
-.pk-save{width:100%;background:var(--black);color:var(--white);border:none;border-radius:7px;padding:7px;font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;transition:background 0.15s}
-.pk-save:hover{background:var(--orange)}
-
-/* CALENDAR */
 .cal-wrap{background:var(--white);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-top:12px}
 .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .cal-month-lbl{font-size:14px;font-weight:800;letter-spacing:-0.3px}
@@ -209,8 +160,6 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .cal-d.today.has-ev::after{background:var(--white)}
 .cal-d.dim{color:var(--g5)}
 .cal-d.sel:not(.today){background:var(--off2);font-weight:700;border:1.5px solid var(--bd)}
-
-/* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal-box{background:var(--white);border-radius:14px;width:420px;max-width:95vw;overflow:hidden;max-height:95vh;overflow-y:auto}
@@ -222,7 +171,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .flabel{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--g4);margin-bottom:6px;display:block}
 .finput{width:100%;border:1.5px solid var(--bd);border-radius:9px;padding:10px 13px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--black);background:var(--white);outline:none;transition:border-color 0.15s;margin-bottom:13px}
 .finput:focus{border-color:var(--orange)}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}
 .type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:13px}
 .type-tile{padding:10px 5px;border:1.5px solid var(--bd);border-radius:9px;text-align:center;cursor:pointer;transition:all 0.15s}
 .type-tile:hover{border-color:var(--g4)}
@@ -247,12 +196,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .btn-save{padding:8px 20px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--orange);color:var(--white);transition:all 0.15s}
 .btn-save:hover{background:#e0521f}
 .btn-save:disabled{background:var(--g5);cursor:not-allowed}
-
-/* CONFIG */
 .cfg-card{background:var(--white);border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:12px;animation:cardIn 0.32s ease both}
 .cfg-card-title{font-size:13px;font-weight:800;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--bd)}
-
-/* EXPORT MODAL */
 .export-modal{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
 .export-modal.open{display:flex}
 .export-box{background:var(--white);border-radius:14px;width:340px;overflow:hidden}
@@ -264,31 +209,19 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .export-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
 .export-opt-name{font-size:13px;font-weight:700}
 .export-opt-desc{font-size:11px;color:var(--g4);margin-top:2px}
-
-/* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--black);color:var(--white);padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
-
-@media(max-width:640px){
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .rodizio-grid{grid-template-columns:1fr}
-  .topbar{padding:0 14px}
-  .app-content{padding:16px 14px}
-  .tb-nav-item{padding:5px 7px;font-size:11.5px}
-}
+@media(max-width:640px){.stats-row{grid-template-columns:repeat(2,1fr)}.rodizio-grid{grid-template-columns:1fr}.topbar{padding:0 14px}.app-content{padding:16px 14px}.tb-nav-item{padding:5px 7px;font-size:11px}}
 </style>
 </head>
 <body>
 <div id="app">
-
-  <!-- SPLASH -->
   <div class="screen visible" id="screen-splash">
     <div class="splash-letters" id="splash-letters"></div>
     <div class="splash-sub" id="splash-sub">Gestão de eventos e escalas</div>
     <div class="splash-bar" id="splash-bar"></div>
   </div>
 
-  <!-- LOGIN -->
   <div class="screen hidden-down" id="screen-login">
     <div class="login-company" id="login-company-name">Evolução Fit</div>
     <div class="login-heading">Agenda<span>.</span></div>
@@ -308,30 +241,18 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
       </div>
       <div class="numpad">
-        <button class="num-key" onclick="pinKey('1')">1</button>
-        <button class="num-key" onclick="pinKey('2')">2</button>
-        <button class="num-key" onclick="pinKey('3')">3</button>
-        <button class="num-key" onclick="pinKey('4')">4</button>
-        <button class="num-key" onclick="pinKey('5')">5</button>
-        <button class="num-key" onclick="pinKey('6')">6</button>
-        <button class="num-key" onclick="pinKey('7')">7</button>
-        <button class="num-key" onclick="pinKey('8')">8</button>
-        <button class="num-key" onclick="pinKey('9')">9</button>
-        <button class="num-key" style="visibility:hidden"></button>
-        <button class="num-key" onclick="pinKey('0')">0</button>
-        <button class="num-key" onclick="pinDel()" style="font-size:15px">⌫</button>
+        <button class="num-key" onclick="pinKey('1')">1</button><button class="num-key" onclick="pinKey('2')">2</button><button class="num-key" onclick="pinKey('3')">3</button>
+        <button class="num-key" onclick="pinKey('4')">4</button><button class="num-key" onclick="pinKey('5')">5</button><button class="num-key" onclick="pinKey('6')">6</button>
+        <button class="num-key" onclick="pinKey('7')">7</button><button class="num-key" onclick="pinKey('8')">8</button><button class="num-key" onclick="pinKey('9')">9</button>
+        <button class="num-key" style="visibility:hidden"></button><button class="num-key" onclick="pinKey('0')">0</button><button class="num-key" onclick="pinDel()" style="font-size:15px">⌫</button>
       </div>
-      <p class="pin-hint" id="pin-hint">Carregando PIN...</p>
+      <p class="pin-hint" id="pin-hint">Carregando...</p>
     </div>
   </div>
 
-  <!-- MAIN APP -->
   <div class="screen hidden-up" id="screen-app">
     <div class="notif-banner hidden" id="notif-banner">
-      <div style="display:flex;align-items:center">
-        <div class="notif-dot"></div>
-        <span id="notif-text"></span>
-      </div>
+      <div style="display:flex;align-items:center"><div class="notif-dot"></div><span id="notif-text"></span></div>
       <button class="notif-close" onclick="dismissNotif()">×</button>
     </div>
     <div class="topbar">
@@ -351,9 +272,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <button class="tb-btn" onclick="logout()">Sair</button>
       </div>
     </div>
-
     <div class="app-content">
-      <!-- AGENDA -->
       <div class="page active" id="page-agenda">
         <div class="stats-row">
           <div class="stat accent"><div class="stat-n" id="cnt-total">—</div><div class="stat-l">Total</div></div>
@@ -362,16 +281,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <div class="stat"><div class="stat-n" id="cnt-entrevista">—</div><div class="stat-l">Entrevistas</div></div>
         </div>
         <div class="sec-head">
-          <div class="sec-title">
-            Eventos
-            <div class="view-toggle">
-              <button class="view-btn active" onclick="setView('cards',this)">Cards</button>
-              <button class="view-btn" onclick="setView('timeline',this)">Timeline</button>
-            </div>
-          </div>
-          <div class="sec-actions">
-            <button class="btn-add" id="btn-novo" onclick="openModal()" style="display:none">+ Novo</button>
-          </div>
+          <div class="sec-title">Eventos<div class="view-toggle"><button class="view-btn active" onclick="setView('cards',this)">Cards</button><button class="view-btn" onclick="setView('timeline',this)">Timeline</button></div></div>
+          <div class="sec-actions"><button class="btn-add" id="btn-novo" onclick="openModal()" style="display:none">+ Novo</button></div>
         </div>
         <div class="lock-notice" id="lock-agenda" style="display:none">🔒 Modo visualização — apenas gestores podem criar eventos.</div>
         <div class="filter-chips">
@@ -384,8 +295,6 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <div id="cards-view" class="events-grid"></div>
         <div id="timeline-view"></div>
       </div>
-
-      <!-- RODIZIO -->
       <div class="page" id="page-rodizio">
         <div class="sec-head">
           <div class="sec-title">Escala — Finais de Semana</div>
@@ -394,38 +303,25 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <div class="lock-notice" id="lock-rodizio" style="display:none">🔒 Apenas gestores podem editar a escala.</div>
         <div class="rodizio-grid" id="rodizio-container"></div>
       </div>
-
-      <!-- CALENDARIO -->
       <div class="page" id="page-calendario">
         <div class="sec-head"><div class="sec-title">Calendário</div></div>
         <div class="cal-wrap">
-          <div class="cal-head">
-            <button class="cal-arr" onclick="calMove(-1)">‹</button>
-            <div class="cal-month-lbl" id="cal-lbl"></div>
-            <button class="cal-arr" onclick="calMove(1)">›</button>
-          </div>
-          <div class="cal-g">
-            <div class="cal-dh">D</div><div class="cal-dh">S</div><div class="cal-dh">T</div>
-            <div class="cal-dh">Q</div><div class="cal-dh">Q</div><div class="cal-dh">S</div><div class="cal-dh">S</div>
-          </div>
+          <div class="cal-head"><button class="cal-arr" onclick="calMove(-1)">‹</button><div class="cal-month-lbl" id="cal-lbl"></div><button class="cal-arr" onclick="calMove(1)">›</button></div>
+          <div class="cal-g"><div class="cal-dh">D</div><div class="cal-dh">S</div><div class="cal-dh">T</div><div class="cal-dh">Q</div><div class="cal-dh">Q</div><div class="cal-dh">S</div><div class="cal-dh">S</div></div>
           <div class="cal-g" id="cal-days"></div>
         </div>
         <div style="margin-top:14px" id="cal-day-events"></div>
       </div>
-
-      <!-- CONFIG -->
       <div class="page" id="page-config">
         <div class="sec-head"><div class="sec-title">Configurações</div></div>
         <div class="cfg-card">
           <div class="cfg-card-title">Identidade da empresa</div>
-          <label class="flabel">Nome da empresa</label>
-          <input class="finput" id="cfg-company" type="text" placeholder="Ex: Studio Flex">
-          <label class="flabel">Nome curto (topbar)</label>
-          <input class="finput" id="cfg-short" type="text" placeholder="Ex: Studio" style="margin-bottom:0">
+          <label class="flabel">Nome da empresa</label><input class="finput" id="cfg-company" type="text" placeholder="Ex: Studio Flex">
+          <label class="flabel">Nome curto (topbar)</label><input class="finput" id="cfg-short" type="text" placeholder="Ex: Studio" style="margin-bottom:0">
           <button class="btn-save" style="width:100%;margin-top:12px;padding:10px" onclick="saveConfig()">Salvar identidade</button>
         </div>
         <div class="cfg-card" style="animation-delay:0.05s">
-          <div class="cfg-card-title">Alterar PIN do Gestor</div>
+          <div class="cfg-card-title">Alterar PIN</div>
           <div style="display:flex;gap:10px">
             <input class="finput" id="cfg-pin" type="password" maxlength="4" placeholder="Novo PIN (4 dígitos)" style="margin-bottom:0;letter-spacing:6px;font-weight:700;text-align:center;flex:1">
             <button class="btn-save" onclick="savePIN()" style="padding:10px 18px;white-space:nowrap">Salvar PIN</button>
@@ -438,7 +334,6 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
       </div>
     </div>
 
-    <!-- MODAL EVENTO -->
     <div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
       <div class="modal-box">
         <div class="modal-hd"><div class="modal-ttl">Novo Evento</div><button class="modal-cls" onclick="closeModal()">✕</button></div>
@@ -450,692 +345,452 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
             <div class="type-tile" onclick="selType(this,'entrevista')"><span class="ticon">🤝</span><span class="tname">Entrevista</span></div>
             <div class="type-tile" onclick="selType(this,'outro')"><span class="ticon">📌</span><span class="tname">Outro</span></div>
           </div>
-          <label class="flabel">Título</label>
-          <input class="finput" id="f-title" placeholder="Ex: Reunião de professores" type="text">
-          <div class="frow" style="margin-bottom:13px">
-            <div><label class="flabel">Data</label><input class="finput" id="f-date" type="date" style="margin-bottom:0"></div>
-            <div><label class="flabel">Horário</label><input class="finput" id="f-time" type="time" style="margin-bottom:0"></div>
-          </div>
-          <label class="flabel">Local</label>
-          <input class="finput" id="f-local" placeholder="Ex: Sala de reuniões" type="text">
-          <label class="flabel">Participantes</label>
-          <input class="finput" id="f-participants" placeholder="Ex: Todos os professores" type="text" style="margin-bottom:13px">
+          <label class="flabel">Título</label><input class="finput" id="f-title" placeholder="Ex: Reunião de professores" type="text">
+          <div class="frow"><div><label class="flabel">Data</label><input class="finput" id="f-date" type="date" style="margin-bottom:0"></div><div><label class="flabel">Horário</label><input class="finput" id="f-time" type="time" style="margin-bottom:0"></div></div>
+          <label class="flabel">Local</label><input class="finput" id="f-local" placeholder="Ex: Sala de reuniões" type="text">
+          <label class="flabel">Participantes</label><input class="finput" id="f-participants" placeholder="Ex: Todos os professores" type="text" style="margin-bottom:13px">
           <div class="toggle-row" id="recur-toggle" onclick="toggleRecur()">
             <div><div class="toggle-lbl">Evento recorrente</div><div class="toggle-sub">Repete automaticamente por período</div></div>
             <div class="toggle-sw" id="recur-sw"></div>
           </div>
           <div class="recur-opts" id="recur-opts">
-            <div class="recur-opt-lbl">Intervalo de repetição</div>
+            <div class="recur-opt-lbl">Intervalo</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
               <div class="chip on" onclick="setRI(7,this)">Semanal</div>
               <div class="chip" onclick="setRI(14,this)">Quinzenal</div>
               <div class="chip" onclick="setRI(21,this)">3 semanas</div>
               <div class="chip" onclick="setRI(30,this)">Mensal</div>
             </div>
-            <label class="flabel">Repetir até</label>
-            <input class="finput" id="f-recur-end" type="date" style="margin-bottom:0">
+            <label class="flabel">Repetir até</label><input class="finput" id="f-recur-end" type="date" style="margin-bottom:0">
           </div>
         </div>
-        <div class="modal-ft">
-          <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-          <button class="btn-save" id="btn-save-ev" onclick="saveEvent()">Criar evento</button>
-        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-save" id="btn-save-ev" onclick="saveEvent()">Criar evento</button></div>
       </div>
     </div>
 
-    <!-- MODAL RODIZIO -->
     <div class="modal-bg" id="rodo-modal" onclick="if(event.target===this)closeRodoModal()">
       <div class="modal-box" style="width:360px">
         <div class="modal-hd"><div class="modal-ttl">Nova Escala</div><button class="modal-cls" onclick="closeRodoModal()">✕</button></div>
         <div class="modal-bd">
-          <label class="flabel">Período</label>
-          <input class="finput" id="r-week" placeholder="Ex: 22–23 Jun" type="text">
-          <label class="flabel">Professor(a) — Nome</label>
-          <input class="finput" id="r-pname" placeholder="Nome completo" type="text">
-          <label class="flabel">Professor(a) — Iniciais</label>
-          <input class="finput" id="r-pinit" placeholder="Ex: CA" maxlength="2" type="text">
-          <label class="flabel">Recepcionista — Nome</label>
-          <input class="finput" id="r-rname" placeholder="Nome completo" type="text">
-          <label class="flabel">Recepcionista — Iniciais</label>
-          <input class="finput" id="r-rinit" placeholder="Ex: MI" maxlength="2" type="text" style="margin-bottom:0">
+          <label class="flabel">Período</label><input class="finput" id="r-week" placeholder="Ex: 22–23 Jun" type="text">
+          <label class="flabel">Professor(a) — Nome</label><input class="finput" id="r-pname" placeholder="Nome completo" type="text">
+          <label class="flabel">Professor(a) — Iniciais</label><input class="finput" id="r-pinit" placeholder="Ex: CA" maxlength="2" type="text">
+          <label class="flabel">Recepcionista — Nome</label><input class="finput" id="r-rname" placeholder="Nome completo" type="text">
+          <label class="flabel">Recepcionista — Iniciais</label><input class="finput" id="r-rinit" placeholder="Ex: MI" maxlength="2" type="text" style="margin-bottom:0">
         </div>
-        <div class="modal-ft">
-          <button class="btn-cancel" onclick="closeRodoModal()">Cancelar</button>
-          <button class="btn-save" id="btn-save-rodo" onclick="saveRodo()">Criar escala</button>
-        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closeRodoModal()">Cancelar</button><button class="btn-save" id="btn-save-rodo" onclick="saveRodo()">Criar escala</button></div>
       </div>
     </div>
 
-    <!-- EXPORT MODAL -->
     <div class="export-modal" id="export-modal" onclick="if(event.target===this)closeExport()">
       <div class="export-box">
         <div class="export-hd"><div class="export-ttl">Exportar</div><button class="modal-cls" onclick="closeExport()">✕</button></div>
-        <div class="export-opt" onclick="exportText()">
-          <div class="export-icon" style="background:var(--off2)">📋</div>
-          <div><div class="export-opt-name">Texto para WhatsApp</div><div class="export-opt-desc">Copia lista formatada para colar no grupo</div></div>
-        </div>
-        <div class="export-opt" onclick="exportPDF()">
-          <div class="export-icon" style="background:var(--orange-l)">📄</div>
-          <div><div class="export-opt-name">PDF / Imagem</div><div class="export-opt-desc">Abre janela de impressão do navegador</div></div>
-        </div>
-        <div class="export-opt" onclick="exportCSV()">
-          <div class="export-icon" style="background:#EAF3DE">📊</div>
-          <div><div class="export-opt-name">CSV / Planilha</div><div class="export-opt-desc">Baixa arquivo para Excel ou Google Sheets</div></div>
-        </div>
+        <div class="export-opt" onclick="exportText()"><div class="export-icon" style="background:var(--off2)">📋</div><div><div class="export-opt-name">Texto para WhatsApp</div><div class="export-opt-desc">Copia lista formatada para colar no grupo</div></div></div>
+        <div class="export-opt" onclick="exportPDF()"><div class="export-icon" style="background:var(--orange-l)">📄</div><div><div class="export-opt-name">PDF / Imagem</div><div class="export-opt-desc">Abre janela de impressão do navegador</div></div></div>
+        <div class="export-opt" onclick="exportCSV()"><div class="export-icon" style="background:#EAF3DE">📊</div><div><div class="export-opt-name">CSV / Planilha</div><div class="export-opt-desc">Baixa arquivo para Excel ou Google Sheets</div></div></div>
       </div>
     </div>
   </div>
 </div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ── SUPABASE ──────────────────────────────────────────────
-const SUPABASE_URL = 'https://indapxewhfobzxnwswhy.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZGFweGV3aGZvYnp4bndzd2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjA0MzQsImV4cCI6MjA5Njg5NjQzNH0.szwfTyc3L5dXkTZxemCEdViuWWWnzgpwrBFsISZmzmc';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ── CONFIG SUPABASE ───────────────────────────────────────
+const SB_URL = 'https://indapxewhfobzxnwswhy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZGFweGV3aGZvYnp4bndzd2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjA0MzQsImV4cCI6MjA5Njg5NjQzNH0.szwfTyc3L5dXkTZxemCEdViuWWWnzgpwrBFsISZmzmc';
+const HEADERS = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+async function sbGet(table, params=''){
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {headers:{...HEADERS,'Accept':'application/json'}});
+  if(!r.ok){const e=await r.text();console.error('GET error',r.status,e);return null;}
+  return r.json();
+}
+async function sbPost(table, body){
+  const r = await fetch(`${SB_URL}/rest/v1/${table}`, {method:'POST',headers:{...HEADERS,'Prefer':'return=representation'},body:JSON.stringify(body)});
+  if(!r.ok){const e=await r.text();console.error('POST error',r.status,e);return null;}
+  return r.json();
+}
+async function sbPatch(table, id, body){
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, {method:'PATCH',headers:{...HEADERS,'Prefer':'return=representation'},body:JSON.stringify(body)});
+  if(!r.ok){const e=await r.text();console.error('PATCH error',r.status,e);return null;}
+  return r.json();
+}
+async function sbDelete(table, col, val){
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${col}=eq.${val}`, {method:'DELETE',headers:HEADERS});
+  return r.ok;
+}
 
 // ── CONSTANTS ─────────────────────────────────────────────
-const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const DAYS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const TYPE_NAMES = {reuniao:'Reunião',entrevista:'Entrevista',rodizio:'Rodízio',outro:'Outro'};
-const TYPE_STATUS = {reuniao:'Confirmado',entrevista:'Agendado',rodizio:'Escalado',outro:'Planejado'};
-const TYPE_EMOJI = {reuniao:'👥',entrevista:'🤝',rodizio:'🔄',outro:'📌'};
-const AVATAR_COLORS = [
-  {bg:'#FEF0EB',fg:'#C24510',border:'#F5622D'},
-  {bg:'#E6F1FB',fg:'#0C447C',border:'#378ADD'},
-  {bg:'#EAF3DE',fg:'#27500A',border:'#639922'},
-  {bg:'#EEEDFE',fg:'#3C3489',border:'#7F77DD'},
-  {bg:'#FAEEDA',fg:'#633806',border:'#EF9F27'},
-  {bg:'#FBEAF0',fg:'#72243E',border:'#D4537E'},
-  {bg:'#E1F5EE',fg:'#085041',border:'#1D9E75'},
-  {bg:'#F1EFE8',fg:'#444441',border:'#888780'},
+const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DAYS_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const TYPE_NAMES={reuniao:'Reunião',entrevista:'Entrevista',rodizio:'Rodízio',outro:'Outro'};
+const TYPE_STATUS={reuniao:'Confirmado',entrevista:'Agendado',rodizio:'Escalado',outro:'Planejado'};
+const TYPE_EMOJI={reuniao:'👥',entrevista:'🤝',rodizio:'🔄',outro:'📌'};
+const AV_COLORS=[
+  {bg:'#FEF0EB',fg:'#C24510',bd:'#F5622D'},{bg:'#E6F1FB',fg:'#0C447C',bd:'#378ADD'},
+  {bg:'#EAF3DE',fg:'#27500A',bd:'#639922'},{bg:'#EEEDFE',fg:'#3C3489',bd:'#7F77DD'},
+  {bg:'#FAEEDA',fg:'#633806',bd:'#EF9F27'},{bg:'#FBEAF0',fg:'#72243E',bd:'#D4537E'},
+  {bg:'#E1F5EE',fg:'#085041',bd:'#1D9E75'},{bg:'#F1EFE8',fg:'#444441',bd:'#888780'},
 ];
 
 // ── STATE ─────────────────────────────────────────────────
-let currentRole = 'colab';
-let pinBuffer = '';
-let currentPIN = '1234';
-let companyName = 'Evolução Fit';
-let companyShort = 'Evolução';
-let currentFilter = 'todos';
-let currentType = 'reuniao';
-let recurEnabled = false;
-let recurInterval = 21;
-let currentView = 'cards';
-let calDate = new Date();
-let selCalDay = null;
-let openPickerId = null;
-let events = [];
-let rodizios = [];
+let currentRole='colab', pinBuffer='', currentPIN='1234';
+let companyName='Evolução Fit', companyShort='Evolução';
+let currentFilter='todos', currentType='reuniao';
+let recurEnabled=false, recurInterval=21, currentView='cards';
+let calDate=new Date(), selCalDay=null;
+let events=[], rodizios=[], configId=null;
 
 // ── TOAST ─────────────────────────────────────────────────
-function toast(msg, duration = 2800) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
-}
-
-// ── SUPABASE HELPERS ──────────────────────────────────────
-async function loadConfig() {
-  const { data } = await sb.from('config').select('*').limit(1).single();
-  if (data) {
-    currentPIN = data.pin || '1234';
-    companyName = data.empresa_nome || 'Evolução Fit';
-    companyShort = data.empresa_short || 'Evolução';
-  }
-  document.getElementById('pin-hint').textContent = 'Digite seu PIN de 4 dígitos';
-  applyBranding();
-}
-
-async function loadEvents() {
-  const { data, error } = await sb.from('eventos').select('*').order('data', { ascending: true });
-  if (!error && data) events = data;
-}
-
-async function loadRodizios() {
-  const { data, error } = await sb.from('rodizios').select('*').order('created_at', { ascending: true });
-  if (!error && data) rodizios = data;
-}
-
-async function saveConfigToDB() {
-  const { data } = await sb.from('config').select('id').limit(1).single();
-  if (data) {
-    await sb.from('config').update({ empresa_nome: companyName, empresa_short: companyShort, pin: currentPIN }).eq('id', data.id);
-  } else {
-    await sb.from('config').insert({ empresa_nome: companyName, empresa_short: companyShort, pin: currentPIN });
-  }
-}
+function toast(msg,d=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
 
 // ── SPLASH ────────────────────────────────────────────────
-async function runSplash() {
-  await loadConfig();
-  const name = companyName;
-  const letters = document.getElementById('splash-letters');
-  letters.innerHTML = '';
-  [...name].forEach(ch => {
-    const s = document.createElement('span');
-    s.className = 'splash-letter';
-    s.textContent = ch === ' ' ? '\u00A0' : ch;
-    letters.appendChild(s);
-  });
-  const dot = document.createElement('div');
-  dot.className = 'splash-dot';
-  letters.appendChild(dot);
+async function runSplash(){
+  try{
+    const data = await sbGet('config','limit=1');
+    if(data&&data.length){
+      configId=data[0].id;currentPIN=data[0].pin||'1234';
+      companyName=data[0].empresa_nome||'Evolução Fit';
+      companyShort=data[0].empresa_short||'Evolução';
+    }
+  }catch(e){console.error('Config load error',e);}
+  document.getElementById('pin-hint').textContent='Digite seu PIN de 4 dígitos';
+  applyBranding();
 
-  let delay = 120;
-  letters.querySelectorAll('.splash-letter').forEach((el, i) => {
-    setTimeout(() => { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }, delay + i * 65);
-  });
-  setTimeout(() => { dot.style.opacity = '1'; dot.style.transform = 'scale(1)'; }, delay + name.length * 65 + 100);
-  setTimeout(() => {
-    document.getElementById('splash-sub').style.opacity = '1';
-    document.getElementById('splash-bar').style.width = '120px';
-  }, delay + name.length * 65 + 300);
-  setTimeout(() => {
-    const splash = document.getElementById('screen-splash');
-    splash.style.opacity = '0';
-    splash.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => {
-      splash.classList.remove('visible');
-      splash.classList.add('hidden-up');
-      document.getElementById('screen-login').classList.remove('hidden-down');
-      document.getElementById('screen-login').classList.add('visible');
-      applyBranding();
-    }, 500);
-  }, delay + name.length * 65 + 2000);
+  const name=companyName;
+  const letters=document.getElementById('splash-letters');
+  letters.innerHTML='';
+  [...name].forEach(ch=>{const s=document.createElement('span');s.className='splash-letter';s.textContent=ch===' '?'\u00A0':ch;letters.appendChild(s);});
+  const dot=document.createElement('div');dot.className='splash-dot';letters.appendChild(dot);
+  let delay=120;
+  letters.querySelectorAll('.splash-letter').forEach((el,i)=>setTimeout(()=>{el.style.opacity='1';el.style.transform='translateY(0)';},delay+i*65));
+  setTimeout(()=>{dot.style.opacity='1';dot.style.transform='scale(1)';},delay+name.length*65+100);
+  setTimeout(()=>{document.getElementById('splash-sub').style.opacity='1';document.getElementById('splash-bar').style.width='120px';},delay+name.length*65+300);
+  setTimeout(()=>{
+    const sp=document.getElementById('screen-splash');
+    sp.style.transition='opacity 0.5s ease';sp.style.opacity='0';
+    setTimeout(()=>{sp.classList.remove('visible');sp.classList.add('hidden-up');document.getElementById('screen-login').classList.remove('hidden-down');document.getElementById('screen-login').classList.add('visible');},500);
+  },delay+name.length*65+2000);
 }
 
-function applyBranding() {
-  document.getElementById('login-company-name').textContent = companyName;
-  document.getElementById('topbar-name').textContent = companyShort;
-  document.title = `Agenda — ${companyName}`;
+function applyBranding(){
+  document.getElementById('login-company-name').textContent=companyName;
+  document.getElementById('topbar-name').textContent=companyShort;
+  document.title=`Agenda — ${companyName}`;
 }
 
 // ── LOGIN ─────────────────────────────────────────────────
-function setRole(r) {
-  document.getElementById('btn-colab').classList.toggle('active', r === 'colab');
-  document.getElementById('btn-gestor').classList.toggle('active', r === 'gestor');
-  document.getElementById('collab-entry').style.display = r === 'colab' ? 'block' : 'none';
-  document.getElementById('pin-entry').style.display = r === 'gestor' ? 'block' : 'none';
-  pinBuffer = ''; updateDots();
+function setRole(r){
+  document.getElementById('btn-colab').classList.toggle('active',r==='colab');
+  document.getElementById('btn-gestor').classList.toggle('active',r==='gestor');
+  document.getElementById('collab-entry').style.display=r==='colab'?'block':'none';
+  document.getElementById('pin-entry').style.display=r==='gestor'?'block':'none';
+  pinBuffer='';updateDots();
 }
-
-function pinKey(k) {
-  if (pinBuffer.length >= 4) return;
-  pinBuffer += k; updateDots();
-  if (pinBuffer.length === 4) {
-    if (pinBuffer === currentPIN) {
-      setTimeout(() => enterApp('gestor'), 200);
-    } else {
-      document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
-      setTimeout(() => {
-        pinBuffer = ''; updateDots();
-        document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error'));
-      }, 700);
-    }
+function pinKey(k){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=k;updateDots();
+  if(pinBuffer.length===4){
+    if(pinBuffer===currentPIN){setTimeout(()=>enterApp('gestor'),200);}
+    else{document.querySelectorAll('.pin-dot').forEach(d=>d.classList.add('error'));setTimeout(()=>{pinBuffer='';updateDots();document.querySelectorAll('.pin-dot').forEach(d=>d.classList.remove('error'));},700);}
   }
 }
-function pinDel() { pinBuffer = pinBuffer.slice(0, -1); updateDots(); }
-function updateDots() {
-  for (let i = 0; i < 4; i++) document.getElementById('d' + i).classList.toggle('filled', i < pinBuffer.length);
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updateDots();}
+function updateDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
+
+async function enterApp(role){
+  currentRole=role;
+  document.getElementById('screen-login').classList.remove('visible');document.getElementById('screen-login').classList.add('hidden-up');
+  document.getElementById('screen-app').classList.remove('hidden-up');document.getElementById('screen-app').classList.add('visible');
+  const badge=document.getElementById('role-badge');
+  badge.textContent=role==='gestor'?'Gestor':'Colaborador';badge.className='role-badge '+(role==='gestor'?'gestor':'colab');
+  const isG=role==='gestor';
+  document.getElementById('btn-novo').style.display=isG?'flex':'none';
+  document.getElementById('lock-agenda').style.display=isG?'none':'flex';
+  document.getElementById('btn-nova-escala').style.display=isG?'flex':'none';
+  document.getElementById('lock-rodizio').style.display=isG?'none':'flex';
+  document.getElementById('nav-config').style.display=isG?'block':'none';
+  document.getElementById('cfg-company').value=companyName;
+  document.getElementById('cfg-short').value=companyShort;
+  document.getElementById('cards-view').innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
+  document.getElementById('rodizio-container').innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
+  const [evData,rdData]=await Promise.all([sbGet('eventos','order=data.asc'),sbGet('rodizios','order=created_at.asc')]);
+  if(evData)events=evData;
+  if(rdData)rodizios=rdData;
+  renderEvents();renderRodizio();renderCalendar();updateStats();showNotif();
 }
 
-async function enterApp(role) {
-  currentRole = role;
-  document.getElementById('screen-login').classList.remove('visible');
-  document.getElementById('screen-login').classList.add('hidden-up');
-  document.getElementById('screen-app').classList.remove('hidden-up');
-  document.getElementById('screen-app').classList.add('visible');
-  const badge = document.getElementById('role-badge');
-  badge.textContent = role === 'gestor' ? 'Gestor' : 'Colaborador';
-  badge.className = 'role-badge ' + (role === 'gestor' ? 'gestor' : 'colab');
-  const isG = role === 'gestor';
-  document.getElementById('btn-novo').style.display = isG ? 'flex' : 'none';
-  document.getElementById('lock-agenda').style.display = isG ? 'none' : 'flex';
-  document.getElementById('btn-nova-escala').style.display = isG ? 'flex' : 'none';
-  document.getElementById('lock-rodizio').style.display = isG ? 'none' : 'flex';
-  document.getElementById('nav-config').style.display = isG ? 'block' : 'none';
-  document.getElementById('cfg-company').value = companyName;
-  document.getElementById('cfg-short').value = companyShort;
-  // load data
-  showLoadingState();
-  await Promise.all([loadEvents(), loadRodizios()]);
-  renderEvents(); renderRodizio(); renderCalendar(); updateStats(); showNotif();
-}
-
-function showLoadingState() {
-  document.getElementById('cards-view').innerHTML = '<div class="loading-state"><div class="spinner"></div> Carregando eventos...</div>';
-  document.getElementById('rodizio-container').innerHTML = '<div class="loading-state"><div class="spinner"></div> Carregando escalas...</div>';
-}
-
-function logout() {
-  closeAllPickers();
-  document.getElementById('screen-app').classList.remove('visible');
-  document.getElementById('screen-app').classList.add('hidden-up');
-  document.getElementById('screen-login').classList.remove('hidden-up');
-  document.getElementById('screen-login').classList.add('visible');
-  setRole('colab');
-  goPageDirect('agenda');
+function logout(){
+  document.getElementById('screen-app').classList.remove('visible');document.getElementById('screen-app').classList.add('hidden-up');
+  document.getElementById('screen-login').classList.remove('hidden-up');document.getElementById('screen-login').classList.add('visible');
+  setRole('colab');goPageDirect('agenda');
 }
 
 // ── NAVIGATION ────────────────────────────────────────────
-function goPage(name, el) {
-  closeAllPickers();
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  document.querySelectorAll('.tb-nav-item').forEach(b => b.classList.remove('active'));
+function goPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
 }
-function goPageDirect(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  document.querySelectorAll('.tb-nav-item').forEach(b => b.classList.remove('active'));
+function goPageDirect(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));
   document.querySelector('.tb-nav-item').classList.add('active');
 }
 
 // ── NOTIFICATION ──────────────────────────────────────────
-function showNotif() {
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const upcoming = events
-    .map(e => ({ ...e, dt: new Date(e.data + 'T12:00') }))
-    .filter(e => e.dt >= today)
-    .sort((a, b) => a.dt - b.dt);
-  if (!upcoming.length) return;
-  const next = upcoming[0];
-  const diff = Math.round((next.dt - today) / 86400000);
-  const when = diff === 0 ? 'hoje' : diff === 1 ? 'amanhã' : `em ${diff} dias`;
-  document.getElementById('notif-text').textContent = `Próximo: ${next.titulo} — ${when} às ${next.hora.slice(0,5)}`;
+function showNotif(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const upcoming=[...events].map(e=>({...e,dt:new Date(e.data+'T12:00')})).filter(e=>e.dt>=today).sort((a,b)=>a.dt-b.dt);
+  if(!upcoming.length)return;
+  const next=upcoming[0];const diff=Math.round((next.dt-today)/86400000);
+  const when=diff===0?'hoje':diff===1?'amanhã':`em ${diff} dias`;
+  document.getElementById('notif-text').textContent=`Próximo: ${next.titulo} — ${when} às ${next.hora.slice(0,5)}`;
   document.getElementById('notif-banner').classList.remove('hidden');
 }
-function dismissNotif() { document.getElementById('notif-banner').classList.add('hidden'); }
+function dismissNotif(){document.getElementById('notif-banner').classList.add('hidden');}
 
-// ── FILTER & VIEW ─────────────────────────────────────────
-function filterEv(f, el) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-chips .chip').forEach(c => { c.classList.remove('on', 'orange'); });
-  el.classList.add('on');
-  if (f !== 'todos') el.classList.add('orange');
+// ── EVENTS ────────────────────────────────────────────────
+function filterEv(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-chips .chip').forEach(c=>{c.classList.remove('on','orange');});
+  el.classList.add('on');if(f!=='todos')el.classList.add('orange');
   renderEvents();
 }
-
-function setView(v, el) {
-  currentView = v;
-  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('cards-view').style.display = v === 'cards' ? 'flex' : 'none';
-  document.getElementById('cards-view').style.flexDirection = 'column';
-  document.getElementById('cards-view').style.gap = '8px';
-  document.getElementById('timeline-view').classList.toggle('show', v === 'timeline');
+function setView(v,el){
+  currentView=v;
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');
+  document.getElementById('cards-view').style.display=v==='cards'?'flex':'none';
+  document.getElementById('cards-view').style.flexDirection='column';
+  document.getElementById('cards-view').style.gap='8px';
+  document.getElementById('timeline-view').classList.toggle('show',v==='timeline');
   renderEvents();
 }
+function fmtDate(d){return new Date(d+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});}
 
-// ── RENDER EVENTS ─────────────────────────────────────────
-function fmtDate(d) {
-  const dt = new Date(d + 'T12:00');
-  return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-}
-
-function renderEvents() {
-  const list = currentFilter === 'todos' ? events : events.filter(e => e.tipo === currentFilter);
-  const sorted = [...list].sort((a, b) => a.data.localeCompare(b.data));
-  const isG = currentRole === 'gestor';
-  if (currentView === 'cards') {
-    const c = document.getElementById('cards-view');
-    if (!sorted.length) { c.innerHTML = '<div class="empty">Nenhum evento encontrado.</div>'; return; }
-    c.innerHTML = sorted.map((ev, i) => `
+function renderEvents(){
+  const list=currentFilter==='todos'?events:events.filter(e=>e.tipo===currentFilter);
+  const sorted=[...list].sort((a,b)=>a.data.localeCompare(b.data));
+  const isG=currentRole==='gestor';
+  if(currentView==='cards'){
+    const c=document.getElementById('cards-view');
+    if(!sorted.length){c.innerHTML='<div class="empty">Nenhum evento encontrado.</div>';return;}
+    c.innerHTML=sorted.map((ev,i)=>`
       <div class="ev-card cat-${ev.tipo}" style="animation-delay:${Math.min(i,12)*35}ms">
         <div class="ev-stripe"></div>
         <div class="ev-body">
-          <div class="ev-type-lbl">${TYPE_NAMES[ev.tipo] || 'Evento'}${ev.recorrente ? ' · ↻' : ''}</div>
+          <div class="ev-type-lbl">${TYPE_NAMES[ev.tipo]||'Evento'}${ev.recorrente?' · ↻':''}</div>
           <div class="ev-title">${ev.titulo}</div>
           <div class="ev-meta"><span>${fmtDate(ev.data)}</span><span>${ev.hora.slice(0,5)}</span><span>${ev.local}</span></div>
         </div>
         <div class="ev-status">${ev.status}</div>
-        ${isG ? `<button class="ev-btn" onclick="deleteEv('${ev.id}','${ev.recur_group || ''}',${ev.recorrente})">✕</button>` : ''}
+        ${isG?`<button class="ev-btn" onclick="deleteEv('${ev.id}','${ev.recur_group||''}',${!!ev.recorrente})">✕</button>`:''}
       </div>`).join('');
   } else {
-    renderTimeline(sorted, isG);
+    renderTimeline(sorted,isG);
   }
 }
 
-function renderTimeline(sorted, isG) {
-  const tl = document.getElementById('timeline-view');
-  if (!sorted.length) { tl.innerHTML = '<div class="empty">Nenhum evento encontrado.</div>'; return; }
-  const byMonth = {};
-  sorted.forEach(ev => {
-    const dt = new Date(ev.data + 'T12:00');
-    const key = `${dt.getFullYear()}-${dt.getMonth()}`;
-    const lbl = `${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;
-    if (!byMonth[key]) byMonth[key] = { label: lbl, items: [] };
-    byMonth[key].items.push(ev);
-  });
-  let html = ''; let delay = 0;
-  Object.values(byMonth).forEach(group => {
-    html += `<div class="tl-month-block"><div class="tl-month-label">${group.label}</div><div class="tl-items">`;
-    group.items.forEach((ev, i) => {
-      const dt = new Date(ev.data + 'T12:00');
-      html += `<div class="tl-item cat-${ev.tipo}" style="animation-delay:${(delay+i)*40}ms">
-        <div class="tl-dot"></div>
+function renderTimeline(sorted,isG){
+  const tl=document.getElementById('timeline-view');
+  if(!sorted.length){tl.innerHTML='<div class="empty">Nenhum evento encontrado.</div>';return;}
+  const byMonth={};
+  sorted.forEach(ev=>{const dt=new Date(ev.data+'T12:00');const key=`${dt.getFullYear()}-${dt.getMonth()}`;const lbl=`${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;if(!byMonth[key])byMonth[key]={label:lbl,items:[]};byMonth[key].items.push(ev);});
+  let html='',delay=0;
+  Object.values(byMonth).forEach(group=>{
+    html+=`<div class="tl-month-block"><div class="tl-month-label">${group.label}</div><div class="tl-items">`;
+    group.items.forEach((ev,i)=>{
+      const dt=new Date(ev.data+'T12:00');
+      html+=`<div class="tl-item cat-${ev.tipo}" style="animation-delay:${(delay+i)*40}ms"><div class="tl-dot"></div>
         <div class="tl-card">
           <div class="tl-date-col"><div class="tl-day">${dt.getDate()}</div><div class="tl-dayname">${DAYS_SHORT[dt.getDay()]}</div></div>
           <div class="tl-divider-v"></div>
-          <div class="tl-body">
-            <div class="tl-type">${TYPE_NAMES[ev.tipo]}</div>
-            <div class="tl-title">${ev.titulo}</div>
-            <div class="tl-meta"><span>${ev.hora.slice(0,5)}</span><span>${ev.local}</span></div>
-          </div>
-          ${ev.recorrente ? `<div class="tl-recur">↻</div>` : ''}
-          ${isG ? `<button class="ev-btn" onclick="deleteEv('${ev.id}','${ev.recur_group||''}',${ev.recorrente})">✕</button>` : ''}
-        </div>
-      </div>`;
+          <div class="tl-body"><div class="tl-type">${TYPE_NAMES[ev.tipo]}</div><div class="tl-title">${ev.titulo}</div><div class="tl-meta"><span>${ev.hora.slice(0,5)}</span><span>${ev.local}</span></div></div>
+          ${ev.recorrente?`<div class="tl-recur">↻</div>`:''}
+          ${isG?`<button class="ev-btn" onclick="deleteEv('${ev.id}','${ev.recur_group||''}',${!!ev.recorrente})">✕</button>`:''}
+        </div></div>`;
     });
-    delay += group.items.length;
-    html += '</div></div>';
+    delay+=group.items.length;html+='</div></div>';
   });
-  tl.innerHTML = html;
+  tl.innerHTML=html;
 }
 
-function updateStats() {
-  document.getElementById('cnt-total').textContent = events.length;
-  ['reuniao', 'rodizio', 'entrevista'].forEach(t =>
-    document.getElementById('cnt-' + t).textContent = events.filter(e => e.tipo === t).length
-  );
+function updateStats(){
+  document.getElementById('cnt-total').textContent=events.length;
+  ['reuniao','rodizio','entrevista'].forEach(t=>document.getElementById('cnt-'+t).textContent=events.filter(e=>e.tipo===t).length);
 }
 
-async function deleteEv(id, recurGroup, isRecur) {
-  if (isRecur && recurGroup) {
-    const all = confirm('Série recorrente.\nOK = excluir toda a série\nCancelar = excluir só este');
-    if (all) {
-      await sb.from('eventos').delete().eq('recur_group', recurGroup);
-      events = events.filter(e => e.recur_group !== recurGroup);
-    } else {
-      await sb.from('eventos').delete().eq('id', id);
-      events = events.filter(e => e.id !== id);
-    }
-  } else {
-    await sb.from('eventos').delete().eq('id', id);
-    events = events.filter(e => e.id !== id);
-  }
-  toast('Evento excluído');
-  renderEvents(); updateStats(); renderCalendar();
+async function deleteEv(id,recurGroup,isRecur){
+  if(isRecur&&recurGroup){
+    const all=confirm('Série recorrente.\nOK = excluir toda a série\nCancelar = excluir só este');
+    if(all){await sbDelete('eventos','recur_group',recurGroup);events=events.filter(e=>e.recur_group!==recurGroup);}
+    else{await sbDelete('eventos','id',id);events=events.filter(e=>e.id!==id);}
+  }else{await sbDelete('eventos','id',id);events=events.filter(e=>e.id!==id);}
+  toast('Evento excluído');renderEvents();updateStats();renderCalendar();
 }
 
 // ── RODIZIO ───────────────────────────────────────────────
-function renderRodizio() {
-  const isG = currentRole === 'gestor';
-  if (!rodizios.length) {
-    document.getElementById('rodizio-container').innerHTML = '<div class="empty" style="grid-column:1/-1">Nenhuma escala cadastrada.</div>';
-    return;
-  }
-  document.getElementById('rodizio-container').innerHTML = rodizios.map((r, i) => `
-    <div class="rodo-card" style="animation-delay:${i*55}ms">
+function renderRodizio(){
+  const isG=currentRole==='gestor';
+  if(!rodizios.length){document.getElementById('rodizio-container').innerHTML='<div class="empty" style="grid-column:1/-1">Nenhuma escala cadastrada.</div>';return;}
+  document.getElementById('rodizio-container').innerHTML=rodizios.map((r,i)=>{
+    const pc=AV_COLORS[r.prof_color||0],rc=AV_COLORS[r.recep_color||1];
+    return`<div class="rodo-card" style="animation-delay:${i*55}ms">
       <div class="rodo-week">${r.semana}</div>
       <div class="rodo-row">
-        ${renderPerson(r, 'prof', isG)}
-        ${renderPerson(r, 'recep', isG)}
-      </div>
-      ${isG ? `<button class="rodo-del" onclick="deleteRodo('${r.id}')" style="margin-top:10px;width:100%;border-radius:7px">✕ Remover escala</button>` : ''}
-    </div>`).join('');
-}
-
-function renderPerson(r, role, isG) {
-  const name = role === 'prof' ? r.prof_nome : r.recep_nome;
-  const init = role === 'prof' ? r.prof_init : r.recep_init;
-  const ci = (role === 'prof' ? r.prof_color : r.recep_color) || 0;
-  const c = AVATAR_COLORS[ci];
-  const pid = `pk-${r.id}-${role}`;
-  return `<div class="rodo-person">
-    <div class="avatar-wrap">
-      <div class="avatar" id="av-${r.id}-${role}"
-        style="background:${c.bg};color:${c.fg};border-color:${c.border}"
-        onclick="${isG ? `togglePicker('${pid}','${r.id}','${role}')` : 'void(0)'}">
-        ${init}
-      </div>
-      ${isG ? `<div class="av-edit">✎</div>` : ''}
-      <div class="avatar-picker" id="${pid}">
-        <div class="pk-label">Cor</div>
-        <div class="pk-colors">${AVATAR_COLORS.map((col, idx) => `
-          <div class="pk-color ${idx === ci ? 'sel' : ''}"
-            style="background:${col.bg};border:2px solid ${col.fg}"
-            onclick="selectColor('${pid}','${r.id}','${role}',${idx})"></div>`).join('')}
+        <div class="rodo-person">
+          <div class="avatar" style="background:${pc.bg};color:${pc.fg};border-color:${pc.bd}">${r.prof_init}</div>
+          <div class="rodo-info"><div class="rodo-name">${r.prof_nome}</div><div class="rodo-role-tag">Professor(a)</div></div>
+          <div class="rodo-type-badge prof">Prof.</div>
         </div>
-        <div class="pk-label">Iniciais</div>
-        <input class="pk-initials" id="pki-${r.id}-${role}" value="${init}" maxlength="2">
-        <button class="pk-save" onclick="saveAvatar('${pid}','${r.id}','${role}')">Salvar</button>
+        <div class="rodo-person">
+          <div class="avatar" style="background:${rc.bg};color:${rc.fg};border-color:${rc.bd}">${r.recep_init}</div>
+          <div class="rodo-info"><div class="rodo-name">${r.recep_nome}</div><div class="rodo-role-tag">Recepção</div></div>
+          <div class="rodo-type-badge rec">Recep.</div>
+        </div>
       </div>
-    </div>
-    <div class="rodo-info">
-      <div class="rodo-name">${name}</div>
-      <div class="rodo-role-tag">${role === 'prof' ? 'Professor(a)' : 'Recepção'}</div>
-    </div>
-    <div class="rodo-type-badge ${role === 'prof' ? 'prof' : 'rec'}">${role === 'prof' ? 'Prof.' : 'Recep.'}</div>
-  </div>`;
+      ${isG?`<button class="rodo-del" onclick="deleteRodo('${r.id}')" style="margin-top:10px;width:100%;border-radius:7px;padding:5px">✕ Remover</button>`:''}
+    </div>`;
+  }).join('');
 }
 
-function togglePicker(pid, rid, role) {
-  const el = document.getElementById(pid);
-  const isOpen = el.classList.contains('open');
-  closeAllPickers();
-  if (!isOpen) { el.classList.add('open'); openPickerId = pid; }
-}
-function closeAllPickers() {
-  document.querySelectorAll('.avatar-picker.open').forEach(p => p.classList.remove('open'));
-  openPickerId = null;
-}
-function selectColor(pid, rid, role, idx) {
-  const r = rodizios.find(x => x.id === rid); if (!r) return;
-  if (role === 'prof') r.prof_color = idx; else r.recep_color = idx;
-  document.querySelectorAll(`#${pid} .pk-color`).forEach((c, i) => c.classList.toggle('sel', i === idx));
-  const c = AVATAR_COLORS[idx];
-  const av = document.getElementById(`av-${rid}-${role}`);
-  if (av) { av.style.background = c.bg; av.style.color = c.fg; av.style.borderColor = c.border; }
-}
-async function saveAvatar(pid, rid, role) {
-  const r = rodizios.find(x => x.id === rid); if (!r) return;
-  const val = document.getElementById(`pki-${rid}-${role}`).value.trim().toUpperCase().slice(0, 2);
-  const ci = role === 'prof' ? r.prof_color : r.recep_color;
-  const update = role === 'prof'
-    ? { prof_init: val || r.prof_init, prof_color: ci }
-    : { recep_init: val || r.recep_init, recep_color: ci };
-  await sb.from('rodizios').update(update).eq('id', rid);
-  if (role === 'prof') { if (val) r.prof_init = val; } else { if (val) r.recep_init = val; }
-  closeAllPickers(); renderRodizio(); toast('Avatar atualizado');
-}
-async function deleteRodo(id) {
-  if (!confirm('Excluir esta escala?')) return;
-  await sb.from('rodizios').delete().eq('id', id);
-  rodizios = rodizios.filter(r => r.id !== id);
-  renderRodizio(); toast('Escala removida');
+async function deleteRodo(id){
+  if(!confirm('Excluir esta escala?'))return;
+  await sbDelete('rodizios','id',id);
+  rodizios=rodizios.filter(r=>r.id!==id);renderRodizio();toast('Escala removida');
 }
 
-// ── CALENDÁRIO ────────────────────────────────────────────
-function renderCalendar() {
-  const y = calDate.getFullYear(), m = calDate.getMonth();
-  document.getElementById('cal-lbl').textContent = `${MONTHS[m]} ${y}`;
-  const evDays = new Set(events.map(e => { const d = new Date(e.data + 'T12:00'); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }));
-  const today = new Date();
-  const first = new Date(y, m, 1);
-  const last = new Date(y, m + 1, 0);
-  let html = '';
-  for (let i = 0; i < first.getDay(); i++) { const pd = new Date(y, m, 1 - first.getDay() + i); html += `<div class="cal-d dim">${pd.getDate()}</div>`; }
-  for (let d = 1; d <= last.getDate(); d++) {
-    const isT = today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
-    const key = `${y}-${m}-${d}`;
-    const isSel = selCalDay === key;
-    html += `<div class="cal-d${isT ? ' today' : ''}${evDays.has(key) ? ' has-ev' : ''}${isSel && !isT ? ' sel' : ''}" onclick="calClickDay(${y},${m},${d})">${d}</div>`;
+// ── CALENDAR ──────────────────────────────────────────────
+function renderCalendar(){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  document.getElementById('cal-lbl').textContent=`${MONTHS[m]} ${y}`;
+  const evDays=new Set(events.map(e=>{const d=new Date(e.data+'T12:00');return`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`}));
+  const today=new Date();const first=new Date(y,m,1);const last=new Date(y,m+1,0);
+  let html='';
+  for(let i=0;i<first.getDay();i++){const pd=new Date(y,m,1-first.getDay()+i);html+=`<div class="cal-d dim">${pd.getDate()}</div>`;}
+  for(let d=1;d<=last.getDate();d++){
+    const isT=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+    const key=`${y}-${m}-${d}`;const isSel=selCalDay===key;
+    html+=`<div class="cal-d${isT?' today':''}${evDays.has(key)?' has-ev':''}${isSel&&!isT?' sel':''}" onclick="calClickDay(${y},${m},${d})">${d}</div>`;
   }
-  document.getElementById('cal-days').innerHTML = html;
+  document.getElementById('cal-days').innerHTML=html;
 }
-function calMove(dir) { calDate = new Date(calDate.getFullYear(), calDate.getMonth() + dir, 1); renderCalendar(); }
-function calClickDay(y, m, d) {
-  selCalDay = `${y}-${m}-${d}`;
-  renderCalendar();
-  const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-  const dayEvs = events.filter(e => e.data === ds);
-  const lbl = new Date(y, m, d).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
-  const c = document.getElementById('cal-day-events');
-  if (!dayEvs.length) { c.innerHTML = `<div style="color:var(--g4);font-size:13px;padding:8px 0">Nenhum evento em ${lbl}.</div>`; return; }
-  c.innerHTML = `<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--g4);margin-bottom:10px">${lbl}</div>` +
-    dayEvs.map(ev => `<div class="ev-card cat-${ev.tipo}" style="margin-bottom:7px">
-      <div class="ev-stripe"></div>
-      <div class="ev-body"><div class="ev-type-lbl">${TYPE_NAMES[ev.tipo]}</div>
-      <div class="ev-title">${ev.titulo}</div>
-      <div class="ev-meta"><span>${ev.hora.slice(0,5)}</span><span>${ev.local}</span></div></div>
-      <div class="ev-status">${ev.status}</div></div>`).join('');
+function calMove(dir){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+dir,1);renderCalendar();}
+function calClickDay(y,m,d){
+  selCalDay=`${y}-${m}-${d}`;renderCalendar();
+  const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const dayEvs=events.filter(e=>e.data===ds);
+  const lbl=new Date(y,m,d).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+  const c=document.getElementById('cal-day-events');
+  if(!dayEvs.length){c.innerHTML=`<div style="color:var(--g4);font-size:13px;padding:8px 0">Nenhum evento em ${lbl}.</div>`;return;}
+  c.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--g4);margin-bottom:10px">${lbl}</div>`+
+  dayEvs.map(ev=>`<div class="ev-card cat-${ev.tipo}" style="margin-bottom:7px"><div class="ev-stripe"></div><div class="ev-body"><div class="ev-type-lbl">${TYPE_NAMES[ev.tipo]}</div><div class="ev-title">${ev.titulo}</div><div class="ev-meta"><span>${ev.hora.slice(0,5)}</span><span>${ev.local}</span></div></div><div class="ev-status">${ev.status}</div></div>`).join('');
 }
 
 // ── MODAL EVENTO ──────────────────────────────────────────
-function toggleRecur() {
-  recurEnabled = !recurEnabled;
-  document.getElementById('recur-sw').classList.toggle('on', recurEnabled);
-  document.getElementById('recur-toggle').classList.toggle('on', recurEnabled);
-  document.getElementById('recur-opts').classList.toggle('show', recurEnabled);
-}
-function setRI(days, el) {
-  recurInterval = days;
-  document.querySelectorAll('#recur-opts .chip').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
-}
-function selType(el, type) {
-  currentType = type;
-  document.querySelectorAll('.type-tile').forEach(t => t.classList.remove('sel'));
-  el.classList.add('sel');
-}
-function openModal() { document.getElementById('modal').classList.add('open'); }
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
-function openRodoModal() { document.getElementById('rodo-modal').classList.add('open'); }
-function closeRodoModal() { document.getElementById('rodo-modal').classList.remove('open'); }
-function openExport() { document.getElementById('export-modal').classList.add('open'); }
-function closeExport() { document.getElementById('export-modal').classList.remove('open'); }
+function toggleRecur(){recurEnabled=!recurEnabled;document.getElementById('recur-sw').classList.toggle('on',recurEnabled);document.getElementById('recur-toggle').classList.toggle('on',recurEnabled);document.getElementById('recur-opts').classList.toggle('show',recurEnabled);}
+function setRI(days,el){recurInterval=days;document.querySelectorAll('#recur-opts .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function selType(el,type){currentType=type;document.querySelectorAll('.type-tile').forEach(t=>t.classList.remove('sel'));el.classList.add('sel');}
+function openModal(){document.getElementById('modal').classList.add('open');}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function openRodoModal(){document.getElementById('rodo-modal').classList.add('open');}
+function closeRodoModal(){document.getElementById('rodo-modal').classList.remove('open');}
+function openExport(){document.getElementById('export-modal').classList.add('open');}
+function closeExport(){document.getElementById('export-modal').classList.remove('open');}
 
-async function saveEvent() {
-  const title = document.getElementById('f-title').value.trim();
-  const date = document.getElementById('f-date').value;
-  const time = document.getElementById('f-time').value;
-  const local = document.getElementById('f-local').value.trim() || 'Academia';
-  const participants = document.getElementById('f-participants').value.trim() || 'Equipe';
-  if (!title || !date || !time) { toast('⚠️ Preencha título, data e horário.'); return; }
-
-  const btn = document.getElementById('btn-save-ev');
-  btn.disabled = true; btn.textContent = 'Salvando...';
-
-  if (recurEnabled) {
-    const endDate = document.getElementById('f-recur-end').value;
-    if (!endDate) { toast('⚠️ Defina a data final.'); btn.disabled = false; btn.textContent = 'Criar evento'; return; }
-    const groupId = crypto.randomUUID();
-    const rows = [];
-    let cur = new Date(date + 'T12:00');
-    const end = new Date(endDate + 'T12:00');
-    let count = 0;
-    while (cur <= end && count < 52) {
-      rows.push({ tipo: currentType, titulo: title, data: cur.toISOString().slice(0, 10), hora: time, local, participantes: participants, status: TYPE_STATUS[currentType], recorrente: true, recur_interval: recurInterval, recur_end: endDate, recur_group: groupId });
-      cur = new Date(cur.getTime() + recurInterval * 86400000);
-      count++;
+async function saveEvent(){
+  const titulo=document.getElementById('f-title').value.trim();
+  const data=document.getElementById('f-date').value;
+  const hora=document.getElementById('f-time').value;
+  const local=document.getElementById('f-local').value.trim()||'Academia';
+  const participantes=document.getElementById('f-participants').value.trim()||'Equipe';
+  if(!titulo||!data||!hora){toast('⚠️ Preencha título, data e horário.');return;}
+  const btn=document.getElementById('btn-save-ev');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(recurEnabled){
+      const endDate=document.getElementById('f-recur-end').value;
+      if(!endDate){toast('⚠️ Defina a data final.');btn.disabled=false;btn.textContent='Criar evento';return;}
+      const groupId=crypto.randomUUID();const rows=[];
+      let cur=new Date(data+'T12:00');const end=new Date(endDate+'T12:00');let count=0;
+      while(cur<=end&&count<52){
+        rows.push({tipo:currentType,titulo,data:cur.toISOString().slice(0,10),hora,local,participantes,status:TYPE_STATUS[currentType],recorrente:true,recur_interval:recurInterval,recur_end:endDate,recur_group:groupId});
+        cur=new Date(cur.getTime()+recurInterval*86400000);count++;
+      }
+      const saved=await sbPost('eventos',rows);
+      if(saved){events.push(...saved);toast(`✅ ${saved.length} eventos criados`);}
+      else toast('❌ Erro ao salvar.');
+    }else{
+      const row={tipo:currentType,titulo,data,hora,local,participantes,status:TYPE_STATUS[currentType],recorrente:false};
+      const saved=await sbPost('eventos',row);
+      if(saved){events.push(...(Array.isArray(saved)?saved:[saved]));toast('✅ Evento criado');}
+      else toast('❌ Erro ao salvar.');
     }
-    const { data, error } = await sb.from('eventos').insert(rows).select();
-    if (!error && data) { events.push(...data); toast(`✅ ${data.length} eventos criados`); }
-    else toast('❌ Erro ao salvar. Tente novamente.');
-  } else {
-    const row = { tipo: currentType, titulo: title, data: date, hora: time, local, participantes: participants, status: TYPE_STATUS[currentType], recorrente: false };
-    const { data, error } = await sb.from('eventos').insert(row).select().single();
-    if (!error && data) { events.push(data); toast('✅ Evento criado'); }
-    else toast('❌ Erro ao salvar. Tente novamente.');
-  }
-
-  events.sort((a, b) => a.data.localeCompare(b.data));
-  renderEvents(); updateStats(); renderCalendar();
-  closeModal();
-  ['f-title','f-date','f-time','f-local','f-participants','f-recur-end'].forEach(id => document.getElementById(id).value = '');
-  recurEnabled = false;
-  document.getElementById('recur-sw').classList.remove('on');
-  document.getElementById('recur-toggle').classList.remove('on');
-  document.getElementById('recur-opts').classList.remove('show');
-  btn.disabled = false; btn.textContent = 'Criar evento';
+    events.sort((a,b)=>a.data.localeCompare(b.data));
+    renderEvents();updateStats();renderCalendar();closeModal();
+    ['f-title','f-date','f-time','f-local','f-participants','f-recur-end'].forEach(id=>document.getElementById(id).value='');
+    recurEnabled=false;document.getElementById('recur-sw').classList.remove('on');document.getElementById('recur-toggle').classList.remove('on');document.getElementById('recur-opts').classList.remove('show');
+  }finally{btn.disabled=false;btn.textContent='Criar evento';}
 }
 
-async function saveRodo() {
-  const week = document.getElementById('r-week').value.trim();
-  const pn = document.getElementById('r-pname').value.trim();
-  const pi = document.getElementById('r-pinit').value.trim().toUpperCase();
-  const rn = document.getElementById('r-rname').value.trim();
-  const ri = document.getElementById('r-rinit').value.trim().toUpperCase();
-  if (!week || !pn || !pi || !rn || !ri) { toast('⚠️ Preencha todos os campos.'); return; }
-
-  const btn = document.getElementById('btn-save-rodo');
-  btn.disabled = true; btn.textContent = 'Salvando...';
-
-  const row = { semana: week, prof_nome: pn, prof_init: pi, prof_color: 0, recep_nome: rn, recep_init: ri, recep_color: 1 };
-  const { data, error } = await sb.from('rodizios').insert(row).select().single();
-  if (!error && data) { rodizios.push(data); toast('✅ Escala criada'); renderRodizio(); closeRodoModal(); }
-  else toast('❌ Erro ao salvar.');
-
-  ['r-week','r-pname','r-pinit','r-rname','r-rinit'].forEach(id => document.getElementById(id).value = '');
-  btn.disabled = false; btn.textContent = 'Criar escala';
+async function saveRodo(){
+  const semana=document.getElementById('r-week').value.trim();
+  const prof_nome=document.getElementById('r-pname').value.trim();
+  const prof_init=document.getElementById('r-pinit').value.trim().toUpperCase();
+  const recep_nome=document.getElementById('r-rname').value.trim();
+  const recep_init=document.getElementById('r-rinit').value.trim().toUpperCase();
+  if(!semana||!prof_nome||!prof_init||!recep_nome||!recep_init){toast('⚠️ Preencha todos os campos.');return;}
+  const btn=document.getElementById('btn-save-rodo');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const row={semana,prof_nome,prof_init,prof_color:0,recep_nome,recep_init,recep_color:1};
+    const saved=await sbPost('rodizios',row);
+    if(saved){rodizios.push(...(Array.isArray(saved)?saved:[saved]));toast('✅ Escala criada');renderRodizio();closeRodoModal();}
+    else toast('❌ Erro ao salvar.');
+    ['r-week','r-pname','r-pinit','r-rname','r-rinit'].forEach(id=>document.getElementById(id).value='');
+  }finally{btn.disabled=false;btn.textContent='Criar escala';}
 }
 
 // ── CONFIG ────────────────────────────────────────────────
-async function saveConfig() {
-  companyName = document.getElementById('cfg-company').value.trim() || 'Minha Empresa';
-  companyShort = document.getElementById('cfg-short').value.trim() || companyName.split(' ')[0];
-  await saveConfigToDB();
-  applyBranding();
-  toast('✅ Identidade atualizada');
+async function saveConfig(){
+  companyName=document.getElementById('cfg-company').value.trim()||'Minha Empresa';
+  companyShort=document.getElementById('cfg-short').value.trim()||companyName.split(' ')[0];
+  if(configId){await sbPatch('config',configId,{empresa_nome:companyName,empresa_short:companyShort});}
+  applyBranding();toast('✅ Identidade atualizada');
 }
-
-async function savePIN() {
-  const np = document.getElementById('cfg-pin').value.trim();
-  if (!/^\d{4}$/.test(np)) { toast('⚠️ PIN deve ter 4 dígitos.'); return; }
-  currentPIN = np;
-  await saveConfigToDB();
-  document.getElementById('cfg-pin').value = '';
-  toast('✅ PIN atualizado');
+async function savePIN(){
+  const np=document.getElementById('cfg-pin').value.trim();
+  if(!/^\d{4}$/.test(np)){toast('⚠️ PIN deve ter 4 dígitos.');return;}
+  currentPIN=np;
+  if(configId)await sbPatch('config',configId,{pin:np});
+  document.getElementById('cfg-pin').value='';toast('✅ PIN atualizado');
 }
-
-async function clearAllData() {
-  if (!confirm('Apagar TODOS os eventos e escalas do banco? Esta ação não pode ser desfeita.')) return;
-  await sb.from('eventos').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await sb.from('rodizios').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  events = []; rodizios = [];
-  renderEvents(); renderRodizio(); updateStats(); renderCalendar();
-  toast('🗑️ Dados apagados');
+async function clearAllData(){
+  if(!confirm('Apagar TODOS os eventos e escalas? Ação irreversível.'))return;
+  await sbDelete('eventos','id','neq.00000000-0000-0000-0000-000000000000');
+  await fetch(`${SB_URL}/rest/v1/eventos`,{method:'DELETE',headers:{...HEADERS,'Prefer':'return=minimal'}});
+  await fetch(`${SB_URL}/rest/v1/rodizios`,{method:'DELETE',headers:{...HEADERS,'Prefer':'return=minimal'}});
+  events=[];rodizios=[];renderEvents();renderRodizio();updateStats();renderCalendar();toast('🗑️ Dados apagados');
 }
 
 // ── EXPORT ────────────────────────────────────────────────
-function exportText() {
-  const sorted = [...events].sort((a, b) => a.data.localeCompare(b.data));
-  let txt = `📅 *${companyName} — Agenda*\n_${new Date().toLocaleDateString('pt-BR')}_\n`;
-  let curMonth = '';
-  sorted.forEach(ev => {
-    const dt = new Date(ev.data + 'T12:00');
-    const month = `${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;
-    if (month !== curMonth) { txt += `\n*${month}*\n`; curMonth = month; }
-    txt += `${TYPE_EMOJI[ev.tipo]} *${ev.titulo}*\n   📆 ${fmtDate(ev.data)} às ${ev.hora.slice(0,5)} · 📍 ${ev.local}\n`;
-    if (ev.recorrente) txt += `   ↻ Recorrente (a cada ${ev.recur_interval} dias)\n`;
-  });
-  navigator.clipboard.writeText(txt)
-    .then(() => toast('✅ Copiado! Cole no WhatsApp.'))
-    .catch(() => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast('✅ Copiado!'); });
+function exportText(){
+  const sorted=[...events].sort((a,b)=>a.data.localeCompare(b.data));
+  let txt=`📅 *${companyName} — Agenda*\n_${new Date().toLocaleDateString('pt-BR')}_\n`;
+  let curMonth='';
+  sorted.forEach(ev=>{const dt=new Date(ev.data+'T12:00');const month=`${MONTHS[dt.getMonth()]} ${dt.getFullYear()}`;if(month!==curMonth){txt+=`\n*${month}*\n`;curMonth=month;}txt+=`${TYPE_EMOJI[ev.tipo]} *${ev.titulo}*\n   📆 ${fmtDate(ev.data)} às ${ev.hora.slice(0,5)} · 📍 ${ev.local}\n`;if(ev.recorrente)txt+=`   ↻ Recorrente (a cada ${ev.recur_interval} dias)\n`;});
+  navigator.clipboard.writeText(txt).then(()=>toast('✅ Copiado! Cole no WhatsApp.')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('✅ Copiado!');});
   closeExport();
 }
-function exportPDF() { closeExport(); setTimeout(() => window.print(), 300); }
-function exportCSV() {
-  const header = 'Tipo,Título,Data,Horário,Local,Participantes,Status,Recorrente';
-  const rows = events.map(ev => `${TYPE_NAMES[ev.tipo]},"${ev.titulo}",${ev.data},${ev.hora.slice(0,5)},"${ev.local}","${ev.participantes}",${ev.status},${ev.recorrente ? 'Sim' : 'Não'}`);
-  const blob = new Blob(['\uFEFF' + header + '\n' + rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `agenda_${companyName.replace(/\s+/g, '_')}.csv`; a.click();
+function exportPDF(){closeExport();setTimeout(()=>window.print(),300);}
+function exportCSV(){
+  const h='Tipo,Título,Data,Horário,Local,Participantes,Status,Recorrente';
+  const rows=events.map(ev=>`${TYPE_NAMES[ev.tipo]},"${ev.titulo}",${ev.data},${ev.hora.slice(0,5)},"${ev.local}","${ev.participantes}",${ev.status},${ev.recorrente?'Sim':'Não'}`);
+  const blob=new Blob(['\uFEFF'+h+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`agenda_${companyName.replace(/\s+/g,'_')}.csv`;a.click();
   closeExport();
 }
 
-// ── CLOSE PICKERS ON OUTSIDE CLICK ───────────────────────
-document.addEventListener('click', e => {
-  if (openPickerId && !e.target.closest('.avatar-wrap')) closeAllPickers();
-});
-
-// ── INIT ──────────────────────────────────────────────────
 runSplash();
 </script>
 </body>
