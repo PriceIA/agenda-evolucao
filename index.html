@@ -75,6 +75,10 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);margin-right:10px;flex-shrink:0;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.85)}}
 .notif-close{background:none;border:none;color:var(--g4);cursor:pointer;font-size:18px;line-height:1}
+.conn-error-banner{display:none;position:fixed;top:0;left:0;right:0;background:var(--red);color:var(--white);padding:12px 20px;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:600;z-index:600;gap:12px}
+.conn-error-banner.show{display:flex}
+.conn-error-text{display:flex;align-items:center;gap:10px}
+.conn-error-close{background:none;border:none;color:var(--white);cursor:pointer;font-size:18px;line-height:1;flex-shrink:0}
 .topbar{background:var(--white);border-bottom:1px solid var(--bd);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .tb-left{display:flex;align-items:center;gap:14px}
 .tb-wordmark{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase}
@@ -329,6 +333,10 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 </style>
 </head>
 <body>
+<div class="conn-error-banner" id="conn-error-banner">
+  <div class="conn-error-text">⚠️ Não foi possível conectar ao banco de dados. Os dados exibidos podem estar desatualizados ou incompletos. Tente recarregar a página em alguns minutos.</div>
+  <button class="conn-error-close" onclick="dismissConnError()">×</button>
+</div>
 <div id="app">
   <!-- SPLASH -->
   <div class="screen hidden-up" id="screen-splash" style="transition: opacity 0.5s; opacity: 0;">
@@ -624,10 +632,13 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 const SB_URL='https://indapxewhfobzxnwswhy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZGFweGV3aGZvYnp4bndzd2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjA0MzQsImV4cCI6MjA5Njg5NjQzNH0.szwfTyc3L5dXkTZxemCEdViuWWWnzgpwrBFsISZmzmc';
 const H={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
-async function sbGet(t,p=''){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:{...H,'Accept':'application/json'}});if(!r.ok)return null;return r.json();}catch(e){return null;}}
-async function sbPost(t,b){try{const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok){console.error(await r.text());return null;}return r.json();}catch(e){return null;}}
-async function sbPatch(t,id,b){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?id=eq.${id}`,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok)return null;return r.json();}catch(e){return null;}}
-async function sbDelete(t,c,v){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?${c}=eq.${v}`,{method:'DELETE',headers:H});return r.ok;}catch(e){return false;}}
+async function sbGet(t,p=''){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:{...H,'Accept':'application/json'}});if(!r.ok){showConnError();return null;}return r.json();}catch(e){showConnError();return null;}}
+async function sbPost(t,b){try{const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok){console.error(await r.text());showConnError();return null;}return r.json();}catch(e){showConnError();return null;}}
+async function sbPatch(t,id,b){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?id=eq.${id}`,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(b)});if(!r.ok){showConnError();return null;}return r.json();}catch(e){showConnError();return null;}}
+async function sbDelete(t,c,v){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?${c}=eq.${v}`,{method:'DELETE',headers:H});if(!r.ok)showConnError();return r.ok;}catch(e){showConnError();return false;}}
+
+function showConnError(){document.getElementById('conn-error-banner').classList.add('show');}
+function dismissConnError(){document.getElementById('conn-error-banner').classList.remove('show');}
 
 const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const MONTHS_SHORT=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
