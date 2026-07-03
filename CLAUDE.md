@@ -30,9 +30,10 @@
   os dados tinham sumido, mas era só o projeto pausado (dados sempre ficaram intactos).
 - Mitigação 1: workflow .github/workflows/ping-supabase.yml pinga o Supabase 2x/semana pra evitar
   a pausa.
-- Mitigação 2 (pendente): tratar erro de conexão de forma visível — banner ou toast avisando
-  "Não foi possível conectar ao banco" em vez de silenciar e mostrar 0. Isso vale pra qualquer
-  chamada sbGet/sbPost/sbPatch/sbDelete que falhar.
+- Mitigação 2 (concluída em 2026-07-03): banner fixo vermelho no topo (`#conn-error-banner`)
+  avisa "Não foi possível conectar ao banco de dados..." sempre que sbGet/sbPost/sbPatch/
+  sbDelete falhar por erro de rede ou resposta não-ok. Tem botão de fechar (X), mas reaparece
+  se uma nova chamada falhar depois.
 
 ## Como trabalhar comigo neste projeto
 - Antes de editar o index.html, leia o arquivo inteiro primeiro — é um arquivo único e grande,

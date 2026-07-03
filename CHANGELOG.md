@@ -14,6 +14,11 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - `CLAUDE.md` com contexto do projeto para desenvolvimento assistido por IA.
 - `README.md`, `.env.example` e `docs/schema.sql` documentando o projeto e o banco de dados.
 
+### Corrigido
+- Chamadas `sbGet`/`sbPost`/`sbPatch`/`sbDelete` que falham por erro de conexão agora exibem
+  um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"
+  como se fosse dado real.
+
 ## [2026-07] — Estado conhecido
 
 ### Adicionado
@@ -29,4 +34,4 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - Identificado incidente em que o Supabase free tier pausa após 7 dias de inatividade, e o app
   engolia o erro de conexão silenciosamente, mostrando "0 eventos" em vez de avisar o usuário.
   Mitigação parcial: ping periódico ao Supabase para evitar a pausa (ver `CLAUDE.md`).
-  Tratamento de erro visível ao usuário ainda está pendente.
+  Tratamento de erro visível ao usuário resolvido em 2026-07-03 (ver `[Unreleased]` acima).
