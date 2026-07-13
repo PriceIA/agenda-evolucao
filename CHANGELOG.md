@@ -26,11 +26,25 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ### Segurança
 - Achado durante os testes visuais de 2026-07-13: o PIN do Gestor em produção ainda era o
   padrão de fábrica (`1234`) — descoberto quando uma sequência de teste digitada no modal de
-  PIN autenticou com sucesso. Tratado operacionalmente: Felipe trocou o PIN pelo próprio app
-  (Config → PIN do Gestor) logo após o commit desta entrada. Fica o registro: PIN padrão em
-  produção é risco real, mesmo em app interno.
+  PIN autenticou com sucesso. **PENDENTE**: a troca manual pelo app (Config → PIN do Gestor)
+  foi combinada mas, verificado no banco em 2026-07-13 ao fim do redesign, ainda não tinha
+  sido feita. Fica o registro: PIN padrão em produção é risco real, mesmo em app interno.
+- Observação relacionada, para o hardening futuro: a coluna `pin` da tabela `config` é
+  legível via anon key (o app lê o PIN no client para validar o acesso do Gestor). Trocar o
+  PIN resolve o "1234", mas qualquer pessoa com a anon key — que é pública por design —
+  consegue ler o PIN atual via REST. Resolver isso exige mudar a arquitetura de validação
+  (ex: RPC/Edge Function que valida server-side), candidato ao mesmo pacote de hardening
+  iniciado com o RLS da tabela `equipe`.
 
 ### Alterado
+- Tela de Configurações redesenhada com liquid glass — última tela do redesign (todas as
+  telas do app agora seguem o mesmo visual): cards de seção em vidro translúcido, inputs
+  mantidos SÓLIDOS (brancos opacos, sem vidro onde se digita), botões de ação em branco
+  sólido, pills de cargo no padrão dos filtros da Agenda, e "Limpar todos os dados" em
+  vermelho translúcido de alerta (ação destrutiva precisa continuar parecendo perigosa).
+  CSS escopado em `#page-config` + classe `cfg-danger` no botão de limpar (cores saíram do
+  style inline). Testado funcionalmente contra produção: adicionar/remover funcionário,
+  salvar identidade e PIN (regravando valores idênticos), permissão por perfil intacta.
 - Telas de entrada (seleção de perfil) e modal de PIN do Gestor redesenhadas com liquid glass:
   fundo gradiente "sol" no login com "Agenda." em destaque, perfil selecionado em branco
   sólido opaco vs não selecionados em vidro translúcido, botão "Entrar →" branco sólido.

@@ -420,6 +420,36 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #pin-overlay .pin-cancel{color:rgba(255,255,255,0.7)}
 #pin-overlay .pin-cancel:hover{color:var(--white)}
 
+/* CONFIG — liquid glass (última tela do redesign; modais e splash intactos) */
+#page-config{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-config .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* cards de seção — vidro (fallback escuro sem blur) */
+#page-config .cfg-card{background:rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.3);border-radius:18px;position:relative;overflow:hidden}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-config .cfg-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.10)}
+}
+#page-config .cfg-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+#page-config .cfg-card-title{color:var(--white);font-size:13px;font-weight:600;border-bottom-color:rgba(255,255,255,0.25)}
+#page-config .flabel{color:rgba(255,255,255,0.7)}
+/* inputs: SÓLIDOS por legibilidade — sem vidro onde se digita */
+#page-config .finput{background:rgba(255,255,255,0.92);color:#2b1608;border-color:transparent}
+#page-config .finput:focus{border-color:var(--white)}
+#page-config .finput::placeholder{color:rgba(60,30,10,0.5)}
+#page-config .btn-save{background:var(--white);color:#8a3400;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+#page-config .btn-save:hover{background:#ffe9d6}
+#page-config .cargo-tab{background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.9)}
+#page-config .cargo-tab:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
+#page-config .cargo-tab.on{background:var(--white);border-color:var(--white);color:#8a3400}
+#page-config .equipe-item{border-color:rgba(255,255,255,0.3)}
+#page-config .equipe-name{color:var(--white)}
+#page-config .equipe-cargo{color:rgba(255,255,255,0.65)}
+#page-config .equipe-del{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.7)}
+#page-config .equipe-del:hover{border-color:#ff9d9d;color:#ff9d9d}
+/* ação destrutiva: vermelho translúcido de alerta — precisa continuar parecendo perigosa */
+#page-config .cfg-danger{background:rgba(180,30,20,0.18);border:1.5px solid rgba(255,90,70,0.7);color:#ffb4ab}
+#page-config .cfg-danger:hover{background:rgba(180,30,20,0.3);border-color:#ff5a46;color:#ffd0cb}
+@media(max-width:640px){#page-config{margin:-16px -14px;padding:18px 14px 32px}}
+
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -668,7 +698,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         </div>
         <div class="cfg-card" style="animation-delay:0.12s">
           <div class="cfg-card-title">Dados</div>
-          <button class="btn-cancel" style="width:100%;padding:10px;border-radius:8px;font-size:12.5px;color:var(--red);border-color:var(--red)" onclick="clearAllData()">Limpar todos os dados</button>
+          <button class="btn-cancel cfg-danger" style="width:100%;padding:10px;border-radius:8px;font-size:12.5px" onclick="clearAllData()">Limpar todos os dados</button>
         </div>
       </div>
     </div>
@@ -1408,7 +1438,7 @@ function setCargo(cargo,el){
 function renderEquipeList(){
   const filtered=equipe.filter(e=>e.ativo&&e.cargo===currentCargo);
   const c=document.getElementById('equipe-list');
-  if(!filtered.length){c.innerHTML=`<div style="color:var(--g4);font-size:12px;padding:8px 0">Nenhum ${currentCargo.toLowerCase()} cadastrado.</div>`;return;}
+  if(!filtered.length){c.innerHTML=`<div style="color:rgba(255,255,255,0.7);font-size:12px;padding:8px 0">Nenhum ${currentCargo.toLowerCase()} cadastrado.</div>`;return;}
   c.innerHTML=filtered.map(m=>`<div class="equipe-item">
     <div class="equipe-avatar">${getInitials(m.nome)}</div>
     <div class="equipe-info"><div class="equipe-name">${m.nome}</div><div class="equipe-cargo">${m.cargo}</div></div>
