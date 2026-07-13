@@ -241,6 +241,49 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .cal-d.dim{color:var(--g5)}
 .cal-d.sel:not(.today){background:var(--off2);font-weight:700;border:1.5px solid var(--bd)}
 
+/* CALENDARIO — liquid glass (somente esta tela; não replicar nas outras sem decisão) */
+#page-calendario{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-calendario.active{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;align-content:start}
+#page-calendario .sec-head{grid-column:1/-1}
+#page-calendario .cal-wrap{grid-column:2;grid-row:2;align-self:start;margin-top:14px}
+#page-calendario #cal-day-events{grid-column:1;grid-row:2}
+@media(max-width:900px){#page-calendario.active{grid-template-columns:1fr}#page-calendario .cal-wrap{grid-column:1;grid-row:2;margin-top:0}#page-calendario #cal-day-events{grid-column:1;grid-row:3;margin-top:0}}
+#page-calendario .sec-title{color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-calendario .cal-wrap,#page-calendario .cal-day-panel,#page-calendario .ev-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.32);border-radius:18px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.28),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-calendario .cal-wrap,#page-calendario .cal-day-panel,#page-calendario .ev-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%)}
+  #page-calendario .cal-wrap{background:rgba(255,255,255,0.08)}
+  #page-calendario .cal-day-panel{background:rgba(255,255,255,0.14)}
+  #page-calendario .ev-card{background:rgba(255,255,255,0.10)}
+}
+#page-calendario .cal-wrap::before,#page-calendario .cal-day-panel::before,#page-calendario .ev-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+#page-calendario .cal-day-panel::after{content:'';position:absolute;top:-44px;right:-34px;width:190px;height:150px;background:radial-gradient(closest-side,rgba(255,255,255,0.30),transparent);pointer-events:none}
+#page-calendario .cal-day-panel{padding:20px 22px;margin-bottom:10px}
+#page-calendario .cal-day-num{font-size:48px;font-weight:500;color:var(--white);line-height:1;text-shadow:0 2px 10px rgba(0,0,0,0.35)}
+#page-calendario .cal-day-lbl{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-top:8px}
+#page-calendario .cal-day-empty{color:rgba(255,255,255,0.7);font-size:13px;margin-top:12px}
+#page-calendario .cal-month-lbl{color:var(--white)}
+#page-calendario .cal-arr{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.06)}
+#page-calendario .cal-arr:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
+#page-calendario .cal-dh{color:rgba(255,255,255,0.55)}
+#page-calendario .cal-d{color:rgba(255,255,255,0.85)}
+#page-calendario .cal-d:hover{background:rgba(255,255,255,0.12)}
+#page-calendario .cal-d.dim{color:rgba(255,255,255,0.28)}
+#page-calendario .cal-d.today{background:var(--white);color:#b8410a;border-radius:20px}
+#page-calendario .cal-d.has-ev::after{background:#ffb066}
+#page-calendario .cal-d.today.has-ev::after{background:#b8410a}
+#page-calendario .cal-d.sel:not(.today){background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.5);color:var(--white);border-radius:20px}
+#page-calendario .ev-card .ev-title{color:var(--white)}
+#page-calendario .ev-card .ev-meta{color:rgba(255,255,255,0.7)}
+#page-calendario .ev-card:hover{border-color:rgba(255,255,255,0.55)}
+#page-calendario .cat-reuniao .ev-type-lbl{color:#ffb066}
+#page-calendario .cat-rodizio .ev-type-lbl{color:#ffd68a}
+#page-calendario .cat-entrevista .ev-stripe{background:var(--white)}
+#page-calendario .cat-entrevista .ev-type-lbl{color:rgba(255,255,255,0.85)}
+#page-calendario .cat-outro .ev-type-lbl{color:rgba(255,255,255,0.7)}
+@media(max-width:640px){#page-calendario{margin:-16px -14px;padding:18px 14px 32px}}
+
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -1067,8 +1110,9 @@ function calClickDay(y,m,d){
   const dayEvs=events.filter(e=>canSee(e)&&e.data===ds);
   const lbl=new Date(y,m,d).toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
   const c=document.getElementById('cal-day-events');
-  if(!dayEvs.length){c.innerHTML=`<div style="color:var(--g4);font-size:13px;padding:8px 0">Nenhum evento em ${lbl}.</div>`;return;}
-  c.innerHTML=`<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--g4);margin-bottom:10px">${lbl}</div>`+
+  const head=`<div class="cal-day-panel"><div class="cal-day-num">${d}</div><div class="cal-day-lbl">${lbl}</div>`;
+  if(!dayEvs.length){c.innerHTML=head+`<div class="cal-day-empty">Nenhum evento neste dia.</div></div>`;return;}
+  c.innerHTML=head+'</div>'+
   dayEvs.map(ev=>`<div class="ev-card cat-${ev.tipo}" style="margin-bottom:7px" onclick="openDetail('${ev.id}')"><div class="ev-stripe"></div><div class="ev-body"><div class="ev-type-lbl">${TYPE_NAMES[ev.tipo]}</div><div class="ev-title">${ev.titulo}</div><div class="ev-meta"><span>${ev.hora.slice(0,5)}</span><span>${ev.local}</span></div></div><div class="ev-status">${ev.status}</div></div>`).join('');
 }
 

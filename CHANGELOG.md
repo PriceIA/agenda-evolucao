@@ -24,6 +24,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   como se fosse dado real.
 
 ### Alterado
+- Tela de Calendário redesenhada com visual "liquid glass": fundo em gradiente radial
+  laranja→preto, card do dia em destaque com número grande, cards de evento e mini calendário
+  em vidro translúcido (backdrop-filter com fallback sólido semi-opaco via `@supports` para
+  navegadores sem suporte). Mudança só de CSS + template visual do painel do dia em
+  `calClickDay()` — lógica, dados e perfis intactos. Somente esta tela; as demais permanecem
+  com o visual claro original.
 - Tabela `equipe` no Supabase: RLS estava habilitado sem nenhuma política, bloqueando todo
   INSERT/SELECT via anon key (erro 42501). Criada a política `anon_all_equipe` (ALL para o
   role anon). Isso é uma exceção deliberada ao padrão das demais tabelas (`config`, `eventos`,

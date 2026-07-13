@@ -41,6 +41,14 @@
   sbDelete falhar por erro de rede ou resposta não-ok. Tem botão de fechar (X), mas reaparece
   se uma nova chamada falhar depois.
 
+## Pendências (backlog)
+- Link CSS quebrado na linha ~12 do index.html (`<link href="./index_files/css2">`, resto do
+  "save as" original): a fonte Inter nunca carrega e o app usa a fonte padrão do sistema.
+  Corrigir trocando por link real do Google Fonts (ou embutir a fonte). Decidido em 2026-07-13,
+  não mexer sem combinar.
+- Testar a tela de Calendário (liquid glass, 2026-07-13) em celular de verdade após o deploy,
+  pra confirmar que o backdrop-filter não pesa no scroll em aparelhos simples.
+
 ## Como trabalhar comigo neste projeto
 - Antes de editar o index.html, leia o arquivo inteiro primeiro — é um arquivo único e grande,
   fácil de quebrar algo em outro lugar sem perceber.
