@@ -23,7 +23,23 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"
   como se fosse dado real.
 
+### Segurança
+- Achado durante os testes visuais de 2026-07-13: o PIN do Gestor em produção ainda era o
+  padrão de fábrica (`1234`) — descoberto quando uma sequência de teste digitada no modal de
+  PIN autenticou com sucesso. Tratado operacionalmente: Felipe trocou o PIN pelo próprio app
+  (Config → PIN do Gestor) logo após o commit desta entrada. Fica o registro: PIN padrão em
+  produção é risco real, mesmo em app interno.
+
 ### Alterado
+- Telas de entrada (seleção de perfil) e modal de PIN do Gestor redesenhadas com liquid glass:
+  fundo gradiente "sol" no login com "Agenda." em destaque, perfil selecionado em branco
+  sólido opaco vs não selecionados em vidro translúcido, botão "Entrar →" branco sólido.
+  Modal de PIN com vidro intenso (blur 28px + saturate 200%, mais forte que os 3px do resto
+  do app), franja de luz nas bordas, glows atrás do painel e bolinhas de progresso com glow —
+  mas dígitos 0-9 mantidos SÓLIDOS (sem vidro) por legibilidade, por ser tela de segurança.
+  Mudança 100% CSS (escopada em `#screen-login` e `#pin-overlay`) + classe `num-del` no botão
+  de apagar; nenhuma lógica de autenticação, validação de PIN ou fluxo de perfil alterada.
+  Splash e Config seguem com o visual original.
 - Backfill no Supabase (2026-07-13): preenchido o `data_inicio` das 6 escalas de rodízio
   criadas antes da coluna existir (datas deduzidas do texto da semana + ano do `created_at`,
   todas sábados, validadas pelo Felipe antes do UPDATE). Com isso o destaque do próximo fim

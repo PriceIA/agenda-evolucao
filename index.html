@@ -374,6 +374,52 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-rodizio .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
 @media(max-width:640px){#page-rodizio{margin:-16px -14px;padding:18px 14px 32px}}
 
+/* LOGIN — liquid glass (somente tela de entrada; splash e app intactos) */
+#screen-login{background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#screen-login .login-company{color:rgba(255,255,255,0.8);text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+#screen-login .login-heading{font-size:34px;font-weight:600;letter-spacing:-1px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,0.3)}
+#screen-login .login-heading span{color:#ffce9e}
+#screen-login .login-sub{color:rgba(255,255,255,0.75)}
+/* cards de perfil — vidro (fallback escuro sem blur); selecionado = branco sólido */
+#screen-login .profile-card{background:rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.4);border-radius:14px;position:relative;overflow:hidden}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #screen-login .profile-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.14)}
+}
+#screen-login .profile-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+#screen-login .profile-card:hover{border-color:rgba(255,255,255,0.7);transform:translateY(-2px)}
+#screen-login .profile-name{color:var(--white)}
+#screen-login .profile-desc{color:rgba(255,255,255,0.65)}
+#screen-login .profile-card.active{background:rgba(255,255,255,0.85);border-color:var(--white);-webkit-backdrop-filter:none;backdrop-filter:none}
+#screen-login .profile-card.active .profile-name{color:#8a3400}
+#screen-login .profile-card.active .profile-desc{color:rgba(90,45,10,0.75)}
+#screen-login .btn-enter{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+#screen-login .btn-enter:hover{background:#ffe9d6;transform:translateY(-1px)}
+
+/* PIN DO GESTOR — vidro intenso (característica de modal) */
+#pin-overlay{background:rgba(0,0,0,0.25)}
+/* glows difusos atrás do painel */
+#pin-overlay::before,#pin-overlay::after{content:'';position:absolute;width:280px;height:280px;border-radius:50%;pointer-events:none}
+#pin-overlay::before{left:calc(50% - 270px);top:calc(50% - 260px);background:radial-gradient(closest-side,rgba(255,255,255,0.35),transparent)}
+#pin-overlay::after{left:calc(50% - 10px);top:calc(50% - 20px);background:radial-gradient(closest-side,rgba(255,206,158,0.4),transparent)}
+/* painel: fallback escuro legível sem blur; com suporte, vidro forte 28px */
+#pin-overlay .pin-box{position:relative;z-index:1;background:rgba(43,22,8,0.92);border:1px solid;border-top-color:rgba(255,255,255,0.9);border-left-color:rgba(255,255,255,0.45);border-right-color:rgba(255,206,158,0.35);border-bottom-color:rgba(255,206,158,0.3);box-shadow:0 20px 50px rgba(0,0,0,0.4)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #pin-overlay{-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px)}
+  #pin-overlay .pin-box{background:linear-gradient(135deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06));-webkit-backdrop-filter:blur(28px) saturate(200%);backdrop-filter:blur(28px) saturate(200%)}
+}
+#pin-overlay .pin-title{color:var(--white)}
+#pin-overlay .pin-sub{color:rgba(255,255,255,0.7)}
+#pin-overlay .pin-dot{border-color:rgba(255,255,255,0.45)}
+#pin-overlay .pin-dot.filled{background:var(--white);border-color:var(--white);box-shadow:0 0 10px rgba(255,255,255,0.8)}
+#pin-overlay .pin-dot.error{background:var(--red);border-color:var(--red);box-shadow:0 0 10px rgba(226,75,74,0.8)}
+/* dígitos 0-9: SÓLIDOS por legibilidade (tela de segurança) — sem vidro */
+#pin-overlay .num-key{background:rgba(255,255,255,0.95);border:none;color:#2b1608;box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 2px 6px rgba(0,0,0,0.25)}
+#pin-overlay .num-key:hover{background:var(--white)}
+#pin-overlay .num-key.num-del{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.4);color:var(--white);box-shadow:none}
+#pin-overlay .num-key.num-del:hover{background:rgba(255,255,255,0.2)}
+#pin-overlay .pin-cancel{color:rgba(255,255,255,0.7)}
+#pin-overlay .pin-cancel:hover{color:var(--white)}
+
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -516,7 +562,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <button class="num-key" onclick="pinKey(&#39;1&#39;)">1</button><button class="num-key" onclick="pinKey(&#39;2&#39;)">2</button><button class="num-key" onclick="pinKey(&#39;3&#39;)">3</button>
         <button class="num-key" onclick="pinKey(&#39;4&#39;)">4</button><button class="num-key" onclick="pinKey(&#39;5&#39;)">5</button><button class="num-key" onclick="pinKey(&#39;6&#39;)">6</button>
         <button class="num-key" onclick="pinKey(&#39;7&#39;)">7</button><button class="num-key" onclick="pinKey(&#39;8&#39;)">8</button><button class="num-key" onclick="pinKey(&#39;9&#39;)">9</button>
-        <button class="num-key" style="visibility:hidden"></button><button class="num-key" onclick="pinKey(&#39;0&#39;)">0</button><button class="num-key" onclick="pinDel()" style="font-size:15px">⌫</button>
+        <button class="num-key" style="visibility:hidden"></button><button class="num-key" onclick="pinKey(&#39;0&#39;)">0</button><button class="num-key num-del" onclick="pinDel()" style="font-size:15px">⌫</button>
       </div>
       <button class="pin-cancel" onclick="closePinOverlay()">Cancelar</button>
     </div>
