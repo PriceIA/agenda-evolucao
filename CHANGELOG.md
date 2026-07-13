@@ -13,11 +13,22 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ### Adicionado
 - `CLAUDE.md` com contexto do projeto para desenvolvimento assistido por IA.
 - `README.md`, `.env.example` e `docs/schema.sql` documentando o projeto e o banco de dados.
+- `.github/workflows/ping-supabase.yml`: workflow que pinga a tabela `config` via REST API
+  2x/semana (segunda e quinta) para evitar a pausa automática do Supabase free tier por
+  inatividade. Antes disso, a documentação (CLAUDE.md/CHANGELOG) já citava essa mitigação
+  como se existisse, mas o workflow nunca tinha sido criado de fato — corrigido agora.
 
 ### Corrigido
 - Chamadas `sbGet`/`sbPost`/`sbPatch`/`sbDelete` que falham por erro de conexão agora exibem
   um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"
   como se fosse dado real.
+
+### Alterado
+- Tabela `equipe` no Supabase: RLS estava habilitado sem nenhuma política, bloqueando todo
+  INSERT/SELECT via anon key (erro 42501). Criada a política `anon_all_equipe` (ALL para o
+  role anon). Isso é uma exceção deliberada ao padrão das demais tabelas (`config`, `eventos`,
+  `rodizios`), que usam RLS desabilitado + permissão "anon_all" na Data API. Ver `CLAUDE.md`
+  para o motivo da divergência.
 
 ## [2026-07] — Estado conhecido
 

@@ -1,0 +1,27 @@
+name: Ping Supabase
+
+# Mantém o projeto Supabase (free tier) ativo, evitando a pausa automática por
+# 7 dias de inatividade. Ver "Incidente conhecido (jul/2026)" no CLAUDE.md.
+
+on:
+  schedule:
+    - cron: '0 12 * * 1,4' # segunda e quinta, 12:00 UTC (09:00 America/Sao_Paulo)
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://indapxewhfobzxnwswhy.supabase.co/rest/v1/config?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          echo "HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 400 ]; then
+            echo "::error::Supabase respondeu com status $HTTP_STATUS"
+            exit 1
+          fi
+        env:
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZGFweGV3aGZvYnp4bndzd2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjA0MzQsImV4cCI6MjA5Njg5NjQzNH0.szwfTyc3L5dXkTZxemCEdViuWWWnzgpwrBFsISZmzmc

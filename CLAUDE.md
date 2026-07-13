@@ -23,6 +23,12 @@
   instalável como PWA.
 - Tabelas conhecidas: events, rodizios, equipe (confirmar nomes exatos direto no Supabase
   Table Editor antes de assumir).
+- RLS (Row Level Security): `config`, `eventos` e `rodizios` usam RLS **desabilitado** +
+  permissão "anon_all" (ALL para role anon) na Data API. A tabela `equipe` é uma **exceção
+  deliberada** (2026-07-13): RLS fica **habilitado**, com uma política explícita
+  `anon_all_equipe` (ALL para anon, `USING (true) WITH CHECK (true)`) em vez de desabilitar o
+  RLS como nas demais. Motivo: primeiro passo de um hardening futuro do banco, feito só nessa
+  tabela por enquanto — não replicar esse padrão nas outras tabelas sem decisão explícita.
 
 ## Incidente conhecido (jul/2026)
 - Supabase free tier pausa após 7 dias de inatividade. O app engolia o erro de conexão
