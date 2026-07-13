@@ -24,6 +24,16 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   como se fosse dado real.
 
 ### Alterado
+- Tela de Rodízio redesenhada com o mesmo visual "liquid glass" das telas de Calendário e
+  Agenda: cabeçalho "Finais de semana" + título "Rodízio", um card de vidro por fim de semana
+  (a estrutura de dados é por fim de semana, não por dia) com badges PROF. em branco sólido e
+  RECEP. em vidro, botão "+ Nova escala" tracejado em vidro sutil (ação secundária, só Gestor)
+  e aviso de bloqueio em vidro para não-gestores. O card do próximo fim de semana ganha vidro
+  mais opaco — depende do campo `data_inicio`, que está nulo nas 6 escalas criadas antes da
+  coluna existir; nesses casos nenhum card é destacado (degrada sem quebrar) e escalas
+  novas/editadas ganham o destaque automaticamente. CSS escopado em `#page-rodizio` + classe
+  `rodo-next` calculada em `renderRodizio()`; lógica, dados e permissões inalterados. Config
+  e login seguem com o visual claro original.
 - Tela de Agenda redesenhada com o mesmo visual "liquid glass" do Calendário: fundo em
   gradiente radial laranja→preto com glow no canto superior direito, cabeçalho com data do dia
   e título "Agenda" (antes "Eventos"), stats/cards/timeline em vidro translúcido (mesmo

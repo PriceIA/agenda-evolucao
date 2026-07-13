@@ -344,6 +344,36 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-agenda .cat-entrevista .tl-dot{background:var(--white)}
 @media(max-width:640px){#page-agenda{margin:-16px -14px;padding:18px 14px 32px}}
 
+/* RODIZIO — liquid glass (somente esta tela; mesma base do Calendário/Agenda) */
+#page-rodizio{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-rodizio .rodizio-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+#page-rodizio .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-rodizio .rodo-card{background:rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+#page-rodizio .rodo-card.rodo-next{background:rgba(43,22,8,0.7);border-color:rgba(255,255,255,0.55)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-rodizio .rodo-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.10)}
+  #page-rodizio .rodo-card.rodo-next{background:rgba(255,255,255,0.14)}
+}
+#page-rodizio .rodo-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+#page-rodizio .rodo-week{color:var(--white);font-size:13px;font-weight:600}
+#page-rodizio .rodo-person{border-color:rgba(255,255,255,0.3)}
+#page-rodizio .rodo-name{color:var(--white)}
+#page-rodizio .rodo-role-tag{color:rgba(255,255,255,0.65)}
+#page-rodizio .rodo-type-badge.prof{background:var(--white);color:#8a3400}
+#page-rodizio .rodo-type-badge.rec{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.4)}
+#page-rodizio .rodo-btn{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.8)}
+#page-rodizio .rodo-btn:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
+#page-rodizio .rodo-btn.del:hover{border-color:#ff9d9d;color:#ff9d9d}
+#page-rodizio .rodo-btn.edit-btn:hover{border-color:#9ec8ff;color:#9ec8ff}
+#page-rodizio .btn-add{background:rgba(255,255,255,0.08);border:1.5px dashed rgba(255,255,255,0.55);color:var(--white)}
+#page-rodizio .btn-add:hover{background:rgba(255,255,255,0.14)}
+#page-rodizio .lock-notice{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.85)}
+#page-rodizio .empty{color:rgba(255,255,255,0.75)}
+#page-rodizio .loading-state{color:rgba(255,255,255,0.75)}
+#page-rodizio .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
+@media(max-width:640px){#page-rodizio{margin:-16px -14px;padding:18px 14px 32px}}
+
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -543,7 +573,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
       <!-- RODIZIO -->
       <div class="page" id="page-rodizio">
         <div class="sec-head">
-          <div class="sec-title">Escala — Finais de Semana</div>
+          <div><div class="rodizio-kicker">Finais de semana</div><div class="sec-title">Rodízio</div></div>
           <button class="btn-add" id="btn-nova-escala" onclick="openRodoModal()" style="display:none">+ Nova escala</button>
         </div>
         <div class="lock-notice" id="lock-rodizio" style="display:none">🔒 Apenas gestores podem editar a escala.</div>
@@ -1105,10 +1135,12 @@ function renderRodizio(){
     return da.localeCompare(db);
   });
   if(!sorted.length){document.getElementById('rodizio-container').innerHTML='<div class="empty" style="grid-column:1/-1">Nenhuma escala cadastrada.</div>';return;}
+  const yestStr=dateToStr(new Date(Date.now()-86400000));
+  const nextIdx=sorted.findIndex(r=>(r.data_inicio||'')>=yestStr);
   document.getElementById('rodizio-container').innerHTML=sorted.map((r,i)=>{
     const pc=AV_COLORS[r.prof_color||0],rc=AV_COLORS[r.recep_color||1];
     const profInit=getInitials(r.prof_nome);const recepInit=getInitials(r.recep_nome);
-    return`<div class="rodo-card" style="animation-delay:${i*55}ms">
+    return`<div class="rodo-card${i===nextIdx?' rodo-next':''}" style="animation-delay:${i*55}ms">
       <div class="rodo-week">
         <span>${r.semana}</span>
         ${r.recorrente?`<span style="font-size:9px;background:var(--orange-l);color:#C24510;padding:2px 7px;border-radius:6px;font-weight:700">↻</span>`:''}
