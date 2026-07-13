@@ -284,6 +284,66 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-calendario .cat-outro .ev-type-lbl{color:rgba(255,255,255,0.7)}
 @media(max-width:640px){#page-calendario{margin:-16px -14px;padding:18px 14px 32px}}
 
+/* AGENDA — liquid glass (somente esta tela; mesma base do Calendário) */
+#page-agenda{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-agenda .agenda-date{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px}
+#page-agenda .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-agenda .stat,#page-agenda .ev-card,#page-agenda .tl-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-agenda .stat,#page-agenda .ev-card,#page-agenda .tl-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%)}
+  #page-agenda .stat,#page-agenda .tl-card{background:rgba(255,255,255,0.12)}
+  #page-agenda .ev-card{background:rgba(255,255,255,0.14)}
+  #page-agenda .ev-card.cat-reuniao{background:rgba(255,255,255,0.16)}
+}
+#page-agenda .stat::before,#page-agenda .ev-card::before,#page-agenda .tl-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+/* destaque de reuniões: barra lateral branca de 3px com leve glow */
+#page-agenda .ev-card.cat-reuniao{border-left:3px solid rgba(255,255,255,0.95);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 10px 0 18px -10px rgba(255,255,255,0.55)}
+#page-agenda .stat-n{color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.35)}
+#page-agenda .stat.accent .stat-n{color:var(--white)}
+#page-agenda .stat-l{color:rgba(255,255,255,0.75);text-shadow:0 1px 4px rgba(0,0,0,0.3)}
+#page-agenda .agenda-date{text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+#page-agenda .view-toggle{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3)}
+#page-agenda .view-btn{color:rgba(255,255,255,0.75)}
+#page-agenda .view-btn.active{background:var(--white);color:#8a3400;box-shadow:none}
+#page-agenda .btn-add{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+#page-agenda .btn-add:hover{background:#ffe9d6}
+#page-agenda .filter-chips .chip{background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.9)}
+#page-agenda .filter-chips .chip:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
+#page-agenda .filter-chips .chip.on,#page-agenda .filter-chips .chip.on.orange{background:var(--white);border-color:var(--white);color:#8a3400}
+/* linha do evento: hora à esquerda, fora do card */
+#page-agenda .ev-row{display:flex;gap:12px;align-items:flex-start;animation:cardIn 0.32s ease both}
+#page-agenda .ev-time-col{width:46px;flex-shrink:0;text-align:right;padding-top:14px}
+#page-agenda .ev-time{font-size:14px;font-weight:700;color:var(--white)}
+#page-agenda .ev-time-date{font-size:9.5px;font-weight:600;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.4px;margin-top:2px}
+#page-agenda .ev-row .ev-card{flex:1;min-width:0}
+#page-agenda .ev-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.45);color:var(--white);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#page-agenda .ev-card .ev-title{color:var(--white)}
+#page-agenda .ev-card .ev-meta{color:rgba(255,255,255,0.7)}
+#page-agenda .ev-card:hover{border-color:rgba(255,255,255,0.6)}
+#page-agenda .ev-btn{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.8)}
+#page-agenda .cat-reuniao .ev-type-lbl{color:#ffb066}
+#page-agenda .cat-rodizio .ev-type-lbl{color:#ffd68a}
+#page-agenda .cat-entrevista .ev-type-lbl{color:rgba(255,255,255,0.85)}
+#page-agenda .cat-outro .ev-type-lbl{color:rgba(255,255,255,0.7)}
+#page-agenda .empty{color:rgba(255,255,255,0.75)}
+#page-agenda .loading-state{color:rgba(255,255,255,0.75)}
+#page-agenda .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
+/* timeline sobre o gradiente */
+#page-agenda .tl-month-label{color:rgba(255,255,255,0.6)}
+#page-agenda .tl-items::before{background:rgba(255,255,255,0.25)}
+#page-agenda .tl-day{color:var(--white)}
+#page-agenda .tl-dayname{color:rgba(255,255,255,0.6)}
+#page-agenda .tl-divider-v{background:rgba(255,255,255,0.3)}
+#page-agenda .tl-title{color:var(--white)}
+#page-agenda .tl-meta{color:rgba(255,255,255,0.7)}
+#page-agenda .cat-reuniao .tl-type{color:#ffb066}
+#page-agenda .cat-rodizio .tl-type{color:#ffd68a}
+#page-agenda .cat-entrevista .tl-type{color:rgba(255,255,255,0.85)}
+#page-agenda .cat-outro .tl-type{color:rgba(255,255,255,0.7)}
+#page-agenda .cat-entrevista .tl-dot{background:var(--white)}
+@media(max-width:640px){#page-agenda{margin:-16px -14px;padding:18px 14px 32px}}
+
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -459,6 +519,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
     <div class="app-content">
       <!-- AGENDA -->
       <div class="page active" id="page-agenda">
+        <div class="agenda-date" id="agenda-date"></div>
         <div class="stats-row">
           <div class="stat accent"><div class="stat-n" id="cnt-total">—</div><div class="stat-l">Total</div></div>
           <div class="stat"><div class="stat-n" id="cnt-reuniao">—</div><div class="stat-l">Reuniões</div></div>
@@ -466,7 +527,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <div class="stat"><div class="stat-n" id="cnt-entrevista">—</div><div class="stat-l">Entrevistas</div></div>
         </div>
         <div class="sec-head">
-          <div class="sec-title">Eventos<div class="view-toggle"><button class="view-btn active" onclick="setView(&#39;cards&#39;,this)">Cards</button><button class="view-btn" onclick="setView(&#39;timeline&#39;,this)">Timeline</button></div></div>
+          <div class="sec-title">Agenda<div class="view-toggle"><button class="view-btn active" onclick="setView(&#39;cards&#39;,this)">Cards</button><button class="view-btn" onclick="setView(&#39;timeline&#39;,this)">Timeline</button></div></div>
           <div class="sec-actions"><button class="btn-add" id="btn-novo" onclick="openModal()" style="display:none">+ Novo</button></div>
         </div>
         <div class="filter-chips">
@@ -836,6 +897,7 @@ async function enterApp(role){
   const badge=document.getElementById('role-badge');
   badge.textContent={gestor:'Gestor',professor:'Professor',recepcao:'Recepção'}[role]||role;
   badge.className='role-badge '+role;
+  document.getElementById('agenda-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
   const isG=role==='gestor';
   document.getElementById('btn-novo').style.display=isG?'flex':'none';
   document.getElementById('btn-nova-escala').style.display=isG?'flex':'none';
@@ -915,19 +977,21 @@ function renderEvents(){
     c.innerHTML=sorted.map((ev,i)=>{
       const vl=getVisLabel(ev.visibilidade);
       const hasAta=ev.ata&&ev.ata.length>0;
-      return`<div class="ev-card cat-${ev.tipo}" style="animation-delay:${Math.min(i,12)*35}ms" onclick="openDetail('${ev.id}')">
-        <div class="ev-stripe"></div>
+      return`<div class="ev-row" style="animation-delay:${Math.min(i,12)*35}ms">
+        <div class="ev-time-col"><div class="ev-time">${ev.hora.slice(0,5)}</div><div class="ev-time-date">${fmtDate(ev.data)}</div></div>
+        <div class="ev-card cat-${ev.tipo}" onclick="openDetail('${ev.id}')">
+        <div class="ev-avatar">${getInitials(ev.titulo)}</div>
         <div class="ev-body">
           <div class="ev-type-lbl">${TYPE_NAMES[ev.tipo]||'Evento'}${ev.recorrente?' · ↻':''}${hasAta?' · 📋':''}</div>
           <div class="ev-title">${ev.titulo}</div>
-          <div class="ev-meta"><span>${fmtDate(ev.data)}</span><span>${ev.hora.slice(0,5)}</span><span>${ev.local}</span></div>
+          <div class="ev-meta"><span>${ev.participantes||'—'}</span><span>${ev.local}</span></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
           ${isG?`<span class="vis-badge ${vl.cls}">${vl.label}</span>`:''}
           <div class="ev-status">${ev.status}</div>
         </div>
         ${isG?`<div style="display:flex;gap:4px"><button class="ev-btn edit" onclick="event.stopPropagation();editEvent('${ev.id}')" title="Editar">✏️</button><button class="ev-btn" onclick="event.stopPropagation();deleteEv('${ev.id}','${ev.recur_group||''}',${!!ev.recorrente})">✕</button></div>`:''}
-      </div>`;
+      </div></div>`;
     }).join('');
   }else{renderTimeline(sorted,isG);}
 }

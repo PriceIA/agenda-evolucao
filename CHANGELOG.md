@@ -24,6 +24,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   como se fosse dado real.
 
 ### Alterado
+- Tela de Agenda redesenhada com o mesmo visual "liquid glass" do Calendário: fundo em
+  gradiente radial laranja→preto com glow no canto superior direito, cabeçalho com data do dia
+  e título "Agenda" (antes "Eventos"), stats/cards/timeline em vidro translúcido (mesmo
+  fallback `@supports`), hora do evento à esquerda fora do card com avatar circular de
+  iniciais, reuniões com destaque (vidro mais opaco + barra lateral branca), filtros em pills
+  (ativo branco sólido) e botão "+ Novo" em branco sólido para contraste máximo. Mudança
+  visual: CSS escopado em `#page-agenda` + template dos cards em `renderEvents()`; lógica,
+  dados, filtros e permissões por perfil inalterados. Rodízio e Config seguem com o visual
+  claro original.
 - Tela de Calendário redesenhada com visual "liquid glass": fundo em gradiente radial
   laranja→preto, card do dia em destaque com número grande, cards de evento e mini calendário
   em vidro translúcido (backdrop-filter com fallback sólido semi-opaco via `@supports` para

@@ -46,8 +46,8 @@
   "save as" original): a fonte Inter nunca carrega e o app usa a fonte padrão do sistema.
   Corrigir trocando por link real do Google Fonts (ou embutir a fonte). Decidido em 2026-07-13,
   não mexer sem combinar.
-- Testar a tela de Calendário (liquid glass, 2026-07-13) em celular de verdade após o deploy,
-  pra confirmar que o backdrop-filter não pesa no scroll em aparelhos simples.
+- ~~Testar a tela de Calendário (liquid glass) em celular de verdade~~ — feito em 2026-07-13,
+  scroll OK em aparelho físico; o estilo foi estendido pra tela de Agenda na sequência.
 
 ## Como trabalhar comigo neste projeto
 - Antes de editar o index.html, leia o arquivo inteiro primeiro — é um arquivo único e grande,
