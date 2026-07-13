@@ -24,6 +24,10 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   como se fosse dado real.
 
 ### Alterado
+- Backfill no Supabase (2026-07-13): preenchido o `data_inicio` das 6 escalas de rodízio
+  criadas antes da coluna existir (datas deduzidas do texto da semana + ano do `created_at`,
+  todas sábados, validadas pelo Felipe antes do UPDATE). Com isso o destaque do próximo fim
+  de semana e a ordenação cronológica passaram a funcionar em produção.
 - Tela de Rodízio redesenhada com o mesmo visual "liquid glass" das telas de Calendário e
   Agenda: cabeçalho "Finais de semana" + título "Rodízio", um card de vidro por fim de semana
   (a estrutura de dados é por fim de semana, não por dia) com badges PROF. em branco sólido e
