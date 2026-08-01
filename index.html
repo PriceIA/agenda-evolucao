@@ -369,6 +369,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-treinos .treino-status.st-pendente{background:var(--white);color:#8a3400}
 #page-treinos .treino-status.st-montado{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.4)}
 #page-treinos .treino-status.st-cancelado{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.25)}
+#page-treinos .btn-add{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+#page-treinos .btn-add:hover{background:#ffe9d6}
 #page-treinos .empty{color:rgba(255,255,255,0.75)}
 #page-treinos .loading-state{color:rgba(255,255,255,0.75)}
 #page-treinos .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
@@ -532,10 +534,10 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .cargo-tab.on{background:var(--orange);color:var(--white);border-color:var(--orange)}
 .cfg-note{font-size:12px;color:var(--g3);line-height:1.5;margin-bottom:12px}
 
-/* TROCAR SENHA */
-.pwd-msg{display:none;font-size:12px;font-weight:600;line-height:1.45;border-radius:8px;padding:9px 11px;margin-bottom:13px}
-.pwd-msg.ok{display:block;background:var(--green-l);color:var(--green);border:1.5px solid var(--green)}
-.pwd-msg.err{display:block;background:#FEF2F2;color:#B91C1C;border:1.5px solid #B91C1C}
+/* MENSAGENS DE FORMULÁRIO (trocar senha, novo treino) */
+.pwd-msg,.form-msg{display:none;font-size:12px;font-weight:600;line-height:1.45;border-radius:8px;padding:9px 11px;margin-bottom:13px}
+.pwd-msg.ok,.form-msg.ok{display:block;background:var(--green-l);color:var(--green);border:1.5px solid var(--green)}
+.pwd-msg.err,.form-msg.err{display:block;background:#FEF2F2;color:#B91C1C;border:1.5px solid #B91C1C}
 
 /* EXPORT */
 .export-modal{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
@@ -700,6 +702,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
       <div class="page" id="page-treinos">
         <div class="sec-head">
           <div><div class="treinos-kicker">Montagem de treinos</div><div class="sec-title">Treinos</div></div>
+          <button class="btn-add" id="btn-novo-treino" onclick="openTreinoModal()" style="display:none">+ Novo treino</button>
         </div>
         <div class="treinos-grid" id="treinos-container"></div>
       </div>
@@ -860,6 +863,31 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
       </div>
     </div>
 
+    <!-- NOVO TREINO (padrão branco dos demais modais) -->
+    <div class="modal-bg" id="treino-modal" onclick="if(event.target===this)closeTreinoModal()">
+      <div class="modal-box" style="width:400px">
+        <div class="modal-hd"><div class="modal-ttl">Novo treino</div><button class="modal-cls" onclick="closeTreinoModal()">✕</button></div>
+        <div class="modal-bd">
+          <div class="form-msg" id="treino-msg"></div>
+          <label class="flabel" for="treino-aluno">Nome do aluno</label>
+          <!-- datalist: autocomplete nativo com os nomes já cadastrados, sem lib -->
+          <input class="finput" id="treino-aluno" type="text" placeholder="Ex: Bruno Carvalho" list="treino-alunos-list" autocomplete="off">
+          <datalist id="treino-alunos-list"></datalist>
+          <label class="flabel" for="treino-professor">Professor destino</label>
+          <select class="finput" id="treino-professor"></select>
+          <label class="flabel">Data da solicitação</label>
+          <div class="date-picker-wrap" id="treino-date-wrap">
+            <div class="date-display" id="treino-date-display" onclick="toggleDatePicker(&#39;treino&#39;)">
+              <span class="date-display-text" id="treino-date-text">Selecione a data</span>
+              <span class="date-display-icon">📅</span>
+            </div>
+            <div class="cal-dropdown" id="treino-date-cal"></div>
+          </div>
+        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closeTreinoModal()">Cancelar</button><button class="btn-save" id="btn-save-treino" onclick="saveTreino()">Criar treino</button></div>
+      </div>
+    </div>
+
     <!-- TROCAR SENHA -->
     <!-- Segue o padrão dos modais brancos do app (Novo Evento / Nova Escala).
          O vidro intenso era característica só do overlay de PIN, que não existe mais. -->
@@ -947,8 +975,8 @@ let editingEvId=null,editingRodoId=null;
 let currentCargo='Professor';
 
 // Date picker state
-let dpDates={ev:null,recur:null,rodo:null,'rodo-recur':null};
-let dpCals={ev:new Date(),recur:new Date(),rodo:new Date(),'rodo-recur':new Date()};
+let dpDates={ev:null,recur:null,rodo:null,'rodo-recur':null,treino:null};
+let dpCals={ev:new Date(),recur:new Date(),rodo:new Date(),'rodo-recur':new Date(),treino:new Date()};
 let selectedProf=null,selectedRecep=null;
 
 // Toast
@@ -1000,7 +1028,13 @@ function toggleDatePicker(key){
   document.querySelectorAll('.cal-dropdown.open').forEach(c=>c.classList.remove('open'));
   document.querySelectorAll('.date-display.open').forEach(c=>c.classList.remove('open'));
   document.querySelectorAll('.team-dropdown.open').forEach(c=>c.classList.remove('open'));
-  if(!isOpen){cal.classList.add('open');disp.classList.add('open');renderDateCal(key);}
+  if(!isOpen){
+    cal.classList.add('open');disp.classList.add('open');renderDateCal(key);
+    // Dentro de modal (que rola), o calendário abre parcialmente fora da área
+    // visível e o usuário não percebe que precisa rolar. Traz ele à vista.
+    // Vale para TODOS os date pickers do app, não só o de treino.
+    setTimeout(()=>{try{cal.scrollIntoView({block:'nearest'});}catch(e){}},0);
+  }
 }
 
 // TEAM SELECT
@@ -1165,6 +1199,7 @@ async function enterApp(role){
   document.getElementById('btn-nova-escala').style.display=isG?'flex':'none';
   document.getElementById('lock-rodizio').style.display=isG?'none':'flex';
   document.getElementById('nav-config').style.display=isG?'block':'none';
+  document.getElementById('btn-novo-treino').style.display=podeCadastrarTreino()?'flex':'none';
   if(isG){document.getElementById('cfg-company').value=companyName;document.getElementById('cfg-short').value=companyShort;}
   document.getElementById('cards-view').innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
   document.getElementById('rodizio-container').innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
@@ -1474,6 +1509,15 @@ async function loadTreinos(){
   updateTreinosBadge();
 }
 
+// Escapa texto vindo do usuário antes de entrar em innerHTML. O resto do app
+// ainda interpola direto (padrão antigo) — aqui já vai correto.
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// Só recepção e gestor cadastram. Isto é CONVENIÊNCIA DE INTERFACE, não segurança:
+// quem garante é a policy de INSERT no banco. Se alguém forçar pelo DevTools, o
+// INSERT é recusado e a mensagem de erro aparece na tela.
+function podeCadastrarTreino(){return currentRole==='gestor'||currentRole==='recepcao';}
+
 // Contador de pendentes. Conta em cima do que o RLS já entregou: para professor
 // são só os treinos dele, para gestor/recepção é o total. Nenhum filtro de perfil
 // aqui — se aparecesse, seria duplicar no cliente a regra que já é do banco.
@@ -1508,19 +1552,96 @@ function renderTreinos(){
     const st=STATUS_TREINO_ORDEM[t.status]!==undefined?t.status:'pendente';
     const montado=t.status==='montado';
     return`<div class="treino-card st-${st}" style="animation-delay:${Math.min(i,12)*35}ms">
-      <div class="treino-avatar">${getInitials(t.aluno_nome)}</div>
+      <div class="treino-avatar">${esc(getInitials(t.aluno_nome))}</div>
       <div class="treino-body">
-        <div class="treino-aluno">${t.aluno_nome||'—'}</div>
+        <div class="treino-aluno">${esc(t.aluno_nome)||'—'}</div>
         <div class="treino-meta">
-          <span>👤 ${prof}</span>
+          <span>👤 ${esc(prof)}</span>
           <span>📅 Solicitado ${fmtDate(t.data_solicitacao)}</span>
           ${t.data_inicio_desejada?`<span>▶ Início ${fmtDate(t.data_inicio_desejada)}</span>`:''}
         </div>
-        ${montado?`<div class="treino-montagem">✅ Montado ${fmtDataHora(t.data_montagem)} por ${nomeEquipe(t.montador,t.montado_por)}</div>`:''}
+        ${montado?`<div class="treino-montagem">✅ Montado ${fmtDataHora(t.data_montagem)} por ${esc(nomeEquipe(t.montador,t.montado_por))}</div>`:''}
       </div>
       <div class="treino-status st-${st}">${st}</div>
     </div>`;
   }).join('');
+}
+
+// NOVO TREINO — cadastro (recepção e gestor)
+function showTreinoMsg(msg,ok){const el=document.getElementById('treino-msg');el.textContent=msg;el.className='form-msg '+(ok?'ok':'err');}
+function clearTreinoMsg(){const el=document.getElementById('treino-msg');el.textContent='';el.className='form-msg';}
+
+function preencherProfessoresSelect(){
+  const sel=document.getElementById('treino-professor');
+  const profs=equipe.filter(e=>e.perfil==='professor'&&e.ativo).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
+  sel.innerHTML='<option value="">Selecione o professor</option>'+profs.map(p=>`<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join('');
+  return profs.length;
+}
+// Autocomplete dos alunos: nomes distintos já gravados, tirados da lista que o
+// RLS entregou (quem cadastra é recepção/gestor, que enxerga todas as linhas).
+function renderAlunosDatalist(){
+  const nomes=[...new Set(treinos.map(t=>(t.aluno_nome||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  document.getElementById('treino-alunos-list').innerHTML=nomes.map(n=>`<option value="${esc(n)}"></option>`).join('');
+}
+
+function openTreinoModal(){
+  clearTreinoMsg();
+  document.getElementById('treino-aluno').value='';
+  const qtdProfs=preencherProfessoresSelect();
+  renderAlunosDatalist();
+  // data de solicitação: hoje por padrão, mas editável
+  const hoje=new Date();
+  dpDates.treino=dateToStr(hoje);
+  dpCals.treino=new Date(hoje.getFullYear(),hoje.getMonth(),1);
+  const txt=document.getElementById('treino-date-text');
+  txt.textContent=`${hoje.getDate()} de ${MONTHS[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+  txt.style.color='var(--black)';
+  if(!qtdProfs)showTreinoMsg('Nenhum professor ativo cadastrado. Cadastre em Configurações → Equipe antes de criar um treino.',false);
+  document.getElementById('treino-modal').classList.add('open');
+}
+function closeTreinoModal(){
+  document.getElementById('treino-modal').classList.remove('open');
+  document.getElementById('treino-aluno').value='';
+  clearTreinoMsg();
+}
+
+function traduzErroTreino(error){
+  const m=((error&&error.message)||'')+' '+((error&&error.code)||'');
+  if(/row-level security|violates row|42501|permission denied/i.test(m))return'Você não tem permissão para cadastrar treinos. Fale com o gestor.';
+  if(/foreign key/i.test(m))return'O professor selecionado não existe mais. Recarregue a página e tente de novo.';
+  if(/check constraint/i.test(m))return'Algum campo ficou com valor inválido. Recarregue a página e tente de novo.';
+  if(/duplicate key/i.test(m))return'Esse treino já foi cadastrado.';
+  return'Não foi possível cadastrar o treino. Tente de novo em alguns instantes.';
+}
+
+async function saveTreino(){
+  clearTreinoMsg();
+  if(!sbClient){showTreinoMsg('O componente de login não carregou. Recarregue a página.',false);return;}
+  const aluno=document.getElementById('treino-aluno').value.trim();
+  const professorId=document.getElementById('treino-professor').value;
+  const data=dpDates.treino;
+  if(!aluno){showTreinoMsg('Digite o nome do aluno.',false);return;}
+  if(!professorId){showTreinoMsg('Selecione o professor destino.',false);return;}
+  if(!data){showTreinoMsg('Selecione a data da solicitação.',false);return;}
+  if(!currentEquipeId){showTreinoMsg('Sua conta não está vinculada a ninguém na equipe — avise o gestor.',false);return;}
+  const btn=document.getElementById('btn-save-treino');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const{error}=await sbClient.from('montagem_treinos').insert({
+      aluno_nome:aluno,
+      professor_id:professorId,
+      data_solicitacao:data,
+      avaliador_id:currentEquipeId,
+      status:'pendente'
+    });
+    // Nunca engolir: erro de policy chega aqui e vira mensagem na tela.
+    if(error){console.error('Erro ao cadastrar treino:',error);showTreinoMsg(traduzErroTreino(error),false);return;}
+    closeTreinoModal();
+    toast('✅ Treino cadastrado');
+    await loadTreinos();   // relê do banco: lista e badge saem consistentes
+  }catch(err){
+    console.error('Erro inesperado ao cadastrar treino:',err);
+    showTreinoMsg('Não foi possível conectar. Verifique sua internet e tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent='Criar treino';}
 }
 
 // CALENDAR PAGE
