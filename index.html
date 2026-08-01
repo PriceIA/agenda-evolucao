@@ -78,6 +78,14 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .role-badge.recepcao{background:var(--green);color:var(--white)}
 .tb-btn{padding:6px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--g3);background:none;font-family:'Inter',sans-serif;transition:all 0.15s}
 .tb-btn:hover{border-color:var(--g4);color:var(--black)}
+/* menu "mais opções" — só existe no mobile; no desktop os 3 botões ficam visíveis */
+.tb-more-wrap{display:none;position:relative}
+.tb-more{padding:6px 10px;font-size:14px;line-height:1}
+.tb-more-menu{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1.5px solid var(--bd);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:200;min-width:180px;overflow:hidden}
+.tb-more-menu.open{display:block}
+.tb-more-menu button{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--g2);cursor:pointer}
+.tb-more-menu button:hover{background:var(--off)}
+.tb-more-menu button+button{border-top:1px solid var(--bd)}
 .app-content{flex:1;overflow-y:auto;padding:22px 24px}
 .page{display:none;animation:fadeUp 0.3s ease both}
 .page.active{display:block}
@@ -539,7 +547,34 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .export-opt-desc{font-size:11px;color:var(--g4);margin-top:2px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--black);color:var(--white);padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
-@media(max-width:640px){.stats-row{grid-template-columns:repeat(2,1fr)}.rodizio-grid{grid-template-columns:1fr}.topbar{padding:0 14px}.app-content{padding:16px 14px}.tb-nav-item{padding:5px 7px;font-size:11px}.login-card,.btn-enter,.login-form{width:290px}}
+@media(max-width:640px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .rodizio-grid{grid-template-columns:1fr}
+  .app-content{padding:16px 14px}
+  .login-card,.btn-enter,.login-form{width:290px}
+  /* TOPBAR EM DUAS LINHAS.
+     Linha 1: marca + nome/badge + ☰   |   Linha 2: menu de abas, largura inteira.
+     Motivo: só o conteúdo da direita (nome+badge+3 botões) já pedia ~395px, e a
+     esquerda outros ~469px — não cabem lado a lado em ~390px de tela.
+     `display:contents` no .tb-left promove os filhos a itens do flex da .topbar,
+     permitindo reordenar sem mexer no HTML nem no desktop. */
+  .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;row-gap:8px}
+  .tb-left{display:contents}
+  .tb-wordmark{order:1}
+  .tb-div{display:none}
+  .tb-right{order:2;margin-left:auto;gap:6px}
+  .tb-user{max-width:90px;font-size:11.5px}
+  /* os 3 botões viram itens do dropdown (o ☰ não é filho direto, então escapa) */
+  .tb-right>.tb-btn{display:none}
+  .tb-more-wrap{display:block}
+  /* abas: rolagem horizontal, sem barra visível. Com 5 abas elas costumam caber
+     inteiras; a rolagem é seguro para telas estreitas ou uma aba a mais no futuro. */
+  .tb-nav{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+  .tb-nav::-webkit-scrollbar{display:none}
+  .tb-nav-item{padding:5px 7px;font-size:11px;flex:0 0 auto;scroll-snap-align:start}
+  /* a topbar de 2 linhas é mais alta que os 56px fixos usados nas telas de vidro */
+  #page-agenda,#page-rodizio,#page-calendario,#page-treinos,#page-config{min-height:calc(100vh - 100px)}
+}
 </style>
 </head>
 <body>
@@ -599,6 +634,15 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <button class="tb-btn" onclick="openPwdModal()" title="Trocar minha senha">🔑 Senha</button>
         <button class="tb-btn" onclick="openExport()">↑ Exportar</button>
         <button class="tb-btn" onclick="logout()">Sair</button>
+        <!-- mesmas 3 ações, agrupadas; só aparece no mobile via CSS -->
+        <div class="tb-more-wrap">
+          <button class="tb-btn tb-more" onclick="toggleTbMore(event)" aria-label="Mais opções" aria-haspopup="true">☰</button>
+          <div class="tb-more-menu" id="tb-more-menu">
+            <button onclick="closeTbMore();openPwdModal()">🔑 Trocar senha</button>
+            <button onclick="closeTbMore();openExport()">↑ Exportar</button>
+            <button onclick="closeTbMore();logout()">Sair</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -993,7 +1037,12 @@ document.addEventListener('click',e=>{
     document.querySelectorAll('.team-dropdown.open').forEach(c=>c.classList.remove('open'));
     document.querySelectorAll('.team-select-btn.open').forEach(c=>c.classList.remove('open'));
   }
+  if(!e.target.closest('.tb-more-wrap'))closeTbMore();
 });
+
+// Menu "mais opções" da topbar (mobile)
+function toggleTbMore(e){if(e)e.stopPropagation();document.getElementById('tb-more-menu').classList.toggle('open');}
+function closeTbMore(){const m=document.getElementById('tb-more-menu');if(m)m.classList.remove('open');}
 
 // SPLASH + BOOT
 async function runSplash(){
@@ -1132,7 +1181,10 @@ async function logout(){
   clearLoginError();
   goPageDirect('agenda');
 }
-function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');if(name==='treinos')loadTreinos();}
+function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');
+  // no mobile o menu rola na horizontal: garante que a aba escolhida fique visível
+  try{el.scrollIntoView({inline:'nearest',block:'nearest'});}catch(e){}
+  if(name==='treinos')loadTreinos();}
 function goPageDirect(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));document.querySelector('.tb-nav-item').classList.add('active');}
 
 function showNotif(){
