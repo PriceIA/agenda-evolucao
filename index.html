@@ -39,34 +39,17 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .login-company{font-size:11px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--g4);margin-bottom:16px;text-align:center}
 .login-heading{font-size:46px;font-weight:900;line-height:1;letter-spacing:-2.5px;text-align:center}
 .login-heading span{color:var(--orange)}
-.login-sub{font-size:14px;color:var(--g3);margin-top:10px;margin-bottom:32px;text-align:center}
-.profile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:320px;margin-bottom:28px}
-.profile-card{padding:16px 8px;border:1.5px solid var(--bd);border-radius:12px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--white)}
-.profile-card:hover{border-color:var(--g4);transform:translateY(-2px)}
-.profile-card.active{border-color:var(--orange);background:var(--orange-l)}
-.profile-icon{font-size:24px;margin-bottom:6px}
-.profile-name{font-size:12px;font-weight:700;color:var(--g2)}
-.profile-card.active .profile-name{color:#C24510}
-.profile-desc{font-size:10px;color:var(--g4);margin-top:2px}
+.login-sub{font-size:14px;color:var(--g3);margin-top:10px;margin-bottom:26px;text-align:center}
+.login-card{width:320px;padding:22px;margin-bottom:18px}
+.login-card .flabel{margin-top:2px}
+.login-card .finput:last-of-type{margin-bottom:0}
+.login-error{display:none;font-size:12px;font-weight:600;line-height:1.45;border-radius:9px;padding:10px 12px;margin-bottom:16px}
+.login-error.show{display:block}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.login-card.shake{animation:shake 0.3s ease}
 .btn-enter{background:var(--black);color:var(--white);border:none;padding:14px 44px;border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;width:320px}
 .btn-enter:hover{background:var(--g1);transform:translateY(-1px)}
-
-/* PIN */
-#pin-overlay{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.6);z-index:400;align-items:center;justify-content:center}
-#pin-overlay.open{display:flex}
-.pin-box{background:var(--white);border-radius:16px;padding:32px;text-align:center;width:300px}
-.pin-title{font-size:16px;font-weight:800;margin-bottom:4px}
-.pin-sub{font-size:12px;color:var(--g4);margin-bottom:24px}
-.pin-dots{display:flex;gap:14px;justify-content:center;margin-bottom:24px}
-.pin-dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--g5);transition:all 0.2s}
-.pin-dot.filled{background:var(--orange);border-color:var(--orange);transform:scale(1.15)}
-.pin-dot.error{background:var(--red);border-color:var(--red);animation:shake 0.3s ease}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-.numpad{display:grid;grid-template-columns:repeat(3,64px);gap:9px;justify-content:center;margin-bottom:14px}
-.num-key{width:64px;height:48px;border-radius:10px;border:1.5px solid var(--bd);background:var(--white);font-family:'Inter',sans-serif;font-size:18px;font-weight:700;cursor:pointer;color:var(--black);transition:all 0.12s;display:flex;align-items:center;justify-content:center}
-.num-key:hover{border-color:var(--g4);background:var(--off)}
-.num-key:active{transform:scale(0.91)}
-.pin-cancel{background:none;border:none;color:var(--g4);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;padding:4px}
+.btn-enter:disabled{opacity:0.6;cursor:not-allowed;transform:none}
 
 /* MAIN APP */
 #screen-app{background:var(--off);display:flex;flex-direction:column}
@@ -88,6 +71,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .tb-nav-item:hover{color:var(--black);background:var(--off)}
 .tb-nav-item.active{color:var(--black);background:var(--off2);font-weight:700}
 .tb-right{display:flex;align-items:center;gap:8px}
+.tb-user{font-size:12px;font-weight:600;color:var(--g2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .role-badge{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px}
 .role-badge.gestor{background:var(--orange);color:var(--white)}
 .role-badge.professor{background:var(--blue);color:var(--white)}
@@ -380,45 +364,21 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #screen-login .login-heading{font-size:34px;font-weight:600;letter-spacing:-1px;color:var(--white);text-shadow:0 2px 8px rgba(0,0,0,0.3)}
 #screen-login .login-heading span{color:#ffce9e}
 #screen-login .login-sub{color:rgba(255,255,255,0.75)}
-/* cards de perfil — vidro (fallback escuro sem blur); selecionado = branco sólido */
-#screen-login .profile-card{background:rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.4);border-radius:14px;position:relative;overflow:hidden}
+/* card do formulário — vidro (fallback escuro sem blur), mesma base do Calendário/Agenda */
+#screen-login .login-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.32);border-radius:18px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.28),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #screen-login .profile-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.14)}
+  #screen-login .login-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
 }
-#screen-login .profile-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
-#screen-login .profile-card:hover{border-color:rgba(255,255,255,0.7);transform:translateY(-2px)}
-#screen-login .profile-name{color:var(--white)}
-#screen-login .profile-desc{color:rgba(255,255,255,0.65)}
-#screen-login .profile-card.active{background:rgba(255,255,255,0.85);border-color:var(--white);-webkit-backdrop-filter:none;backdrop-filter:none}
-#screen-login .profile-card.active .profile-name{color:#8a3400}
-#screen-login .profile-card.active .profile-desc{color:rgba(90,45,10,0.75)}
+#screen-login .login-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+#screen-login .flabel{color:rgba(255,255,255,0.7)}
+/* inputs: SÓLIDOS por legibilidade — sem vidro onde se digita (mesma regra da Config) */
+#screen-login .finput{background:rgba(255,255,255,0.92);color:#2b1608;border-color:transparent}
+#screen-login .finput:focus{border-color:var(--white)}
+#screen-login .finput::placeholder{color:rgba(60,30,10,0.5)}
+/* erro de login: vermelho translúcido de alerta (mesmos valores do .cfg-danger) */
+#screen-login .login-error{background:rgba(180,30,20,0.18);border:1.5px solid rgba(255,90,70,0.7);color:#ffb4ab}
 #screen-login .btn-enter{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
-#screen-login .btn-enter:hover{background:#ffe9d6;transform:translateY(-1px)}
-
-/* PIN DO GESTOR — vidro intenso (característica de modal) */
-#pin-overlay{background:rgba(0,0,0,0.25)}
-/* glows difusos atrás do painel */
-#pin-overlay::before,#pin-overlay::after{content:'';position:absolute;width:280px;height:280px;border-radius:50%;pointer-events:none}
-#pin-overlay::before{left:calc(50% - 270px);top:calc(50% - 260px);background:radial-gradient(closest-side,rgba(255,255,255,0.35),transparent)}
-#pin-overlay::after{left:calc(50% - 10px);top:calc(50% - 20px);background:radial-gradient(closest-side,rgba(255,206,158,0.4),transparent)}
-/* painel: fallback escuro legível sem blur; com suporte, vidro forte 28px */
-#pin-overlay .pin-box{position:relative;z-index:1;background:rgba(43,22,8,0.92);border:1px solid;border-top-color:rgba(255,255,255,0.9);border-left-color:rgba(255,255,255,0.45);border-right-color:rgba(255,206,158,0.35);border-bottom-color:rgba(255,206,158,0.3);box-shadow:0 20px 50px rgba(0,0,0,0.4)}
-@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #pin-overlay{-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px)}
-  #pin-overlay .pin-box{background:linear-gradient(135deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06));-webkit-backdrop-filter:blur(28px) saturate(200%);backdrop-filter:blur(28px) saturate(200%)}
-}
-#pin-overlay .pin-title{color:var(--white)}
-#pin-overlay .pin-sub{color:rgba(255,255,255,0.7)}
-#pin-overlay .pin-dot{border-color:rgba(255,255,255,0.45)}
-#pin-overlay .pin-dot.filled{background:var(--white);border-color:var(--white);box-shadow:0 0 10px rgba(255,255,255,0.8)}
-#pin-overlay .pin-dot.error{background:var(--red);border-color:var(--red);box-shadow:0 0 10px rgba(226,75,74,0.8)}
-/* dígitos 0-9: SÓLIDOS por legibilidade (tela de segurança) — sem vidro */
-#pin-overlay .num-key{background:rgba(255,255,255,0.95);border:none;color:#2b1608;box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 2px 6px rgba(0,0,0,0.25)}
-#pin-overlay .num-key:hover{background:var(--white)}
-#pin-overlay .num-key.num-del{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.4);color:var(--white);box-shadow:none}
-#pin-overlay .num-key.num-del:hover{background:rgba(255,255,255,0.2)}
-#pin-overlay .pin-cancel{color:rgba(255,255,255,0.7)}
-#pin-overlay .pin-cancel:hover{color:var(--white)}
+#screen-login .btn-enter:hover:not(:disabled){background:#ffe9d6;transform:translateY(-1px)}
 
 /* CONFIG — liquid glass (última tela do redesign; modais e splash intactos) */
 #page-config{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
@@ -431,6 +391,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-config .cfg-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
 #page-config .cfg-card-title{color:var(--white);font-size:13px;font-weight:600;border-bottom-color:rgba(255,255,255,0.25)}
 #page-config .flabel{color:rgba(255,255,255,0.7)}
+#page-config .cfg-note{color:rgba(255,255,255,0.7)}
 /* inputs: SÓLIDOS por legibilidade — sem vidro onde se digita */
 #page-config .finput{background:rgba(255,255,255,0.92);color:#2b1608;border-color:transparent}
 #page-config .finput:focus{border-color:var(--white)}
@@ -523,6 +484,12 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .cargo-tabs{display:flex;gap:5px;margin-bottom:10px}
 .cargo-tab{padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bd);color:var(--g3);background:var(--white);transition:all 0.15s;font-family:'Inter',sans-serif}
 .cargo-tab.on{background:var(--orange);color:var(--white);border-color:var(--orange)}
+.cfg-note{font-size:12px;color:var(--g3);line-height:1.5;margin-bottom:12px}
+
+/* TROCAR SENHA */
+.pwd-msg{display:none;font-size:12px;font-weight:600;line-height:1.45;border-radius:8px;padding:9px 11px;margin-bottom:13px}
+.pwd-msg.ok{display:block;background:var(--green-l);color:var(--green);border:1.5px solid var(--green)}
+.pwd-msg.err{display:block;background:#FEF2F2;color:#B91C1C;border:1.5px solid #B91C1C}
 
 /* EXPORT */
 .export-modal{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:300;align-items:center;justify-content:center}
@@ -538,7 +505,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .export-opt-desc{font-size:11px;color:var(--g4);margin-top:2px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--black);color:var(--white);padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
-@media(max-width:640px){.stats-row{grid-template-columns:repeat(2,1fr)}.rodizio-grid{grid-template-columns:1fr}.topbar{padding:0 14px}.app-content{padding:16px 14px}.tb-nav-item{padding:5px 7px;font-size:11px}.profile-grid{width:290px}}
+@media(max-width:640px){.stats-row{grid-template-columns:repeat(2,1fr)}.rodizio-grid{grid-template-columns:1fr}.topbar{padding:0 14px}.app-content{padding:16px 14px}.tb-nav-item{padding:5px 7px;font-size:11px}.login-card,.btn-enter,.login-form{width:290px}}
 </style>
 </head>
 <body>
@@ -555,47 +522,23 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
   </div>
 
   <!-- LOGIN -->
-  <div class="screen visible" id="screen-login">
+  <!-- começa oculto: quem já tem sessão vai direto pro app, sem piscar o login -->
+  <div class="screen hidden-down" id="screen-login">
     <div class="login-company" id="login-company-name">Evolução Fit</div>
     <div class="login-heading">Agenda<span>.</span></div>
-    <div class="login-sub">Selecione seu perfil para continuar</div>
-    <div class="profile-grid">
-      <div class="profile-card" id="pc-professor" onclick="selectProfile(&#39;professor&#39;)">
-        <div class="profile-icon">🏋️</div>
-        <div class="profile-name">Professor</div>
-        <div class="profile-desc">Agenda da equipe</div>
+    <div class="login-sub">Entre com seu usuário e senha</div>
+    <form class="login-form" id="login-form" onsubmit="handleLogin(event)" autocomplete="on">
+      <div class="login-card">
+        <label class="flabel" for="login-user">Usuário</label>
+        <input class="finput" id="login-user" name="username" type="text" placeholder="Ex: FelipePolenta"
+               autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+        <label class="flabel" for="login-pass">Senha</label>
+        <input class="finput" id="login-pass" name="password" type="password" placeholder="Sua senha"
+               autocomplete="current-password">
       </div>
-      <div class="profile-card" id="pc-recepcao" onclick="selectProfile(&#39;recepcao&#39;)">
-        <div class="profile-icon">🗂️</div>
-        <div class="profile-name">Recepção</div>
-        <div class="profile-desc">Agenda e escalas</div>
-      </div>
-      <div class="profile-card" id="pc-gestor" onclick="selectProfile(&#39;gestor&#39;)">
-        <div class="profile-icon">⚡</div>
-        <div class="profile-name">Gestor</div>
-        <div class="profile-desc">Acesso completo</div>
-      </div>
-    </div>
-    <button class="btn-enter" onclick="handleLogin()">Entrar →</button>
-  </div>
-
-  <!-- PIN OVERLAY -->
-  <div id="pin-overlay">
-    <div class="pin-box">
-      <div class="pin-title">Acesso do Gestor</div>
-      <div class="pin-sub">Digite o PIN de 4 dígitos</div>
-      <div class="pin-dots">
-        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
-        <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
-      </div>
-      <div class="numpad">
-        <button class="num-key" onclick="pinKey(&#39;1&#39;)">1</button><button class="num-key" onclick="pinKey(&#39;2&#39;)">2</button><button class="num-key" onclick="pinKey(&#39;3&#39;)">3</button>
-        <button class="num-key" onclick="pinKey(&#39;4&#39;)">4</button><button class="num-key" onclick="pinKey(&#39;5&#39;)">5</button><button class="num-key" onclick="pinKey(&#39;6&#39;)">6</button>
-        <button class="num-key" onclick="pinKey(&#39;7&#39;)">7</button><button class="num-key" onclick="pinKey(&#39;8&#39;)">8</button><button class="num-key" onclick="pinKey(&#39;9&#39;)">9</button>
-        <button class="num-key" style="visibility:hidden"></button><button class="num-key" onclick="pinKey(&#39;0&#39;)">0</button><button class="num-key num-del" onclick="pinDel()" style="font-size:15px">⌫</button>
-      </div>
-      <button class="pin-cancel" onclick="closePinOverlay()">Cancelar</button>
-    </div>
+      <div class="login-error" id="login-error"></div>
+      <button class="btn-enter" id="btn-login" type="submit">Entrar →</button>
+    </form>
   </div>
 
   <!-- MAIN APP -->
@@ -616,7 +559,9 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         </div>
       </div>
       <div class="tb-right">
+        <span class="tb-user" id="tb-user"></span>
         <span class="role-badge" id="role-badge"></span>
+        <button class="tb-btn" onclick="openPwdModal()" title="Trocar minha senha">🔑 Senha</button>
         <button class="tb-btn" onclick="openExport()">↑ Exportar</button>
         <button class="tb-btn" onclick="logout()">Sair</button>
       </div>
@@ -677,11 +622,9 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <button class="btn-save" style="width:100%;margin-top:12px;padding:10px" onclick="saveConfig()">Salvar identidade</button>
         </div>
         <div class="cfg-card" style="animation-delay:0.05s">
-          <div class="cfg-card-title">PIN do Gestor</div>
-          <div style="display:flex;gap:10px">
-            <input class="finput" id="cfg-pin" type="password" maxlength="4" placeholder="Novo PIN (4 dígitos)" style="margin-bottom:0;letter-spacing:6px;font-weight:700;text-align:center;flex:1">
-            <button class="btn-save" onclick="savePIN()" style="padding:10px 18px;white-space:nowrap">Salvar PIN</button>
-          </div>
+          <div class="cfg-card-title">Minha senha</div>
+          <div class="cfg-note">Troca a senha da sua própria conta de acesso. Quem esqueceu a senha não consegue recuperar sozinho — precisa te pedir o reset pelo painel do Supabase.</div>
+          <button class="btn-save" style="width:100%;padding:10px" onclick="openPwdModal()">Trocar minha senha</button>
         </div>
         <div class="cfg-card" style="animation-delay:0.08s">
           <div class="cfg-card-title">Equipe</div>
@@ -825,6 +768,23 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
       </div>
     </div>
 
+    <!-- TROCAR SENHA -->
+    <!-- Segue o padrão dos modais brancos do app (Novo Evento / Nova Escala).
+         O vidro intenso era característica só do overlay de PIN, que não existe mais. -->
+    <div class="modal-bg" id="pwd-modal" onclick="if(event.target===this)closePwdModal()">
+      <div class="modal-box" style="width:380px">
+        <div class="modal-hd"><div class="modal-ttl">Trocar minha senha</div><button class="modal-cls" onclick="closePwdModal()">✕</button></div>
+        <div class="modal-bd">
+          <div class="pwd-msg" id="pwd-msg"></div>
+          <label class="flabel" for="pwd-new">Nova senha</label>
+          <input class="finput" id="pwd-new" type="password" placeholder="Mínimo de 6 caracteres" autocomplete="new-password">
+          <label class="flabel" for="pwd-confirm">Confirmar nova senha</label>
+          <input class="finput" id="pwd-confirm" type="password" placeholder="Repita a nova senha" autocomplete="new-password" style="margin-bottom:0">
+        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closePwdModal()">Cancelar</button><button class="btn-save" id="btn-save-pwd" onclick="savePassword()">Salvar senha</button></div>
+      </div>
+    </div>
+
     <!-- EXPORT -->
     <div class="export-modal" id="export-modal" onclick="if(event.target===this)closeExport()">
       <div class="export-box">
@@ -838,6 +798,13 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 </div>
 <div class="toast" id="toast"></div>
 
+<!-- supabase-js (auth + REST). Versão FIXA + integrity: se o CDN entregar outro
+     conteúdo, o navegador recusa executar em vez de rodar código alterado.
+     Ao atualizar a versão, recalcular o integrity junto. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0/dist/umd/supabase.js"
+        integrity="sha384-faMlYZUtkJj+Sh6Bmu/L0GzPcraRWN6CW+9RH3GUrK/Z0WS9tgaNNt0tHiLxsbdb"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <script>
 const SB_URL='https://indapxewhfobzxnwswhy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZGFweGV3aGZvYnp4bndzd2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMjA0MzQsImV4cCI6MjA5Njg5NjQzNH0.szwfTyc3L5dXkTZxemCEdViuWWWnzgpwrBFsISZmzmc';
@@ -850,6 +817,22 @@ async function sbDelete(t,c,v){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?$
 function showConnError(){document.getElementById('conn-error-banner').classList.add('show');}
 function dismissConnError(){document.getElementById('conn-error-banner').classList.remove('show');}
 
+// CLIENTE SUPABASE-JS — reaproveita a MESMA url e anon key acima (chave não duplicada).
+// Fase 1: usado só para autenticação (login/sessão/senha) e para ler a `equipe`
+// já autenticado. Todo o resto do app continua nos helpers sbGet/sbPost/sbPatch/
+// sbDelete com a anon key — a Fase 1 não fecha o banco.
+const sbClient=window.supabase?window.supabase.createClient(SB_URL,SB_KEY,{
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:'agenda-evolucao-auth'}
+}):null;
+// Se o CDN estiver fora do ar/bloqueado (ou o integrity falhar), sbClient é null e
+// o login fica impossível. Avisa NA TELA — não repetir o erro engolido de jul/2026.
+function showLibError(){
+  const b=document.getElementById('conn-error-banner');
+  b.querySelector('.conn-error-text').textContent='⚠️ Não foi possível carregar o componente de login (biblioteca externa bloqueada ou fora do ar). Verifique sua conexão e recarregue a página.';
+  b.classList.add('show');
+}
+if(!sbClient){showLibError();console.error('supabase-js não carregou: window.supabase indefinido.');}
+
 const MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const MONTHS_SHORT=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -858,7 +841,9 @@ const TYPE_STATUS={reuniao:'Confirmado',entrevista:'Agendado',rodizio:'Escalado'
 const TYPE_EMOJI={reuniao:'👥',entrevista:'🤝',rodizio:'🔄',outro:'📌'};
 const AV_COLORS=[{bg:'#FEF0EB',fg:'#C24510',bd:'#F5622D'},{bg:'#E6F1FB',fg:'#0C447C',bd:'#378ADD'},{bg:'#EAF3DE',fg:'#27500A',bd:'#639922'},{bg:'#EEEDFE',fg:'#3C3489',bd:'#7F77DD'},{bg:'#FAEEDA',fg:'#633806',bd:'#EF9F27'},{bg:'#FBEAF0',fg:'#72243E',bd:'#D4537E'}];
 
-let currentRole='',pinBuffer='',currentPIN='1234',selectedProfile='';
+const AUTH_DOMAIN='@equipe.evolucaofit.app';      // domínio interno: o usuário nunca digita nem vê email
+const PERFIS_VALIDOS=['professor','recepcao','gestor'];
+let currentRole='',currentUserName='';
 let companyName='Evolução Fit',companyShort='Evolução',configId=null;
 let currentFilter='todos',currentType='reuniao',currentVis=['todos'];
 let recurEnabled=false,recurInterval=21,currentView='cards';
@@ -966,10 +951,20 @@ document.addEventListener('click',e=>{
   }
 });
 
-// SPLASH
+// SPLASH + BOOT
 async function runSplash(){
-  try{const d=await sbGet('config','limit=1');if(d&&d.length){configId=d[0].id;currentPIN=d[0].pin||'1234';companyName=d[0].empresa_nome||'Evolução Fit';companyShort=d[0].empresa_short||'Evolução';}}catch(e){}
+  // A sessão é decidida ANTES de qualquer chamada de rede: getSession() lê o
+  // armazenamento local do navegador, é instantâneo. Assim não pisca a tela de
+  // login pra quem já está logado, nem fica tela preta pra quem não está.
+  let sessao=null;
+  if(sbClient){
+    try{const{data,error}=await sbClient.auth.getSession();if(error)console.error('Erro ao ler sessão:',error);sessao=data?data.session:null;}
+    catch(e){console.error('Erro ao ler sessão:',e);}
+  }
+  if(!sessao)showLoginScreen();
+  try{const d=await sbGet('config','limit=1');if(d&&d.length){configId=d[0].id;companyName=d[0].empresa_nome||'Evolução Fit';companyShort=d[0].empresa_short||'Evolução';}}catch(e){}
   applyBranding();
+  if(sessao&&sessao.user)retomarSessao(sessao.user);
   const name=companyName;const letters=document.getElementById('splash-letters');letters.innerHTML='';
   [...name].forEach(ch=>{const s=document.createElement('span');s.className='splash-letter';s.textContent=ch===' '?'\u00A0':ch;letters.appendChild(s);});
   const dot=document.createElement('div');dot.className='splash-dot';letters.appendChild(dot);
@@ -977,24 +972,84 @@ async function runSplash(){
   letters.querySelectorAll('.splash-letter').forEach((el,i)=>setTimeout(()=>{el.style.opacity='1';el.style.transform='translateY(0)';},delay+i*65));
   setTimeout(()=>{dot.style.opacity='1';dot.style.transform='scale(1)';},delay+name.length*65+100);
   setTimeout(()=>{document.getElementById('splash-sub').style.opacity='1';document.getElementById('splash-bar').style.width='120px';},delay+name.length*65+300);
-  setTimeout(()=>{const sp=document.getElementById('screen-splash');sp.style.transition='opacity 0.5s ease';sp.style.opacity='0';setTimeout(()=>{sp.classList.remove('visible');sp.classList.add('hidden-up');document.getElementById('screen-login').classList.remove('hidden-down');document.getElementById('screen-login').classList.add('visible');},500);},delay+name.length*65+2000);
+  // O splash só se apaga; quem decide entre login e app é o bloco de sessão acima.
+  setTimeout(()=>{const sp=document.getElementById('screen-splash');sp.style.transition='opacity 0.5s ease';sp.style.opacity='0';setTimeout(()=>{sp.classList.remove('visible');sp.classList.add('hidden-up');},500);},delay+name.length*65+2000);
 }
 function applyBranding(){document.getElementById('login-company-name').textContent=companyName;document.getElementById('topbar-name').textContent=companyShort;document.title=`Agenda — ${companyName}`;}
 
-// LOGIN
-function selectProfile(p){selectedProfile=p;document.querySelectorAll('.profile-card').forEach(c=>c.classList.remove('active'));document.getElementById('pc-'+p).classList.add('active');}
-function handleLogin(){if(!selectedProfile){toast('⚠️ Selecione um perfil.');return;}if(selectedProfile==='gestor')openPinOverlay();else enterApp(selectedProfile);}
-function openPinOverlay(){pinBuffer='';updateDots();document.getElementById('pin-overlay').classList.add('open');}
-function closePinOverlay(){document.getElementById('pin-overlay').classList.remove('open');pinBuffer='';updateDots();}
-function pinKey(k){
-  if(pinBuffer.length>=4)return;pinBuffer+=k;updateDots();
-  if(pinBuffer.length===4){
-    if(pinBuffer===currentPIN){closePinOverlay();setTimeout(()=>enterApp('gestor'),100);}
-    else{document.querySelectorAll('.pin-dot').forEach(d=>d.classList.add('error'));setTimeout(()=>{pinBuffer='';updateDots();document.querySelectorAll('.pin-dot').forEach(d=>d.classList.remove('error'));},700);}
+// LOGIN (Supabase Auth)
+// O usuário digita só o login ("FelipePolenta"); o app monta o email interno.
+// trim + toLowerCase são obrigatórios: o Supabase guarda o email em minúsculas.
+function userToEmail(u){return u.trim().toLowerCase()+AUTH_DOMAIN;}
+
+function showLoginScreen(){
+  const l=document.getElementById('screen-login');
+  l.classList.remove('hidden-down','hidden-up');l.classList.add('visible');
+}
+function showLoginError(msg){
+  const el=document.getElementById('login-error');
+  el.textContent=msg;el.classList.add('show');
+  const card=document.querySelector('#screen-login .login-card');
+  if(card){card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake');}
+}
+function clearLoginError(){const el=document.getElementById('login-error');el.textContent='';el.classList.remove('show');}
+
+// Lê o papel na tabela `equipe` pelo vínculo auth_user_id. Vai AUTENTICADO
+// (supabase-js manda o token do usuário), por isso a equipe precisa de policy
+// para o role `authenticated` — e não só para `anon`.
+async function fetchPerfil(authUserId){
+  const{data,error}=await sbClient.from('equipe').select('perfil,nome').eq('auth_user_id',authUserId).maybeSingle();
+  if(error){console.error('Erro ao ler equipe:',error);showConnError();return null;}
+  // Atenção ao diagnosticar: o RLS não devolve erro, devolve ZERO linhas. Se a
+  // linha existe no banco e mesmo assim cai aqui, suspeite da policy de
+  // `authenticated` na equipe antes de suspeitar do vínculo.
+  if(!data||!PERFIS_VALIDOS.includes(data.perfil)){console.warn('Sem perfil válido para auth_user_id='+authUserId+'. Verifique o vínculo na equipe E a policy de leitura para o role authenticated.');return null;}
+  currentUserName=data.nome||'';
+  return data.perfil;
+}
+
+const ERRO_SEM_PERFIL='Seu login existe, mas não está vinculado a nenhum perfil — avise o gestor.';
+
+async function handleLogin(e){
+  if(e)e.preventDefault();
+  clearLoginError();
+  if(!sbClient){showLibError();showLoginError('O componente de login não carregou. Recarregue a página.');return;}
+  const usuario=document.getElementById('login-user').value;
+  const senha=document.getElementById('login-pass').value;
+  if(!usuario.trim()||!senha){showLoginError('Preencha usuário e senha.');return;}
+  const btn=document.getElementById('btn-login');btn.disabled=true;btn.textContent='Entrando...';
+  try{
+    const{data,error}=await sbClient.auth.signInWithPassword({email:userToEmail(usuario),password:senha});
+    if(error){
+      console.error('Falha no login:',error);
+      // Mensagem genérica de propósito: não revelar se o usuário existe.
+      showLoginError(/email not confirmed/i.test(error.message||'')
+        ? 'Login ainda não confirmado no painel — avise o gestor.'
+        : 'Usuário ou senha inválidos.');
+      return;
+    }
+    const perfil=await fetchPerfil(data.user.id);
+    if(!perfil){await sbClient.auth.signOut();showLoginError(ERRO_SEM_PERFIL);return;}
+    document.getElementById('login-pass').value='';
+    clearLoginError();
+    await enterApp(perfil);
+  }catch(err){
+    console.error('Erro inesperado no login:',err);
+    showLoginError('Não foi possível conectar. Verifique sua internet e tente de novo.');
+  }finally{btn.disabled=false;btn.textContent='Entrar →';}
+}
+
+// Sessão já ativa no navegador: entra direto, sem passar pelo login.
+async function retomarSessao(user){
+  try{
+    const perfil=await fetchPerfil(user.id);
+    if(!perfil){await sbClient.auth.signOut();showLoginScreen();showLoginError(ERRO_SEM_PERFIL);return;}
+    await enterApp(perfil);
+  }catch(err){
+    console.error('Erro ao retomar sessão:',err);
+    showLoginScreen();showLoginError('Não foi possível validar sua sessão. Entre novamente.');
   }
 }
-function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updateDots();}
-function updateDots(){for(let i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);}
 
 async function enterApp(role){
   currentRole=role;
@@ -1003,6 +1058,7 @@ async function enterApp(role){
   const badge=document.getElementById('role-badge');
   badge.textContent={gestor:'Gestor',professor:'Professor',recepcao:'Recepção'}[role]||role;
   badge.className='role-badge '+role;
+  document.getElementById('tb-user').textContent=currentUserName;
   document.getElementById('agenda-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
   const isG=role==='gestor';
   document.getElementById('btn-novo').style.display=isG?'flex':'none';
@@ -1018,10 +1074,14 @@ async function enterApp(role){
   if(isG)renderEquipeList();
 }
 
-function logout(){
+async function logout(){
+  if(sbClient){const{error}=await sbClient.auth.signOut();if(error)console.error('Erro ao sair:',error);}
   document.getElementById('screen-app').classList.remove('visible');document.getElementById('screen-app').classList.add('hidden-up');
-  document.getElementById('screen-login').classList.remove('hidden-up');document.getElementById('screen-login').classList.add('visible');
-  selectedProfile='';currentRole='';document.querySelectorAll('.profile-card').forEach(c=>c.classList.remove('active'));
+  showLoginScreen();
+  currentRole='';currentUserName='';
+  document.getElementById('tb-user').textContent='';
+  document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
+  clearLoginError();
   goPageDirect('agenda');
 }
 function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
@@ -1459,18 +1519,61 @@ async function removeEquipe(id){
   equipe=equipe.filter(e=>e.id!==id);renderEquipeList();toast('Funcionário removido');
 }
 
+// TROCAR SENHA (Supabase Auth: updateUser)
+function openPwdModal(){
+  document.getElementById('pwd-new').value='';document.getElementById('pwd-confirm').value='';
+  clearPwdMsg();
+  document.getElementById('pwd-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('pwd-new').focus(),60);
+}
+function closePwdModal(){
+  document.getElementById('pwd-modal').classList.remove('open');
+  document.getElementById('pwd-new').value='';document.getElementById('pwd-confirm').value='';
+  clearPwdMsg();
+}
+function showPwdMsg(msg,ok){const el=document.getElementById('pwd-msg');el.textContent=msg;el.className='pwd-msg '+(ok?'ok':'err');}
+function clearPwdMsg(){const el=document.getElementById('pwd-msg');el.textContent='';el.className='pwd-msg';}
+
+// O Supabase devolve o erro em inglês; traduz os casos comuns em vez de jogar
+// texto cru na cara do usuário — mas sempre mostra ALGUMA coisa, nunca silêncio.
+function traduzErroSenha(msg){
+  const m=msg||'';
+  if(/at least|should be at least|too short/i.test(m))return'A senha precisa ter pelo menos 6 caracteres.';
+  if(/different from the old|same as the old/i.test(m))return'A nova senha precisa ser diferente da atual.';
+  if(/weak|pwned|compromised|common/i.test(m))return'Essa senha é muito comum ou fraca. Escolha outra.';
+  if(/session|jwt|token|expired|not authenticated/i.test(m))return'Sua sessão expirou. Saia e entre de novo para trocar a senha.';
+  if(/rate|too many/i.test(m))return'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.';
+  return'Não foi possível trocar a senha. Tente de novo em alguns instantes.';
+}
+
+async function savePassword(){
+  clearPwdMsg();
+  if(!sbClient){showPwdMsg('O componente de login não carregou. Recarregue a página.',false);return;}
+  const nova=document.getElementById('pwd-new').value;
+  const conf=document.getElementById('pwd-confirm').value;
+  if(!nova||!conf){showPwdMsg('Preencha os dois campos.',false);return;}
+  if(nova.length<6){showPwdMsg('A senha precisa ter pelo menos 6 caracteres.',false);return;}
+  if(nova!==conf){showPwdMsg('As senhas não conferem.',false);return;}
+  const btn=document.getElementById('btn-save-pwd');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const{error}=await sbClient.auth.updateUser({password:nova});
+    if(error){console.error('Erro ao trocar senha:',error);showPwdMsg(traduzErroSenha(error.message),false);return;}
+    document.getElementById('pwd-new').value='';document.getElementById('pwd-confirm').value='';
+    showPwdMsg('Senha alterada. Use a nova senha no próximo login.',true);
+    toast('✅ Senha alterada');
+    setTimeout(closePwdModal,2200);
+  }catch(err){
+    console.error('Erro inesperado ao trocar senha:',err);
+    showPwdMsg('Não foi possível conectar. Verifique sua internet e tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent='Salvar senha';}
+}
+
 // CONFIG
 async function saveConfig(){
   companyName=document.getElementById('cfg-company').value.trim()||'Minha Empresa';
   companyShort=document.getElementById('cfg-short').value.trim()||companyName.split(' ')[0];
   if(configId)await sbPatch('config',configId,{empresa_nome:companyName,empresa_short:companyShort});
   applyBranding();toast('✅ Identidade atualizada');
-}
-async function savePIN(){
-  const np=document.getElementById('cfg-pin').value.trim();
-  if(!/^\d{4}$/.test(np)){toast('⚠️ PIN deve ter 4 dígitos.');return;}
-  currentPIN=np;if(configId)await sbPatch('config',configId,{pin:np});
-  document.getElementById('cfg-pin').value='';toast('✅ PIN atualizado');
 }
 async function clearAllData(){
   if(!confirm('Apagar TODOS os eventos e escalas? Ação irreversível.'))return;

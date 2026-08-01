@@ -11,6 +11,50 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Unreleased]
 
 ### Adicionado
+- **Login real com usuário + senha via Supabase Auth (Fase 1 de 5), 2026-07-31.** Substitui a
+  seleção de perfil + PIN. O usuário digita só o login (ex.: `FelipePolenta`) e nunca vê email:
+  o app monta `usuario.trim().toLowerCase() + '@equipe.evolucaofit.app'` e chama
+  `signInWithPassword`. O `toLowerCase()` é obrigatório — o Supabase guarda o email em minúsculas.
+  Confirmação por email desligada e sem SMTP configurado (ver "Segurança" abaixo).
+- Dependência nova: `supabase-js` **fixado em 2.111.0** via jsDelivr, com atributo `integrity`
+  (SRI). Versão fixa porque num app sem build uma tag flutuante (`@2`) mudaria o app sozinho, sem
+  ninguém tocar em nada; o SRI faz o navegador recusar executar se o CDN entregar conteúdo
+  diferente — relevante numa tela onde se digita senha. **Ao trocar a versão, recalcular o hash.**
+  Custo assumido: ~210 KB no primeiro carregamento, e uma dependência externa nova. Por isso o
+  `sbClient` nulo (CDN fora do ar/bloqueado ou SRI falhando) dispara `showLibError()` com banner
+  vermelho e texto próprio — mesmo princípio da correção de 2026-07-03, nada falha em silêncio.
+- Sessão persistente: `persistSession` + `autoRefreshToken` (storageKey `agenda-evolucao-auth`).
+  No boot o `getSession()` roda **antes** de qualquer chamada de rede — se rodasse depois do
+  `sbGet('config')`, quem já está logado veria a tela de login piscar. Botão "Sair" agora faz
+  `signOut()` de verdade e limpa os campos.
+- Roteamento de perfil pela tabela `equipe`: `select perfil, nome ... where auth_user_id = <uid>`,
+  feito **autenticado** via supabase-js (decisão consciente: o atalho seria ler com a anon key,
+  mas isso só empurraria o problema pra Fase 2, que exige leitura autenticada). Sem linha vinculada
+  ou com `perfil` inválido, o app faz `signOut()` e mostra erro claro — não existe entrar sem
+  perfil. O nome de quem está logado passou a aparecer na topbar, ao lado do badge de papel.
+- Colunas novas na `equipe`: `auth_user_id uuid unique references auth.users(id) on delete set null`
+  e `perfil text check (perfil in ('professor','recepcao','gestor'))`. `perfil` aceita NULL de
+  propósito (quem não tem perfil não loga; um `default` daria acesso por acidente). `perfil` é
+  acesso e **não se confunde com `cargo`**, que é função no rodízio — o Felipe tem
+  `cargo = Recepção` e `perfil = gestor`. Backfill: professores → `professor`, recepção →
+  `recepcao`, e a linha do Felipe vinculada ao usuário de teste com `perfil = gestor`.
+- **Trocar senha dentro do app** (`updateUser({ password })`), com sucesso e erro visíveis. Um
+  modal único com **duas portas de entrada**: botão "🔑 Senha" na topbar, disponível para **todos
+  os perfis**, e card "Minha senha" na Config (só Gestor), no lugar exato onde ficava o PIN. As
+  duas portas são deliberadas: a Config só é visível pro Gestor, então um acesso único ali
+  deixaria professor e recepção sem conseguir trocar a própria senha — que é justamente o ponto.
+  O modal segue o padrão **branco** dos demais (Novo Evento / Nova Escala) e não o vidro intenso,
+  porque aquilo era característica do overlay de PIN, que deixou de existir. Mínimo de 6
+  caracteres, alinhado ao mínimo padrão do Supabase (regra mais rígida só no cliente confundiria
+  o usuário quando o servidor discordasse). Erros do Supabase chegam em inglês e passam por
+  `traduzErroSenha()`; o que fica fora da lista vira mensagem genérica na tela e erro cru no
+  console. Validado pelo Felipe ponta a ponta em 2026-08-01: trocar pela topbar, sair e entrar
+  com a senha nova.
+- Tela de login redesenhada no padrão liquid glass, **sem inventar valor nenhum**: card de vidro
+  com a mesma base do `#page-calendario .cal-wrap` (blur 3px, saturate 180%, raio 18px, linha de
+  highlight no topo), inputs **SÓLIDOS** pela mesma regra da Config (onde se digita não leva
+  vidro — a mesma decisão que mantinha o keypad do PIN opaco), caixa de erro com os valores do
+  `.cfg-danger`, e o `@keyframes shake` do PIN reaproveitado para o card tremer na senha errada.
 - `CLAUDE.md` com contexto do projeto para desenvolvimento assistido por IA.
 - `README.md`, `.env.example` e `docs/schema.sql` documentando o projeto e o banco de dados.
 - `.github/workflows/ping-supabase.yml`: workflow que pinga a tabela `config` via REST API
@@ -24,17 +68,63 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   como se fosse dado real.
 
 ### Segurança
-- Achado durante os testes visuais de 2026-07-13: o PIN do Gestor em produção ainda era o
-  padrão de fábrica (`1234`) — descoberto quando uma sequência de teste digitada no modal de
-  PIN autenticou com sucesso. **PENDENTE**: a troca manual pelo app (Config → PIN do Gestor)
-  foi combinada mas, verificado no banco em 2026-07-13 ao fim do redesign, ainda não tinha
-  sido feita. Fica o registro: PIN padrão em produção é risco real, mesmo em app interno.
-- Observação relacionada, para o hardening futuro: a coluna `pin` da tabela `config` é
-  legível via anon key (o app lê o PIN no client para validar o acesso do Gestor). Trocar o
-  PIN resolve o "1234", mas qualquer pessoa com a anon key — que é pública por design —
-  consegue ler o PIN atual via REST. Resolver isso exige mudar a arquitetura de validação
-  (ex: RPC/Edge Function que valida server-side), candidato ao mesmo pacote de hardening
-  iniciado com o RLS da tabela `equipe`.
+- **Policy `anon_all_equipe_authenticated` (ALL para `authenticated`, `USING (true) WITH CHECK
+  (true)`) criada em 2026-07-31**, sem tocar na `anon_all_equipe` original. Necessária porque
+  depois do login o usuário deixa de ser `anon` e vira `authenticated` — sem ela, a leitura do
+  perfil falharia e o roteamento quebraria.
+- **`GRANT SELECT ON public.equipe TO authenticated` — descoberto durante os testes.** A policy
+  sozinha não bastava: sem o grant de tabela o Postgres recusa antes de sequer avaliar o RLS
+  (erro `42501 permission denied`). O sintoma era traiçoeiro — o login passava e só a leitura do
+  perfil falhava depois. Fica a regra: **policy e grant são coisas diferentes e ambas precisam
+  existir.**
+- **Ambos são provisórios e a Fase 2 tem que apertá-los com `auth.uid()`.** Hoje qualquer usuário
+  autenticado lê a tabela `equipe` inteira.
+- **Pegadinha de diagnóstico, para não perder tempo de novo:** RLS que barra não devolve erro,
+  devolve **zero linhas**. "Policy faltando" e "linha não vinculada" dão exatamente o mesmo
+  sintoma na tela. Grant faltando, ao contrário, dá erro explícito (`42501`).
+- **Rate limit do Supabase Auth:** após várias tentativas de login erradas seguidas, o Supabase
+  bloqueia temporariamente e recusa **até a senha correta** por alguns minutos. Encontrado durante
+  os testes de 2026-07-31. **Não é bug, é proteção** — antes de resetar senha de alguém, pergunte
+  quantas vezes a pessoa errou e espere alguns minutos.
+- **Não existe "esqueci minha senha" para o usuário final**, porque não há SMTP configurado e a
+  confirmação por email está desligada. Reset é sempre feito pelo Felipe, pelo painel
+  (Authentication → Users) ou via SQL com pgcrypto:
+  `create extension if not exists pgcrypto;` +
+  `update auth.users set encrypted_password = crypt('<nova senha>', gen_salt('bf')) where email = '<login>@equipe.evolucaofit.app';`
+- **Incidente durante o desenvolvimento (2026-07-31): a senha real do Felipe foi trocada por
+  acidente num teste.** Ao validar as mensagens de erro do formulário de trocar senha, os casos
+  foram executados direto na função `savePassword()`; o caso "senha válida" rodou com uma sessão
+  real ainda ativa no `localStorage` do navegador (sobrevivente do teste de login anterior) e o
+  `updateUser` foi pra valer. Corrigido com reset pelo painel. Nenhum outro dado foi tocado — a
+  única escrita foi essa. **Regra que fica: não executar função que escreve enquanto houver sessão
+  ativa; conferir `getSession()` antes, ou testar só os ramos anteriores à chamada da API.** O
+  risco real não é o gestor (que reseta a própria senha em um minuto) e sim repetir isso com a
+  conta de um professor ou recepcionista, que ficaria sem acesso no meio do expediente sem saber
+  por quê. Registrado também no `CLAUDE.md`.
+- **O banco continua ABERTO — a Fase 1 não fechou nada.** `eventos`, `rodizios` e `config` seguem
+  legíveis e graváveis por qualquer pessoa com a anon key (que é pública por design). O login
+  resolveu *quem é você*; *o que você pode fazer* ainda é decidido por `if` no JavaScript, que é
+  cosmético e burlável pelo DevTools. Fechar isso é a Fase 2.
+- **Resolvido pela raiz: o PIN do Gestor foi eliminado.** O registro de 2026-07-13 apontava que o
+  PIN em produção ainda era o padrão de fábrica (`1234`) e que a troca manual continuava pendente.
+  Com o login real, o PIN deixou de existir — não há mais o que trocar. Fica o registro histórico
+  do risco: PIN padrão em produção é risco real, mesmo em app interno, e ele sobreviveu ~18 dias
+  depois de detectado.
+- Registro histórico relacionado: a coluna `pin` da tabela `config` era legível via anon key (o
+  app lia o PIN no client para validar o Gestor), então qualquer pessoa com a anon key conseguia
+  ler o PIN atual via REST. O login via Supabase Auth resolve isso — a senha nunca trafega nem
+  fica legível pelo client. A coluna `pin` virou dado morto e continua no banco; candidata a
+  `drop column` na Fase 2.
+
+### Removido
+- **PIN do Gestor, em todas as suas partes (2026-07-31):** o overlay com teclado numérico, o CSS
+  do teclado e do modal, as funções `pinKey`/`pinDel`/`updateDots`/`openPinOverlay`/
+  `closePinOverlay`, os globais `currentPIN`/`pinBuffer`, e também o card "PIN do Gestor" na tela
+  de Config junto com `savePIN()`. O card foi removido por decisão consciente e não por descuido:
+  deixá-lo permitiria ao gestor configurar uma proteção que não protege mais nada — pior do que
+  não ter. O lugar dele foi ocupado pelo card "Minha senha" (ver "Adicionado").
+- Seleção de perfil por card na tela de entrada (`selectProfile`, `.profile-card`, `.profile-grid`).
+  O perfil agora vem do banco, pela pessoa autenticada — não é mais escolha do usuário.
 
 ### Alterado
 - Tela de Configurações redesenhada com liquid glass — última tela do redesign (todas as
