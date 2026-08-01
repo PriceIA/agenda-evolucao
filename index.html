@@ -73,6 +73,10 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .tb-right{display:flex;align-items:center;gap:8px}
 .tb-user{font-size:12px;font-weight:600;color:var(--g2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .role-badge{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+/* contador de treinos pendentes — some quando é zero, para não virar ruído */
+.tb-treinos-badge{display:none;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px;border:none;background:var(--amber);color:var(--black);cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;transition:all 0.15s}
+.tb-treinos-badge.show{display:inline-flex}
+.tb-treinos-badge:hover{filter:brightness(1.07)}
 .role-badge.gestor{background:var(--orange);color:var(--white)}
 .role-badge.professor{background:var(--blue);color:var(--white)}
 .role-badge.recepcao{background:var(--green);color:var(--white)}
@@ -631,6 +635,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
       <div class="tb-right">
         <span class="tb-user" id="tb-user"></span>
         <span class="role-badge" id="role-badge"></span>
+        <button class="tb-treinos-badge" id="tb-treinos-badge" onclick="irParaTreinos()"></button>
         <button class="tb-btn" onclick="openPwdModal()" title="Trocar minha senha">🔑 Senha</button>
         <button class="tb-btn" onclick="openExport()">↑ Exportar</button>
         <button class="tb-btn" onclick="logout()">Sair</button>
@@ -1176,6 +1181,7 @@ async function logout(){
   document.getElementById('screen-app').classList.remove('visible');document.getElementById('screen-app').classList.add('hidden-up');
   showLoginScreen();
   currentRole='';currentUserName='';currentEquipeId='';treinos=[];
+  updateTreinosBadge();
   document.getElementById('tb-user').textContent='';
   document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
   clearLoginError();
@@ -1460,10 +1466,32 @@ async function loadTreinos(){
     treinos=[];
     c.innerHTML='<div class="empty">Não foi possível carregar os treinos. Tente recarregar a página em alguns instantes.</div>';
     showConnError();
+    updateTreinosBadge();
     return;
   }
   treinos=data||[];
   renderTreinos();
+  updateTreinosBadge();
+}
+
+// Contador de pendentes. Conta em cima do que o RLS já entregou: para professor
+// são só os treinos dele, para gestor/recepção é o total. Nenhum filtro de perfil
+// aqui — se aparecesse, seria duplicar no cliente a regra que já é do banco.
+function updateTreinosBadge(){
+  const el=document.getElementById('tb-treinos-badge');
+  if(!el)return;
+  const n=treinos.filter(t=>t.status==='pendente').length;
+  if(n>0){
+    el.textContent='📋 '+n;
+    el.title=n===1?'1 treino pendente — clique para abrir':n+' treinos pendentes — clique para abrir';
+    el.classList.add('show');
+  }else{
+    el.textContent='';el.removeAttribute('title');el.classList.remove('show');
+  }
+}
+function irParaTreinos(){
+  const b=[...document.querySelectorAll('.tb-nav-item')].find(x=>x.textContent.trim()==='Treinos');
+  if(b)goPage('treinos',b);
 }
 
 function renderTreinos(){
