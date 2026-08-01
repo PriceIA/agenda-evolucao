@@ -328,6 +328,40 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-agenda .cat-entrevista .tl-dot{background:var(--white)}
 @media(max-width:640px){#page-agenda{margin:-16px -14px;padding:18px 14px 32px}}
 
+/* TREINOS — liquid glass (mesma base da Agenda; nenhum valor novo) */
+.treinos-grid{display:flex;flex-direction:column;gap:8px}
+.treino-card{border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;animation:cardIn 0.32s ease both}
+.treino-body{flex:1;min-width:0}
+.treino-aluno{font-size:14px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.treino-meta{font-size:11.5px;margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
+.treino-montagem{font-size:11px;margin-top:4px}
+.treino-status{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;white-space:nowrap;text-transform:uppercase;flex-shrink:0}
+#page-treinos{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-treinos .treinos-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+#page-treinos .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-treinos .treino-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-treinos .treino-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+  #page-treinos .treino-card.st-pendente{background:rgba(255,255,255,0.16)}
+}
+#page-treinos .treino-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+/* pendente em destaque: mesma barra lateral branca usada nas reuniões da Agenda */
+#page-treinos .treino-card.st-pendente{border-left:3px solid rgba(255,255,255,0.95);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 10px 0 18px -10px rgba(255,255,255,0.55)}
+#page-treinos .treino-card.st-cancelado{opacity:0.6}
+#page-treinos .treino-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.45);color:var(--white);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#page-treinos .treino-aluno{color:var(--white)}
+#page-treinos .treino-meta{color:rgba(255,255,255,0.7)}
+#page-treinos .treino-montagem{color:rgba(255,255,255,0.6)}
+/* status: branco sólido = precisa de ação; vidro contornado = concluído (padrão do Rodízio) */
+#page-treinos .treino-status.st-pendente{background:var(--white);color:#8a3400}
+#page-treinos .treino-status.st-montado{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.4)}
+#page-treinos .treino-status.st-cancelado{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.25)}
+#page-treinos .empty{color:rgba(255,255,255,0.75)}
+#page-treinos .loading-state{color:rgba(255,255,255,0.75)}
+#page-treinos .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
+@media(max-width:640px){#page-treinos{margin:-16px -14px;padding:18px 14px 32px}}
+
 /* RODIZIO — liquid glass (somente esta tela; mesma base do Calendário/Agenda) */
 #page-rodizio{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
 #page-rodizio .rodizio-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
@@ -555,6 +589,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <button class="tb-nav-item active" onclick="goPage(&#39;agenda&#39;,this)">Agenda</button>
           <button class="tb-nav-item" onclick="goPage(&#39;rodizio&#39;,this)">Rodízio</button>
           <button class="tb-nav-item" onclick="goPage(&#39;calendario&#39;,this)">Calendário</button>
+          <button class="tb-nav-item" onclick="goPage(&#39;treinos&#39;,this)">Treinos</button>
           <button class="tb-nav-item" id="nav-config" style="display:none" onclick="goPage(&#39;config&#39;,this)">Config.</button>
         </div>
       </div>
@@ -610,6 +645,14 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <div class="cal-g" id="cal-days"></div>
         </div>
         <div style="margin-top:14px" id="cal-day-events"></div>
+      </div>
+
+      <!-- TREINOS -->
+      <div class="page" id="page-treinos">
+        <div class="sec-head">
+          <div><div class="treinos-kicker">Montagem de treinos</div><div class="sec-title">Treinos</div></div>
+        </div>
+        <div class="treinos-grid" id="treinos-container"></div>
       </div>
 
       <!-- CONFIG -->
@@ -843,13 +886,14 @@ const AV_COLORS=[{bg:'#FEF0EB',fg:'#C24510',bd:'#F5622D'},{bg:'#E6F1FB',fg:'#0C4
 
 const AUTH_DOMAIN='@equipe.evolucaofit.app';      // domínio interno: o usuário nunca digita nem vê email
 const PERFIS_VALIDOS=['professor','recepcao','gestor'];
-let currentRole='',currentUserName='';
+const STATUS_TREINO_ORDEM={pendente:0,montado:1,cancelado:2}; // pendente sempre no topo
+let currentRole='',currentUserName='',currentEquipeId='';
 let companyName='Evolução Fit',companyShort='Evolução',configId=null;
 let currentFilter='todos',currentType='reuniao',currentVis=['todos'];
 let recurEnabled=false,recurInterval=21,currentView='cards';
 let rodoRecurEnabled=false,rodoRecurInterval=7;
 let calDate=new Date(),selCalDay=null;
-let events=[],rodizios=[],equipe=[],currentDetailId=null;
+let events=[],rodizios=[],equipe=[],treinos=[],currentDetailId=null;
 let editingEvId=null,editingRodoId=null;
 let currentCargo='Professor';
 
@@ -998,13 +1042,15 @@ function clearLoginError(){const el=document.getElementById('login-error');el.te
 // (supabase-js manda o token do usuário), por isso a equipe precisa de policy
 // para o role `authenticated` — e não só para `anon`.
 async function fetchPerfil(authUserId){
-  const{data,error}=await sbClient.from('equipe').select('perfil,nome').eq('auth_user_id',authUserId).maybeSingle();
+  // `id` (equipe.id) é usado como avaliador_id / montado_por em montagem_treinos.
+  const{data,error}=await sbClient.from('equipe').select('id,perfil,nome').eq('auth_user_id',authUserId).maybeSingle();
   if(error){console.error('Erro ao ler equipe:',error);showConnError();return null;}
   // Atenção ao diagnosticar: o RLS não devolve erro, devolve ZERO linhas. Se a
   // linha existe no banco e mesmo assim cai aqui, suspeite da policy de
   // `authenticated` na equipe antes de suspeitar do vínculo.
   if(!data||!PERFIS_VALIDOS.includes(data.perfil)){console.warn('Sem perfil válido para auth_user_id='+authUserId+'. Verifique o vínculo na equipe E a policy de leitura para o role authenticated.');return null;}
   currentUserName=data.nome||'';
+  currentEquipeId=data.id||'';
   return data.perfil;
 }
 
@@ -1072,19 +1118,21 @@ async function enterApp(role){
   if(evData)events=evData;if(rdData)rodizios=rdData;if(eqData)equipe=eqData;
   renderEvents();renderRodizio();renderCalendar();updateStats();showNotif();
   if(isG)renderEquipeList();
+  // depois do equipe: o fallback de nome do professor depende do array carregado
+  await loadTreinos();
 }
 
 async function logout(){
   if(sbClient){const{error}=await sbClient.auth.signOut();if(error)console.error('Erro ao sair:',error);}
   document.getElementById('screen-app').classList.remove('visible');document.getElementById('screen-app').classList.add('hidden-up');
   showLoginScreen();
-  currentRole='';currentUserName='';
+  currentRole='';currentUserName='';currentEquipeId='';treinos=[];
   document.getElementById('tb-user').textContent='';
   document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
   clearLoginError();
   goPageDirect('agenda');
 }
-function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');if(name==='treinos')loadTreinos();}
 function goPageDirect(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));document.querySelector('.tb-nav-item').classList.add('active');}
 
 function showNotif(){
@@ -1317,6 +1365,82 @@ function editRodo(id){
 async function deleteRodo(id){
   if(!confirm('Excluir esta escala?'))return;
   await sbDelete('rodizios','id',id);rodizios=rodizios.filter(r=>r.id!==id);renderRodizio();toast('Escala removida');
+}
+
+// TREINOS
+// ATENÇÃO: esta tela usa sbClient.from() (AUTENTICADO), e não os helpers
+// sbGet/sbPost/sbPatch das outras telas. Os helpers mandam a anon key fixa, e a
+// tabela montagem_treinos só concedeu grant ao role `authenticated` — com a anon
+// key a resposta é 401 / 42501 permission denied. Não copiar o padrão das telas
+// vizinhas aqui.
+// O RLS já filtra as linhas: professor recebe só as dele, gestor/recepção recebem
+// todas. Não refiltrar no JS — e não assumir que dá pra ver mais do que veio.
+const CAMPOS_TREINO='id,aluno_nome,data_solicitacao,data_inicio_desejada,status,data_montagem,observacoes,professor_id,avaliador_id,montado_por';
+const EMBED_TREINO=',professor:professor_id(nome),avaliador:avaliador_id(nome),montador:montado_por(nome)';
+
+// timestamptz (data_montagem/created_at) — diferente das colunas `date`, que usam fmtDate()
+function fmtDataHora(ts){
+  if(!ts)return'—';
+  const d=new Date(ts);
+  if(isNaN(d))return'—';
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+' às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+// Nome vindo do embedding; se o embedding falhar, cai pro array `equipe` local
+// (que só tem gente ativa — por isso o embedding é o caminho preferido).
+function nomeEquipe(embed,id){
+  if(embed&&embed.nome)return embed.nome;
+  const m=equipe.find(e=>e.id===id);
+  return m?m.nome:'—';
+}
+
+async function loadTreinos(){
+  const c=document.getElementById('treinos-container');
+  if(!sbClient){c.innerHTML='<div class="empty">O componente de login não carregou. Recarregue a página.</div>';return;}
+  c.innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
+  let{data,error}=await sbClient.from('montagem_treinos').select(CAMPOS_TREINO+EMBED_TREINO).order('data_solicitacao',{ascending:true});
+  if(error){
+    console.warn('Embedding falhou, tentando consulta simples:',error);
+    const r=await sbClient.from('montagem_treinos').select(CAMPOS_TREINO).order('data_solicitacao',{ascending:true});
+    data=r.data;error=r.error;
+  }
+  if(error){
+    console.error('Erro ao carregar treinos:',error);
+    treinos=[];
+    c.innerHTML='<div class="empty">Não foi possível carregar os treinos. Tente recarregar a página em alguns instantes.</div>';
+    showConnError();
+    return;
+  }
+  treinos=data||[];
+  renderTreinos();
+}
+
+function renderTreinos(){
+  const c=document.getElementById('treinos-container');
+  if(!treinos.length){c.innerHTML='<div class="empty">Nenhum treino na fila.</div>';return;}
+  // pendente primeiro; dentro do mesmo status, quem espera há mais tempo no topo
+  const ordenados=[...treinos].sort((a,b)=>{
+    const pa=STATUS_TREINO_ORDEM[a.status]??9,pb=STATUS_TREINO_ORDEM[b.status]??9;
+    if(pa!==pb)return pa-pb;
+    return(a.data_solicitacao||'').localeCompare(b.data_solicitacao||'');
+  });
+  c.innerHTML=ordenados.map((t,i)=>{
+    const prof=nomeEquipe(t.professor,t.professor_id);
+    const st=STATUS_TREINO_ORDEM[t.status]!==undefined?t.status:'pendente';
+    const montado=t.status==='montado';
+    return`<div class="treino-card st-${st}" style="animation-delay:${Math.min(i,12)*35}ms">
+      <div class="treino-avatar">${getInitials(t.aluno_nome)}</div>
+      <div class="treino-body">
+        <div class="treino-aluno">${t.aluno_nome||'—'}</div>
+        <div class="treino-meta">
+          <span>👤 ${prof}</span>
+          <span>📅 Solicitado ${fmtDate(t.data_solicitacao)}</span>
+          ${t.data_inicio_desejada?`<span>▶ Início ${fmtDate(t.data_inicio_desejada)}</span>`:''}
+        </div>
+        ${montado?`<div class="treino-montagem">✅ Montado ${fmtDataHora(t.data_montagem)} por ${nomeEquipe(t.montador,t.montado_por)}</div>`:''}
+      </div>
+      <div class="treino-status st-${st}">${st}</div>
+    </div>`;
+  }).join('');
 }
 
 // CALENDAR PAGE
