@@ -348,6 +348,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .treino-meta{font-size:11.5px;margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
 .treino-montagem{font-size:11px;margin-top:4px}
 .treino-status{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;white-space:nowrap;text-transform:uppercase;flex-shrink:0}
+.treino-right{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0}
+.treino-acao{padding:6px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;border:none;transition:all 0.15s}
 #page-treinos{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
 #page-treinos .treinos-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
 #page-treinos .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
@@ -369,6 +371,9 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-treinos .treino-status.st-pendente{background:var(--white);color:#8a3400}
 #page-treinos .treino-status.st-montado{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.4)}
 #page-treinos .treino-status.st-cancelado{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.25)}
+#page-treinos .treino-acao{background:var(--white);color:#8a3400;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+#page-treinos .treino-acao:hover:not(:disabled){background:#ffe9d6}
+#page-treinos .treino-acao:disabled{opacity:0.6;cursor:not-allowed}
 #page-treinos .btn-add{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
 #page-treinos .btn-add:hover{background:#ffe9d6}
 #page-treinos .empty{color:rgba(255,255,255,0.75)}
@@ -1562,9 +1567,53 @@ function renderTreinos(){
         </div>
         ${montado?`<div class="treino-montagem">✅ Montado ${fmtDataHora(t.data_montagem)} por ${esc(nomeEquipe(t.montador,t.montado_por))}</div>`:''}
       </div>
-      <div class="treino-status st-${st}">${st}</div>
+      <div class="treino-right">
+        <div class="treino-status st-${st}">${st}</div>
+        ${st==='pendente'?`<button class="treino-acao" onclick="marcarMontado('${esc(t.id)}',this)">✓ Montado</button>`:''}
+      </div>
     </div>`;
   }).join('');
+}
+
+// CONFIRMAR MONTAGEM
+// O botão aparece em TODA linha pendente, sem checagem de perfil no JS — e isso
+// está certo: o RLS deixa o professor dar UPDATE nas linhas dele, e gestor/recepção
+// em qualquer uma. Como o SELECT já filtrou o que cada um vê, toda linha visível
+// é uma linha que a pessoa pode confirmar. Gestor/recepção cobrindo o professor é
+// fluxo esperado, sem aviso extra.
+async function marcarMontado(id,btn){
+  if(!sbClient){toast('❌ Componente de login não carregou. Recarregue a página.',4000);return;}
+  if(!currentEquipeId){toast('❌ Sua conta não está vinculada à equipe — avise o gestor.',4500);return;}
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    // .select() no fim é essencial: quando o RLS barra um UPDATE ele NÃO devolve
+    // erro, devolve zero linhas afetadas. Sem isso, um update recusado pareceria
+    // sucesso. Mesma pegadinha documentada no CLAUDE.md para o SELECT.
+    const{data,error}=await sbClient.from('montagem_treinos').update({
+      status:'montado',
+      montado_por:currentEquipeId,
+      data_montagem:new Date().toISOString()
+    }).eq('id',id).select('id');
+    if(error){
+      console.error('Erro ao confirmar montagem:',error);
+      toast(/permission|row-level|42501/i.test((error.message||'')+(error.code||''))
+        ? '❌ Você não tem permissão para confirmar este treino.'
+        : '❌ Não foi possível confirmar. Tente de novo.',4500);
+      return;
+    }
+    if(!data||!data.length){
+      console.warn('UPDATE não afetou nenhuma linha — provável bloqueio de RLS para id='+id);
+      toast('❌ Não foi possível confirmar: este treino não é seu.',4500);
+      return;
+    }
+    toast('✅ Treino marcado como montado');
+    await loadTreinos();   // relê do banco: lista, ordenação e badge consistentes
+  }catch(err){
+    console.error('Erro inesperado ao confirmar montagem:',err);
+    toast('❌ Não foi possível conectar. Verifique sua internet.',4500);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='✓ Montado';}
+  }
 }
 
 // NOVO TREINO — cadastro (recepção e gestor)
