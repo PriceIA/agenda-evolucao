@@ -381,6 +381,68 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-treinos .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
 @media(max-width:640px){#page-treinos{margin:-16px -14px;padding:18px 14px 32px}}
 
+/* RELATÓRIOS — liquid glass (mesma base de Treinos; nenhum valor novo).
+   Estrutura de "pasta": .rel-lista é gerada do registry RELATORIOS e o relatório
+   escolhido abre em #relatorios-detalhe. Relatório novo não precisa de CSS novo. */
+.rel-lista{display:flex;flex-direction:column;gap:8px}
+.rel-card{border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;cursor:pointer;animation:cardIn 0.32s ease both;transition:all 0.18s}
+.rel-card-icone{font-size:22px;flex-shrink:0}
+.rel-card-body{flex:1;min-width:0}
+.rel-card-titulo{font-size:14px;font-weight:700;letter-spacing:-0.2px}
+.rel-card-desc{font-size:11.5px;margin-top:3px}
+.rel-card-seta{font-size:18px;flex-shrink:0}
+.rel-voltar{background:none;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:12px}
+.rel-totais{border-radius:16px;padding:16px 18px;display:flex;gap:28px;flex-wrap:wrap;position:relative;overflow:hidden;margin-bottom:10px;animation:cardIn 0.32s ease both}
+.rel-total-n{font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1}
+.rel-total-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-top:4px}
+.rel-tabela{border-radius:16px;padding:4px 18px 10px;position:relative;overflow:hidden;animation:cardIn 0.32s ease both}
+.rel-head,.rel-linha{display:grid;grid-template-columns:minmax(0,1fr) 86px 112px 86px;align-items:center;gap:10px}
+.rel-head{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;padding:12px 0 8px}
+.rel-linha{padding:11px 0}
+.rel-linha+.rel-linha{border-top:1px solid rgba(255,255,255,0.14)}
+.rel-prof{display:flex;align-items:center;gap:10px;min-width:0}
+.rel-avatar{width:34px;height:34px;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rel-nome{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rel-tag-inativo{font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;letter-spacing:0.5px;text-transform:uppercase;flex-shrink:0}
+.rel-v{font-size:15px;font-weight:800;text-align:right}
+/* rótulo por célula: escondido no desktop (o cabeçalho já nomeia), aparece no
+   mobile quando o cabeçalho some e as métricas empilham */
+.rel-m-lbl{display:none;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;margin-top:2px}
+.rel-aviso{border-radius:12px;padding:10px 14px;font-size:11.5px;font-weight:600;line-height:1.45;margin-bottom:10px}
+#page-relatorios{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-relatorios .relatorios-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+#page-relatorios .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-relatorios .rel-card,#page-relatorios .rel-totais,#page-relatorios .rel-tabela{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-relatorios .rel-card,#page-relatorios .rel-totais,#page-relatorios .rel-tabela{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+  #page-relatorios .rel-totais{background:rgba(255,255,255,0.16)}
+}
+#page-relatorios .rel-card::before,#page-relatorios .rel-totais::before,#page-relatorios .rel-tabela::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+#page-relatorios .rel-card:hover{border-color:rgba(255,255,255,0.65);transform:translateX(3px)}
+#page-relatorios .rel-card-titulo,#page-relatorios .rel-nome,#page-relatorios .rel-total-n,#page-relatorios .rel-v{color:var(--white)}
+#page-relatorios .rel-card-desc,#page-relatorios .rel-card-seta,#page-relatorios .rel-total-l,#page-relatorios .rel-head,#page-relatorios .rel-m-lbl{color:rgba(255,255,255,0.7)}
+#page-relatorios .rel-v.zero{color:rgba(255,255,255,0.45)}
+#page-relatorios .rel-avatar{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.45);color:var(--white)}
+#page-relatorios .rel-tag-inativo{background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.28)}
+#page-relatorios .rel-voltar{color:rgba(255,255,255,0.8)}
+#page-relatorios .rel-voltar:hover{color:var(--white)}
+/* aviso de dado incompleto: branco sólido, mesma lógica do status "pendente" —
+   precisa de atenção, então não é vidro */
+#page-relatorios .rel-aviso{background:var(--white);color:#8a3400}
+#page-relatorios .empty{color:rgba(255,255,255,0.75)}
+#page-relatorios .loading-state{color:rgba(255,255,255,0.75)}
+#page-relatorios .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
+@media(max-width:640px){
+  #page-relatorios{margin:-16px -14px;padding:18px 14px 32px}
+  /* cabeçalho some e as três métricas empilham sob o nome, como os cards de treino */
+  .rel-head{display:none}
+  .rel-linha{grid-template-columns:repeat(3,1fr);gap:8px 10px;padding:13px 0}
+  .rel-prof{grid-column:1/-1}
+  .rel-v{text-align:left}
+  .rel-m-lbl{display:block}
+}
+
 /* RODIZIO — liquid glass (somente esta tela; mesma base do Calendário/Agenda) */
 #page-rodizio{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
 #page-rodizio .rodizio-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
@@ -584,7 +646,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
   .tb-nav::-webkit-scrollbar{display:none}
   .tb-nav-item{padding:5px 7px;font-size:11px;flex:0 0 auto;scroll-snap-align:start}
   /* a topbar de 2 linhas é mais alta que os 56px fixos usados nas telas de vidro */
-  #page-agenda,#page-rodizio,#page-calendario,#page-treinos,#page-config{min-height:calc(100vh - 100px)}
+  #page-agenda,#page-rodizio,#page-calendario,#page-treinos,#page-relatorios,#page-config{min-height:calc(100vh - 100px)}
 }
 </style>
 </head>
@@ -636,6 +698,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <button class="tb-nav-item" onclick="goPage(&#39;rodizio&#39;,this)">Rodízio</button>
           <button class="tb-nav-item" onclick="goPage(&#39;calendario&#39;,this)">Calendário</button>
           <button class="tb-nav-item" onclick="goPage(&#39;treinos&#39;,this)">Treinos</button>
+          <button class="tb-nav-item" id="nav-relatorios" style="display:none" onclick="goPage(&#39;relatorios&#39;,this)">Relatórios</button>
           <button class="tb-nav-item" id="nav-config" style="display:none" onclick="goPage(&#39;config&#39;,this)">Config.</button>
         </div>
       </div>
@@ -710,6 +773,15 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <button class="btn-add" id="btn-novo-treino" onclick="openTreinoModal()" style="display:none">+ Novo treino</button>
         </div>
         <div class="treinos-grid" id="treinos-container"></div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div class="page" id="page-relatorios">
+        <div class="sec-head">
+          <div><div class="relatorios-kicker">Análises</div><div class="sec-title">Relatórios</div></div>
+        </div>
+        <div class="rel-lista" id="relatorios-lista"></div>
+        <div id="relatorios-detalhe"></div>
       </div>
 
       <!-- CONFIG -->
@@ -1203,6 +1275,9 @@ async function enterApp(role){
   document.getElementById('btn-novo').style.display=isG?'flex':'none';
   document.getElementById('btn-nova-escala').style.display=isG?'flex':'none';
   document.getElementById('lock-rodizio').style.display=isG?'none':'flex';
+  // Relatórios: só gestor. Recepção cadastra treino mas não vê análise da equipe.
+  // Ocultar a aba é decisão de produto, não barreira de segurança — ver o bloco RELATÓRIOS.
+  document.getElementById('nav-relatorios').style.display=isG?'block':'none';
   document.getElementById('nav-config').style.display=isG?'block':'none';
   document.getElementById('btn-novo-treino').style.display=podeCadastrarTreino()?'flex':'none';
   if(isG){document.getElementById('cfg-company').value=companyName;document.getElementById('cfg-short').value=companyShort;}
@@ -1221,6 +1296,8 @@ async function logout(){
   document.getElementById('screen-app').classList.remove('visible');document.getElementById('screen-app').classList.add('hidden-up');
   showLoginScreen();
   currentRole='';currentUserName='';currentEquipeId='';treinos=[];
+  // não deixar relatório aberto esperando o próximo login
+  relatorioAberto=null;document.getElementById('relatorios-detalhe').innerHTML='';
   updateTreinosBadge();
   document.getElementById('tb-user').textContent='';
   document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
@@ -1230,7 +1307,8 @@ async function logout(){
 function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');
   // no mobile o menu rola na horizontal: garante que a aba escolhida fique visível
   try{el.scrollIntoView({inline:'nearest',block:'nearest'});}catch(e){}
-  if(name==='treinos')loadTreinos();}
+  if(name==='treinos')loadTreinos();
+  if(name==='relatorios')loadRelatorios();}
 function goPageDirect(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));document.querySelector('.tb-nav-item').classList.add('active');}
 
 function showNotif(){
@@ -1691,6 +1769,214 @@ async function saveTreino(){
     console.error('Erro inesperado ao cadastrar treino:',err);
     showTreinoMsg('Não foi possível conectar. Verifique sua internet e tente de novo.',false);
   }finally{btn.disabled=false;btn.textContent='Criar treino';}
+}
+
+// RELATÓRIOS
+// PASTA EXTENSÍVEL: cada relatório é uma entrada em RELATORIOS. Para acrescentar
+// um novo, basta um objeto aqui + a função de render — sem mexer em navbar,
+// goPage() ou CSS.
+//
+// ACESSO: a aba só aparece para gestor (ver applyRole). Isso é CONVENIÊNCIA DE
+// INTERFACE, não segurança — igual ao podeCadastrarTreino(). Quem garante é o
+// RLS: treinos_select_gestor_recepcao entrega todas as linhas a gestor/recepção
+// e treinos_select_professor entrega só as dele ao professor. Recepção não vê a
+// aba por decisão de produto, mas se forçasse pelo DevTools veria apenas dados
+// que a policy já autoriza. Não tratar essa ocultação como barreira.
+const RELATORIOS=[
+  {id:'treinos-por-professor',icone:'📊',titulo:'Treinos por Professor',
+   desc:'Montados, tempo médio de montagem e pendentes',render:renderRelTreinosProf}
+];
+let relatorioAberto=null;
+
+// Busca: mesmo padrão AUTENTICADO da aba Treinos (ver o bloco TREINOS acima).
+// Os helpers sbGet/sbPost mandam a anon key e tomariam 401/42501 nesta tabela.
+// count:'exact' não é enfeite — ver o aviso de truncamento em renderRelTreinosProf.
+const CAMPOS_REL='professor_id,status,data_solicitacao,data_montagem';
+async function carregarRelTreinos(){
+  let{data,error,count}=await sbClient.from('montagem_treinos')
+    .select(CAMPOS_REL+',professor:professor_id(nome)',{count:'exact'});
+  if(error){
+    console.warn('Embedding falhou no relatório, tentando consulta simples:',error);
+    const r=await sbClient.from('montagem_treinos').select(CAMPOS_REL,{count:'exact'});
+    data=r.data;error=r.error;count=r.count;
+  }
+  if(error)throw error;
+  return{linhas:data||[],total:count};
+}
+
+// DIFERENÇA EM DIAS DE CALENDÁRIO, no fuso de São Paulo.
+// Duas armadilhas evitadas aqui:
+//  1. new Date('2026-08-01') é meia-noite UTC, enquanto new Date('2026-08-01T00:00:00')
+//     é meia-noite LOCAL. Misturar os dois erra 3h em SJC — o bastante para virar
+//     o dia no arredondamento.
+//  2. data_montagem é timestamptz, ou seja, um INSTANTE. Um treino montado às 21h
+//     de 1/ago em São José é 00:00 de 2/ago em UTC: contar em UTC inventaria um
+//     dia inteiro de atraso.
+// Solução: reduzir os dois lados a uma data de calendário de São Paulo (YYYY-MM-DD)
+// e subtrair via Date.UTC — imune a fuso e a horário de verão.
+function diaSaoPaulo(ts){
+  if(!ts)return null;
+  const d=new Date(ts);
+  if(isNaN(d))return null;
+  return d.toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'});  // YYYY-MM-DD
+}
+function diasEntre(ini,fim){
+  if(!ini||!fim)return null;
+  const a=String(ini).split('-').map(Number),b=String(fim).split('-').map(Number);
+  if(a.length!==3||b.length!==3||a.some(isNaN)||b.some(isNaN))return null;
+  return Math.round((Date.UTC(b[0],b[1]-1,b[2])-Date.UTC(a[0],a[1]-1,a[2]))/86400000);
+}
+
+// AGREGAÇÃO no cliente (sem RPC, por decisão de projeto).
+function agregarTreinosPorProfessor(linhas){
+  const mapa=new Map();
+  // `perfil==='professor'` é o mesmo critério que o modal de novo treino já usa
+  // (preencherProfessoresSelect). NÃO confundir com `cargo`, que é função no rodízio.
+  const ativos=new Set(equipe.filter(e=>e.perfil==='professor').map(e=>e.id));
+  const pega=(id,nome)=>{
+    if(!mapa.has(id))mapa.set(id,{id,nome:nome||null,inativo:!ativos.has(id),
+      montados:0,pendentes:0,somaDias:0,comData:0,semData:0,inconsistentes:0});
+    const r=mapa.get(id);
+    if(!r.nome&&nome)r.nome=nome;
+    return r;
+  };
+  // Professor ativo sem nenhum treino entra na lista mesmo assim: "não montou nada"
+  // é informação, não ausência.
+  equipe.filter(e=>e.perfil==='professor').forEach(p=>pega(p.id,p.nome));
+
+  for(const t of linhas){
+    // DECISÃO (caso deixado em aberto pelo Felipe): 'cancelado' fica FORA das três
+    // métricas. Não foi entregue, então não é "montado"; não está na fila, então não
+    // é "pendente"; e não tem data de montagem, então não entra na média. Somá-lo a
+    // qualquer coluna faria o relatório premiar treino que não aconteceu.
+    if(t.status==='pendente'){pega(t.professor_id,(t.professor||{}).nome).pendentes++;continue;}
+    if(t.status!=='montado')continue;
+    const r=pega(t.professor_id,(t.professor||{}).nome);
+    r.montados++;
+    const dias=diasEntre(t.data_solicitacao,diaSaoPaulo(t.data_montagem));
+    // montado sem data_montagem: conta como montado, mas fica fora da média — e a
+    // tela avisa quantos ficaram de fora, em vez de exibir média silenciosamente menor.
+    if(dias===null){r.semData++;continue;}
+    // montagem anterior à solicitação = dado inconsistente. Não zeramos nem
+    // clampamos: some da média e vai pro console com o id, para dar pra investigar.
+    if(dias<0){
+      r.inconsistentes++;
+      console.warn('Relatório: montagem anterior à solicitação (professor='+t.professor_id+
+                   ', solicitado='+t.data_solicitacao+', montado='+t.data_montagem+')');
+      continue;
+    }
+    r.somaDias+=dias;r.comData++;
+  }
+  // ordem: quem mais montou primeiro; empate resolve por nome
+  return[...mapa.values()].sort((a,b)=>b.montados-a.montados||
+    (a.nome||'').localeCompare(b.nome||'','pt-BR'));
+}
+
+// Média só existe se houve montagem com data válida. Professor sem nenhuma mostra
+// '—', nunca '0 dias' — zero seria mentira (significaria "montou no mesmo dia").
+function fmtMediaDias(soma,qtd){
+  if(!qtd)return'—';
+  return(soma/qtd).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+' dias';
+}
+
+function renderRelatoriosLista(){
+  document.getElementById('relatorios-lista').innerHTML=RELATORIOS.map(r=>`
+    <div class="rel-card" onclick="abrirRelatorio('${esc(r.id)}')">
+      <div class="rel-card-icone">${r.icone}</div>
+      <div class="rel-card-body">
+        <div class="rel-card-titulo">${esc(r.titulo)}</div>
+        <div class="rel-card-desc">${esc(r.desc)}</div>
+      </div>
+      <div class="rel-card-seta">›</div>
+    </div>`).join('');
+}
+
+async function abrirRelatorio(id){
+  const rel=RELATORIOS.find(r=>r.id===id);
+  if(!rel)return;
+  relatorioAberto=id;
+  document.getElementById('relatorios-lista').style.display='none';
+  const box=document.getElementById('relatorios-detalhe');
+  box.innerHTML=`<button class="rel-voltar" onclick="fecharRelatorio()">‹ Voltar aos relatórios</button>
+    <div class="sec-title" style="margin-bottom:14px">${rel.icone} ${esc(rel.titulo)}</div>
+    <div id="rel-corpo"><div class="loading-state"><div class="spinner"></div> Carregando...</div></div>`;
+  try{
+    await rel.render(document.getElementById('rel-corpo'));
+  }catch(err){
+    // Nunca deixar a tela em "Carregando..." eterno nem mostrar número errado.
+    console.error('Erro ao montar relatório:',err);
+    document.getElementById('rel-corpo').innerHTML=
+      '<div class="empty">Não foi possível carregar este relatório. Tente recarregar a página em alguns instantes.</div>';
+    showConnError();
+  }
+}
+function fecharRelatorio(){
+  relatorioAberto=null;
+  document.getElementById('relatorios-detalhe').innerHTML='';
+  document.getElementById('relatorios-lista').style.display='';
+}
+function loadRelatorios(){
+  renderRelatoriosLista();
+  if(relatorioAberto)abrirRelatorio(relatorioAberto);   // reabre ao voltar pra aba
+}
+
+async function renderRelTreinosProf(box){
+  if(!sbClient){box.innerHTML='<div class="empty">O componente de login não carregou. Recarregue a página.</div>';return;}
+  const{linhas,total}=await carregarRelTreinos();
+  const profs=agregarTreinosPorProfessor(linhas);
+
+  const totMontados=profs.reduce((s,p)=>s+p.montados,0);
+  const totPendentes=profs.reduce((s,p)=>s+p.pendentes,0);
+  const totSoma=profs.reduce((s,p)=>s+p.somaDias,0);
+  const totComData=profs.reduce((s,p)=>s+p.comData,0);
+  const totSemData=profs.reduce((s,p)=>s+p.semData,0);
+  const totIncons=profs.reduce((s,p)=>s+p.inconsistentes,0);
+
+  const avisos=[];
+  // O PostgREST corta em 1000 linhas por padrão. Sem este aviso, passando de mil
+  // treinos o relatório mostraria números menores SEM avisar — exatamente o tipo de
+  // falha silenciosa que já mordeu este projeto na pausa do Supabase.
+  if(total!=null&&total>linhas.length){
+    avisos.push(`⚠️ Números incompletos: o banco tem ${total} treinos, mas esta consulta trouxe apenas ${linhas.length} (limite da API). Os totais abaixo estão subestimados — avise o desenvolvedor para paginar a busca.`);
+  }
+  if(totSemData){
+    avisos.push(`⚠️ ${totSemData} treino(s) marcados como montados estão sem data de montagem e ficaram fora do tempo médio. A média é sobre ${totComData} de ${totMontados} montados.`);
+  }
+  if(totIncons){
+    avisos.push(`⚠️ ${totIncons} treino(s) têm data de montagem anterior à solicitação e ficaram fora do tempo médio. Os ids estão no console do navegador.`);
+  }
+
+  if(!profs.length){
+    box.innerHTML='<div class="empty">Nenhum professor cadastrado ainda. Cadastre em Configurações → Equipe.</div>';
+    return;
+  }
+
+  box.innerHTML=
+    avisos.map(a=>`<div class="rel-aviso">${esc(a)}</div>`).join('')+
+    `<div class="rel-totais">
+      <div><div class="rel-total-n">${totMontados}</div><div class="rel-total-l">Montados</div></div>
+      <div><div class="rel-total-n">${totPendentes}</div><div class="rel-total-l">Pendentes</div></div>
+      <div><div class="rel-total-n">${fmtMediaDias(totSoma,totComData)}</div><div class="rel-total-l">Tempo médio geral</div></div>
+    </div>
+    <div class="rel-tabela">
+      <div class="rel-head">
+        <div>Professor</div><div style="text-align:right">Montados</div>
+        <div style="text-align:right">Tempo médio</div><div style="text-align:right">Pendentes</div>
+      </div>
+      ${profs.map(p=>{
+        const nome=p.nome||'—';
+        return `<div class="rel-linha">
+          <div class="rel-prof">
+            <div class="rel-avatar">${esc(getInitials(p.nome))}</div>
+            <div class="rel-nome">${esc(nome)}</div>
+            ${p.inativo?'<div class="rel-tag-inativo">inativo</div>':''}
+          </div>
+          <div><div class="rel-v${p.montados?'':' zero'}">${p.montados}</div><div class="rel-m-lbl">Montados</div></div>
+          <div><div class="rel-v${p.comData?'':' zero'}">${esc(fmtMediaDias(p.somaDias,p.comData))}</div><div class="rel-m-lbl">Tempo médio</div></div>
+          <div><div class="rel-v${p.pendentes?'':' zero'}">${p.pendentes}</div><div class="rel-m-lbl">Pendentes</div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 
 // CALENDAR PAGE
