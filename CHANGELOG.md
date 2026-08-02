@@ -62,12 +62,88 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   inatividade. Antes disso, a documentação (CLAUDE.md/CHANGELOG) já citava essa mitigação
   como se existisse, mas o workflow nunca tinha sido criado de fato — corrigido agora.
 
+- **Tela de Treinos e tabela `montagem_treinos`, 2026-08-02.** Fila de montagem de treino:
+  recepção/gestor cadastra o pedido, professor monta e confirma pelo botão "Marcar como montado".
+  Colunas: `id` (uuid, PK), `aluno_nome` (text), `avaliador_id` (uuid, NOT NULL),
+  `professor_id` (uuid, NOT NULL), `data_solicitacao` (date, NOT NULL),
+  `data_inicio_desejada` (date), `status` (text: `pendente`/`montado`/`cancelado`),
+  `montado_por` (uuid), `data_montagem` (timestamptz), `observacoes` (text),
+  `created_at` (timestamptz).
+- **Esta tela quebra o padrão das vizinhas de propósito:** usa `sbClient.from()` (autenticado) em
+  vez dos helpers `sbGet`/`sbPost`/`sbPatch`, porque a `montagem_treinos` só concedeu grant ao role
+  `authenticated` — com a anon key dos helpers a resposta é `401`/`42501`. Não copiar o padrão
+  antigo aqui.
+- O UPDATE de confirmação encadeia **`.select('id')`** (= `Prefer: return=representation`). Sem
+  isso o PostgREST devolve `204` vazio e um UPDATE barrado pelo RLS pareceria sucesso; com isso,
+  o bloqueio chega como `200` + zero linhas e vira mensagem na tela. Mesma família da pegadinha
+  já registrada para o SELECT.
+
 ### Corrigido
 - Chamadas `sbGet`/`sbPost`/`sbPatch`/`sbDelete` que falham por erro de conexão agora exibem
   um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"
   como se fosse dado real.
 
 ### Segurança
+- **`montagem_treinos` é a primeira tabela do projeto com RLS de verdade (2026-08-02)** — habilitado,
+  com **cinco** policies (o SELECT é dividido em duas, somadas com `OR` pelo Postgres) e escopo
+  derivado de `auth.uid()`, em vez do `anon_all` genérico usado em `eventos`/`rodizios`/`config` ou
+  do `using(true)` da `equipe`. Texto real extraído de `pg_policies`:
+
+  ```sql
+  create policy treinos_select_professor on public.montagem_treinos for SELECT to authenticated
+    using ((professor_id IN ( SELECT equipe.id
+     FROM equipe
+    WHERE (equipe.auth_user_id = auth.uid()))));
+
+  create policy treinos_select_gestor_recepcao on public.montagem_treinos for SELECT to authenticated
+    using ((EXISTS ( SELECT 1
+     FROM equipe
+    WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text]))))));
+
+  create policy treinos_insert_recepcao_gestor on public.montagem_treinos for INSERT to authenticated
+    with check ((EXISTS ( SELECT 1
+     FROM equipe
+    WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text]))))));
+
+  create policy treinos_update_montagem on public.montagem_treinos for UPDATE to authenticated
+    using (((professor_id IN ( SELECT equipe.id FROM equipe WHERE (equipe.auth_user_id = auth.uid())))
+     OR (EXISTS ( SELECT 1 FROM equipe WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text])))))))
+    with check (((professor_id IN ( SELECT equipe.id FROM equipe WHERE (equipe.auth_user_id = auth.uid())))
+     OR (EXISTS ( SELECT 1 FROM equipe WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text])))))));
+
+  create policy treinos_delete_recepcao_gestor on public.montagem_treinos for DELETE to authenticated
+    using ((EXISTS ( SELECT 1
+     FROM equipe
+    WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text]))))));
+  ```
+
+  Professor lê e atualiza só as linhas onde `professor_id` é a linha dele; gestor/recepção fazem
+  tudo. O `with check` do UPDATE repete o `using` — é o que impede o professor de reatribuir o
+  treino para outro professor.
+- **Grants (2026-08-02):** `authenticated` com `SELECT, UPDATE, DELETE, TRUNCATE, REFERENCES,
+  TRIGGER` lidos no painel; `INSERT` não apareceu na leitura mas necessariamente existe (policy não
+  substitui grant, e o INSERT do teste passou). `anon` **sem nenhum CRUD** — sobraram só `TRUNCATE`
+  e `REFERENCES` da concessão padrão do Supabase.
+- **Pendência de segurança aberta: revogar `TRUNCATE` do `anon`.** `TRUNCATE` **não passa por RLS** —
+  nenhuma policy protege contra ele. Sem caminho de exploração conhecido hoje (a Data API do
+  PostgREST não expõe verbo de TRUNCATE), então é risco latente e não buraco aberto, mas é
+  privilégio sem uso legítimo: `revoke truncate, references on public.montagem_treinos from anon;`
+- **Validação por teste automatizado, não por leitura de policy (2026-08-02).** Script Node
+  (`teste-rls-treinos.js`, mantido fora do repositório) logando com **anon key** — nunca a service
+  role, que ignora RLS e faria qualquer teste passar. Ele cria um treino descartável para o
+  Professor B, loga como Professor A e tenta agir sobre ele. Resultado:
+  - **SELECT bloqueado:** o professor A não enxerga o treino do professor B (zero linhas).
+  - **UPDATE bloqueado:** `HTTP 200` com **zero linhas afetadas** — o bloqueio silencioso esperado
+    da policy. Distinto de `42501`, que seria grant faltando (problema diferente, e o script
+    diferencia os dois no veredito).
+  - Gestor/recepção seguem com acesso total.
+  - O teste criou e removeu um treino descartável e dois professores de teste (`ativo = false`),
+    sem tocar em dado real de produção.
+  As senhas são digitadas no terminal com máscara — nunca em arquivo, `.env` ou histórico de shell.
+- **Este é o padrão-alvo da Fase 2.** Ao fechar `eventos`, `rodizios`, `config` e `equipe`, replicar
+  as três decisões que fizeram diferença aqui: (1) grant de tabela **além** da policy — são coisas
+  diferentes e ambas precisam existir; (2) policy separada por operação em vez de um `ALL` genérico;
+  (3) teste automatizado com a anon key **provando** o bloqueio, em vez de conferir a policy no olho.
 - **Policy `anon_all_equipe_authenticated` (ALL para `authenticated`, `USING (true) WITH CHECK
   (true)`) criada em 2026-07-31**, sem tocar na `anon_all_equipe` original. Necessária porque
   depois do login o usuário deixa de ser `anon` e vira `authenticated` — sem ela, a leitura do

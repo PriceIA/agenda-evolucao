@@ -106,6 +106,121 @@
 vinculado"). Ao investigar, cheque a policy **e** o grant antes de suspeitar do vínculo.
 Exceção útil: falta de **grant** dá erro explícito (`42501`); falta de **policy** dá silêncio.
 
+## Tabela `montagem_treinos` (tela Treinos, 2026-08-02)
+Fila de montagem de treino: a recepção/gestor cadastra o pedido, o professor monta e confirma.
+
+### Schema
+| coluna | tipo | obs |
+|---|---|---|
+| `id` | uuid | PK |
+| `aluno_nome` | text | nome do aluno |
+| `avaliador_id` | uuid **NOT NULL** | quem fez a avaliação (`equipe.id`) |
+| `professor_id` | uuid **NOT NULL** | professor responsável por montar (`equipe.id`) |
+| `data_solicitacao` | date **NOT NULL** | usa `fmtDate()` |
+| `data_inicio_desejada` | date | opcional |
+| `status` | text | `pendente` / `montado` / `cancelado` |
+| `montado_por` | uuid | quem confirmou (`equipe.id`) |
+| `data_montagem` | timestamptz | usa `fmtDataHora()`, não `fmtDate()` |
+| `observacoes` | text | |
+| `created_at` | timestamptz | |
+
+### Acesso — diferente do resto do app, de propósito
+- A tela usa **`sbClient.from()` (autenticado)**, e **não** os helpers `sbGet`/`sbPost`/`sbPatch`.
+  Os helpers mandam a anon key fixa, e esta tabela **só concedeu grant ao role `authenticated`** —
+  com a anon key a resposta é `401` / `42501 permission denied`. **Não copiar o padrão das telas
+  vizinhas aqui.**
+- O RLS **filtra as linhas**: professor recebe só as dele, gestor/recepção recebem todas. Por isso
+  não há refiltro por perfil no JavaScript — e o `updateTreinosBadge()` conta em cima do que o
+  banco já entregou. Duplicar a regra no cliente só criaria duas fontes de verdade.
+- `podeCadastrarTreino()` (só gestor/recepção) é **conveniência de interface**, não segurança:
+  quem garante é a policy de INSERT.
+- `marcarMontado()` encadeia **`.select('id')`** no UPDATE (= `Prefer: return=representation`).
+  Sem isso o PostgREST responde `204` vazio e um UPDATE recusado pelo RLS pareceria sucesso.
+  Com isso, bloqueio vem como `200` + **zero linhas**, e o app avisa na tela.
+
+### Policies de RLS — texto real (extraído de `pg_policies` em 2026-08-02)
+São **cinco** policies, não quatro: o SELECT é dividido em duas. No Postgres, policies permissivas
+da mesma operação se somam com `OR`, então "professor vê as dele" + "gestor/recepção veem todas" é
+exatamente como se escreve isso — duas policies simples em vez de uma condição grande.
+
+```sql
+create policy treinos_select_professor on public.montagem_treinos for SELECT to authenticated
+  using ((professor_id IN ( SELECT equipe.id
+   FROM equipe
+  WHERE (equipe.auth_user_id = auth.uid()))));
+
+create policy treinos_select_gestor_recepcao on public.montagem_treinos for SELECT to authenticated
+  using ((EXISTS ( SELECT 1
+   FROM equipe
+  WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text]))))));
+
+create policy treinos_insert_recepcao_gestor on public.montagem_treinos for INSERT to authenticated
+  with check ((EXISTS ( SELECT 1
+   FROM equipe
+  WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text]))))));
+
+create policy treinos_update_montagem on public.montagem_treinos for UPDATE to authenticated
+  using (((professor_id IN ( SELECT equipe.id FROM equipe WHERE (equipe.auth_user_id = auth.uid())))
+   OR (EXISTS ( SELECT 1 FROM equipe WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text])))))))
+  with check (((professor_id IN ( SELECT equipe.id FROM equipe WHERE (equipe.auth_user_id = auth.uid())))
+   OR (EXISTS ( SELECT 1 FROM equipe WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text])))))));
+
+create policy treinos_delete_recepcao_gestor on public.montagem_treinos for DELETE to authenticated
+  using ((EXISTS ( SELECT 1
+   FROM equipe
+  WHERE ((equipe.auth_user_id = auth.uid()) AND (equipe.perfil = ANY (ARRAY['gestor'::text, 'recepcao'::text]))))));
+```
+
+Leitura rápida do desenho:
+- **Professor** lê e atualiza só as linhas onde `professor_id` é a linha dele na `equipe`. Não
+  cadastra e não apaga.
+- **Gestor/recepção** fazem tudo, via `EXISTS` na `equipe` com `perfil in ('gestor','recepcao')`.
+- O `with check` do UPDATE repete o `using`, o que **impede o professor de reatribuir o treino para
+  outro professor** (a linha resultante tem que continuar sendo dele). Gestor/recepção podem
+  reatribuir, e isso é intencional.
+
+### Grants
+`authenticated`: `SELECT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER` (lidos na tela do painel).
+`INSERT` não apareceu na leitura, mas **necessariamente existe**: policy não substitui grant, e o
+`INSERT` do script de teste passou logado como gestor. Confirmar em definitivo com:
+```sql
+select grantee, string_agg(privilege_type, ', ' order by privilege_type)
+  from information_schema.role_table_grants
+ where table_schema='public' and table_name='montagem_treinos' group by grantee;
+```
+`anon`: **sem nenhum CRUD** — só `TRUNCATE` e `REFERENCES`, sobra da concessão padrão do Supabase
+(ver o alerta no backlog: **TRUNCATE ignora RLS**).
+
+### Validação (2026-08-02) — testado, não só lido
+As policies foram verificadas por **script automatizado** (`teste-rls-treinos.js`, rodado fora do
+repositório), logando de verdade com a **anon key** — nunca a service role, que ignora RLS e faria
+qualquer teste passar. O script cria um treino descartável para o Professor B, loga como Professor
+A e tenta agir sobre ele:
+- **SELECT:** o professor A **não enxerga** o treino do professor B (zero linhas).
+- **UPDATE:** o professor A **não consegue** confirmar o treino do professor B — `HTTP 200` com
+  **zero linhas afetadas**, que é o bloqueio silencioso esperado da policy (não é erro `42501`,
+  que indicaria grant faltando, problema diferente).
+- Gestor/recepção seguem com acesso total, como antes.
+- O teste criou e removeu um treino descartável e dois professores de teste (desativados com
+  `ativo = false`), sem tocar em dado real de produção.
+
+### Esta tabela é o padrão-alvo da Fase 2
+`montagem_treinos` é a **primeira tabela do projeto com RLS de verdade** — habilitado, com policies
+por operação e escopo derivado de `auth.uid()`, e validado por teste. **É o padrão que a Fase 2 deve
+replicar em `eventos`, `rodizios`, `config` e `equipe`**, que hoje ainda estão abertas
+(RLS desabilitado + `anon_all`, ou policy `using(true)` no caso da `equipe`). Ao fechar as outras,
+copiar daqui as quatro decisões que fizeram diferença: (1) grant de tabela **além** da policy,
+(2) policies pequenas por operação (e até duas na mesma operação, somadas com `OR`) em vez de um
+`ALL` genérico, (3) `with check` repetindo o `using` no UPDATE, senão a pessoa pode transformar uma
+linha sua numa linha de outro, (4) teste automatizado com a anon key provando o bloqueio, em vez de
+leitura visual da policy.
+
+**Detalhe que facilita a Fase 2:** todas as cinco policies consultam a `equipe` **apenas pela linha
+de quem chamou** (`where auth_user_id = auth.uid()`). Ou seja, quando a Fase 2 apertar a `equipe`
+para cada pessoa ler só a própria linha, **nenhuma destas policies quebra**. Isso não foi sorte e
+não deve ser desfeito: qualquer policy nova que precise varrer a `equipe` inteira cria uma
+dependência que trava justamente o aperto que a gente quer fazer.
+
 ## Incidente conhecido (jul/2026)
 - Supabase free tier pausa após 7 dias de inatividade. O app engolia o erro de conexão
   silenciosamente (catch(e){return null}) e mostrava "0 eventos" em vez de avisar — parecia que
@@ -122,6 +237,27 @@ Exceção útil: falta de **grant** dá erro explícito (`42501`); falta de **po
   abertos: qualquer pessoa com a anon key (que é pública por design) lê e escreve via DevTools.
   A Fase 1 resolveu *quem é você*, não *o que você pode fazer* — o `currentRole` no JavaScript é
   cosmético. Inclui apertar a policy e o grant provisórios da `equipe` (ver acima).
+  **Modelo a seguir: a `montagem_treinos`** (ver seção própria) — é a única tabela do projeto com
+  RLS habilitado, policies por operação e bloqueio comprovado por teste.
+- **`anon` ainda tem `TRUNCATE` na `montagem_treinos` — revogar.** Detectado em 2026-08-02 ao ler os
+  grants. O CRUD do `anon` já foi tirado, mas `TRUNCATE` e `REFERENCES` ficaram como sobra da
+  concessão padrão do Supabase. Importa porque **`TRUNCATE` não passa por RLS**: policy nenhuma
+  protege contra ele. Hoje não há caminho de exploração conhecido (o PostgREST não expõe verbo de
+  TRUNCATE pela Data API), então é risco latente, não buraco aberto — mas é privilégio sem nenhum
+  uso legítimo para o `anon`, e a correção é uma linha:
+  `revoke truncate, references on public.montagem_treinos from anon;`
+  Conferir o mesmo nas outras tabelas ao fazer a Fase 2.
+- **O UPDATE da `montagem_treinos` não é restrito por coluna.** A policy diz *quais linhas* o
+  professor pode alterar, não *quais campos*. Na prática ele pode reescrever `aluno_nome`,
+  `observacoes`, `avaliador_id` ou datas da própria linha, e pode gravar `montado_por` apontando
+  para outra pessoa (a tela mostraria "montado por Fulano" sem ter sido). Não é escalada de
+  privilégio — é integridade de dado. Só dá pra fechar com trigger ou grant por coluna; avaliar na
+  Fase 2 se vale a complexidade num app de uso interno.
+- **`docs/schema.sql` está desatualizado.** Não tem a `montagem_treinos`, e declara
+  `equipe.id` como `bigint generated by default as identity` — mas as chaves em uso hoje são UUID
+  (ex.: `ced151d4-9f3e-4930-b830-befaa003d406`), e `montagem_treinos.professor_id` é `uuid`.
+  Ou a coluna mudou de tipo em algum momento sem o arquivo acompanhar, ou o arquivo nunca esteve
+  certo. Conferir no Table Editor antes de confiar nele. Detectado em 2026-08-02.
 - Coluna `pin` da tabela `config` virou **dado morto** — nada no app lê ou escreve nela desde
   2026-07-31. Não foi removida (a Fase 1 não mexeu em schema além da `equipe`). Candidata a
   `drop column` na Fase 2, junto com o resto do hardening.
