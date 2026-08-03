@@ -233,6 +233,14 @@ dependência que trava justamente o aperto que a gente quer fazer.
   se uma nova chamada falhar depois.
 
 ## Pendências (backlog)
+- **Passo 6 da aba Treinos (PDF) — pausado em 2026-08-03, sem prazo de retomada.** Decisão do
+  Felipe: outro projeto tem prioridade, e ele volta a este quando puder. **Não é urgência e não
+  bloqueia nada** — a aba Treinos está completa e em uso até o Passo 5 (Relatórios).
+  **Atenção ao retomar:** o escopo do Passo 6 nunca foi escrito em lugar nenhum — a numeração dos
+  passos só existiu em conversa, e o que ficou registrado é apenas "PDF", presumivelmente exportar
+  o relatório de Treinos por Professor (o Passo 5, commit `bf9a431`). **Confirmar com o Felipe o
+  que o PDF deve conter antes de começar a implementar**, em vez de deduzir pelo nome.
+  Ponto de partida: `bf9a431` é o último commit da sequência.
 - **Fase 2 — fechar o banco (não feita).** Hoje `eventos`, `rodizios` e `config` continuam
   abertos: qualquer pessoa com a anon key (que é pública por design) lê e escreve via DevTools.
   A Fase 1 resolveu *quem é você*, não *o que você pode fazer* — o `currentRole` no JavaScript é
