@@ -232,24 +232,6 @@ dependência que trava justamente o aperto que a gente quer fazer.
   sbDelete falhar por erro de rede ou resposta não-ok. Tem botão de fechar (X), mas reaparece
   se uma nova chamada falhar depois.
 
-## ⚠️ PENDÊNCIA IMEDIATA — push represado (decidido em 2026-08-02)
-**Existem 6 commits em `main` que nunca saíram desta máquina.** `origin/main` está 6 atrás:
-os 4 da aba Treinos, o `15e3fbf` (Passo 4 — marcar como montado) e o `2409d23` (documentação da
-`montagem_treinos`).
-
-**Decisão do Felipe:** segurar o push até fechar o **Passo 5 (estatísticas)** e o **Passo 6 (PDF)**,
-e então subir tudo de uma vez. Serão ~8 commits represados.
-
-**Isto é uma exceção consciente à regra de ouro do topo deste arquivo** ("nunca avançar pra próxima
-fase sem antes commitar a fase anterior no GitHub"). Commit local não é backup: enquanto isso durar,
-uma pane de disco leva junto a aba Treinos inteira, o Passo 4 e toda a documentação de RLS — trabalho
-que não está em nenhum outro lugar. O risco é conhecido e aceito, não esquecido.
-
-**Ao retomar em qualquer sessão futura:** conferir com `git status` se o push já saiu. Se ainda
-estiver represado e os Passos 5 e 6 estiverem prontos, **fazer o push antes de qualquer coisa nova**
-e apagar esta seção. Se os Passos 5 e 6 tiverem sido abandonados ou adiados, o combinado perde a
-validade — nesse caso, subir assim mesmo em vez de continuar acumulando.
-
 ## Pendências (backlog)
 - **Fase 2 — fechar o banco (não feita).** Hoje `eventos`, `rodizios` e `config` continuam
   abertos: qualquer pessoa com a anon key (que é pública por design) lê e escreve via DevTools.
