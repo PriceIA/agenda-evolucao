@@ -1,3 +1,9 @@
 .vercel
 .env*
 !.env.example
+
+# Config local do Claude Code (por maquina, nao vai pro repositorio)
+.claude/settings.local.json
+
+# Projeto nao tem package.json nem build; lock de npm aqui e acidente
+package-lock.json
