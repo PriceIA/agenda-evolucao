@@ -259,21 +259,48 @@ O **cadeado** no cartão só aparece para o gestor, porque só ele lê `card_vis
 consultar traria zero linhas em silêncio, sem erro. Para professor/recepção o cadeado não faz falta:
 todo cartão que eles enxergam é, por definição, um cartão liberado para eles.
 
-### RLS — 7 policies e 3 funções `security definer`
+### RLS — 7 policies e 4 funções `security definer`
 Todas para `authenticated`. `quadros_select` e `colunas_select` são `using (true)` **de propósito**:
 a estrutura do quadro não é segredo, o conteúdo é. Quem filtra é o `cards_select`:
 ```sql
-eh_gestor() OR (EXISTS ( SELECT 1 FROM card_visibilidade v
-  WHERE ((v.card_id = cards.id) AND ((v.equipe_id = meu_equipe_id()) OR (v.perfil = meu_perfil())))))
+eh_gestor() OR pode_ver_card(cards.id)
 ```
 As demais (`quadros_write`, `colunas_write`, `cards_write`, `vis_all`) são `ALL` com
 `using eh_gestor()` e `with check eh_gestor()`.
 
-As 3 funções (`eh_gestor()`, `meu_equipe_id()`, `meu_perfil()`) são `security definer`, `STABLE` e
-`SET search_path TO 'public'`. **Não removê-las nem trocá-las por consulta direta à `equipe`:** como
-são `security definer`, elas ignoram o RLS da `equipe`, e é isso que garante que **a Fase 2 possa
-apertar a `equipe` sem quebrar nenhuma policy do Planejamento**. O `search_path` fixo também não é
-enfeite — sem ele, `security definer` vira vetor de escalada de privilégio.
+As 4 funções (`eh_gestor()`, `meu_equipe_id()`, `meu_perfil()`, `pode_ver_card(uuid)`) são
+`security definer`, `STABLE` e `SET search_path TO 'public'`. **Não removê-las nem trocá-las por
+consulta direta às tabelas:** como são `security definer`, elas ignoram o RLS de `equipe` e
+`card_visibilidade`, e é isso que garante que **a Fase 2 possa apertar a `equipe` sem quebrar
+nenhuma policy do Planejamento**. O `search_path` fixo também não é enfeite — sem ele,
+`security definer` vira vetor de escalada de privilégio.
+
+### ⚠️ REGRA: policy que consulta outra tabela com RLS precisa de `security definer`
+**Nunca `EXISTS` direto contra outra tabela protegida por RLS dentro de uma policy.** Aprendido na
+marra na Fase 4 (2026-08-06), e está no mesmo nível do "policy não substitui grant" da Fase 1.
+
+**O que aconteceu:** a `cards_select` original fazia
+`EXISTS (select 1 from card_visibilidade v where v.card_id = cards.id and (...))`. A subconsulta
+**herda o RLS de `card_visibilidade`**, que só tem a `vis_all` (`ALL using eh_gestor()`). Para quem
+não é gestor, a subconsulta via zero linhas, o `EXISTS` nunca achava nada, e professor/recepção não
+viam cartão algum — **com o dado 100% correto na tabela e sem nenhum erro em lugar nenhum**.
+
+É o "RLS barra em silêncio" de sempre, só que **aninhado dentro de outra policy**: a policy que
+falha não é a policy culpada, e a tabela que você está depurando não é a que está barrando. Por isso
+é caro de achar.
+
+**Correção:** função `pode_ver_card(p_card_id uuid)` `security definer` encapsulando a checagem, e
+policy virou `eh_gestor() OR pode_ver_card(cards.id)`. Confirmado com conta real (Leonardo, perfil
+`recepcao`), não por leitura de policy.
+
+**Com `eh_gestor`, `meu_equipe_id`, `meu_perfil` e `pode_ver_card` são quatro casos: isto é padrão
+do projeto, não exceção.**
+
+**Consequência direta para a Fase 2 — não ignorar:** as policies da `montagem_treinos` fazem
+`EXISTS` direto contra a `equipe`. Hoje funcionam só porque a `equipe` tem policy permissiva
+(`using(true)`). **No dia em que a Fase 2 apertar a `equipe`, aquelas policies passam a ter
+exatamente este bug, em silêncio, e a aba Treinos para de mostrar linha para todo mundo.**
+Converter a `montagem_treinos` para `security definer` **antes** de mexer na `equipe`, nunca depois.
 
 ### Regra visual (exceção deliberada — não "corrigir")
 - **Os cartões são SÓLIDOS escuros (`var(--g1)`), nunca vidro, nunca na cor da lista.** Só levam uma
@@ -313,8 +340,12 @@ enfeite — sem ele, `security definer` vira vetor de escalada de privilégio.
   abertos: qualquer pessoa com a anon key (que é pública por design) lê e escreve via DevTools.
   A Fase 1 resolveu *quem é você*, não *o que você pode fazer* — o `currentRole` no JavaScript é
   cosmético. Inclui apertar a policy e o grant provisórios da `equipe` (ver acima).
-  **Modelo a seguir: a `montagem_treinos`** (ver seção própria) — é a única tabela do projeto com
-  RLS habilitado, policies por operação e bloqueio comprovado por teste.
+  **Modelo a seguir: as tabelas da Fase 4** (`quadros`/`colunas`/`cards`/`card_visibilidade`) —
+  usam funções `security definer` e por isso não quebram quando a `equipe` for apertada. A
+  `montagem_treinos` (2026-08-02) foi o primeiro acerto, mas consulta a `equipe` por `EXISTS`
+  direto: **ela vai quebrar em silêncio quando a `equipe` for fechada.** Ver a regra
+  "policy que consulta outra tabela com RLS precisa de `security definer`" na seção do
+  Planejamento — e converter a `montagem_treinos` ANTES de mexer na `equipe`.
 - **`anon` ainda tem `TRUNCATE` na `montagem_treinos` — revogar.** Detectado em 2026-08-02 ao ler os
   grants. O CRUD do `anon` já foi tirado, mas `TRUNCATE` e `REFERENCES` ficaram como sobra da
   concessão padrão do Supabase. Importa porque **`TRUNCATE` não passa por RLS**: policy nenhuma

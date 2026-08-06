@@ -218,32 +218,83 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   | `card_visibilidade` | `vis_all` | ALL | `eh_gestor()` | `eh_gestor()` |
 
   ```sql
-  -- cards_select: gestor vê tudo; os demais só o que foi liberado pro perfil ou pra pessoa
+  -- cards_select (texto ATUAL, depois da correção de 2026-08-06):
+  -- gestor vê tudo; os demais, só o que foi liberado pro perfil ou pra pessoa.
+  eh_gestor() OR pode_ver_card(cards.id)
+  ```
+
+  Quadros e listas são legíveis por qualquer autenticado (`using true`) **de propósito**: a estrutura
+  do quadro não é segredo, o conteúdo é. O que filtra de verdade é o `cards_select`.
+- **As 4 funções auxiliares — todas `security definer`, `STABLE`, `SET search_path TO 'public'`:**
+
+  ```sql
+  eh_gestor()               -> boolean : select exists (select 1 from equipe
+                                         where auth_user_id = auth.uid() and perfil = 'gestor')
+  meu_equipe_id()           -> uuid    : select id from equipe where auth_user_id = auth.uid() limit 1
+  meu_perfil()              -> text    : select perfil from equipe where auth_user_id = auth.uid() limit 1
+  pode_ver_card(p_card_id)  -> boolean : encapsula a checagem em card_visibilidade
+                                         (linha do card batendo com meu_equipe_id() ou meu_perfil())
+  ```
+
+  As três primeiras foram lidas de `pg_proc` em 2026-08-06. **O corpo literal de `pode_ver_card()`
+  ainda não foi extraído** — o que está acima é o contrato dela, descrito por quem a criou. Rodar
+  para completar o registro:
+  `select pg_get_functiondef(oid) from pg_proc where proname = 'pode_ver_card';`
+
+  **Por que elas existem, que é o ponto a não esquecer:** nenhuma das 7 policies consulta `equipe`
+  ou `card_visibilidade` diretamente — todas passam por essas funções. Como são `security definer`,
+  rodam com os privilégios do dono e **não são afetadas pelo RLS das tabelas que consultam**.
+  Consequência prática: quando a Fase 2 apertar a `equipe` para cada pessoa ler só a própria linha,
+  **nenhuma policy do Planejamento quebra**. É a mesma preocupação registrada para a
+  `montagem_treinos` (cujas policies foram escritas com o cuidado de só tocar a linha de quem
+  chamou), resolvida aqui de forma estrutural em vez de por disciplina. O
+  `SET search_path TO 'public'` **não é enfeite**: sem ele, `security definer` é um vetor clássico
+  de escalada de privilégio, porque o chamador poderia apontar o `search_path` para um schema com
+  uma tabela `equipe` falsa.
+- **⚠️ LIÇÃO APRENDIDA DA FASE 4 (2026-08-06) — subconsulta dentro de policy herda o RLS da tabela
+  consultada.** Está aqui no mesmo nível do "policy não substitui grant" da Fase 1: é o tipo de
+  erro que custa horas porque **não dá erro nenhum**.
+
+  **O bug.** A `cards_select` original fazia um `EXISTS` direto contra `card_visibilidade`:
+
+  ```sql
+  -- ERRADO — não use como referência. Registrado só para reconhecer o padrão.
   eh_gestor() OR (EXISTS ( SELECT 1
      FROM card_visibilidade v
     WHERE ((v.card_id = cards.id) AND ((v.equipe_id = meu_equipe_id()) OR (v.perfil = meu_perfil())))))
   ```
 
-  Quadros e listas são legíveis por qualquer autenticado (`using true`) **de propósito**: a estrutura
-  do quadro não é segredo, o conteúdo é. O que filtra de verdade é o `cards_select`.
-- **As 3 funções auxiliares — todas `security definer`, `STABLE`, `SET search_path TO 'public'`:**
+  Isso não funciona. A subconsulta em `card_visibilidade` **herda o RLS daquela tabela**, que tem
+  só a `vis_all` (`ALL using eh_gestor()`). Para quem não é gestor, a subconsulta enxerga zero
+  linhas — então o `EXISTS` **nunca encontrava nada**, mesmo com o dado 100% correto gravado na
+  tabela. Resultado: professor e recepção não viam cartão nenhum, e nada no log acusava.
 
-  ```sql
-  eh_gestor()     -> boolean : select exists (select 1 from equipe
-                               where auth_user_id = auth.uid() and perfil = 'gestor')
-  meu_equipe_id() -> uuid    : select id from equipe where auth_user_id = auth.uid() limit 1
-  meu_perfil()    -> text    : select perfil from equipe where auth_user_id = auth.uid() limit 1
-  ```
+  É o "RLS barra em silêncio" já conhecido do projeto, só que **aninhado dentro de outra policy** —
+  bem mais difícil de enxergar, porque a policy que falha (`cards_select`) não é a policy culpada
+  (`vis_all`), e a tabela que você está depurando não é a tabela que está barrando.
 
-  **Por que elas existem, que é o ponto a não esquecer:** nenhuma das 7 policies consulta a `equipe`
-  diretamente — todas passam por essas funções. Como são `security definer`, rodam com os
-  privilégios do dono e **não são afetadas pelo RLS da `equipe`**. Consequência prática: quando a
-  Fase 2 apertar a `equipe` para cada pessoa ler só a própria linha, **nenhuma policy do
-  Planejamento quebra**. É a mesma preocupação registrada para a `montagem_treinos` (cujas policies
-  foram escritas com o cuidado de só tocar a linha de quem chamou), resolvida aqui de forma
-  estrutural em vez de por disciplina. O `SET search_path TO 'public'` **não é enfeite**: sem ele,
-  `security definer` é um vetor clássico de escalada de privilégio, porque o chamador poderia
-  apontar o `search_path` para um schema com uma tabela `equipe` falsa.
+  **A correção**, aplicada em produção pelo SQL Editor em 2026-08-06: criar a função
+  `pode_ver_card(p_card_id uuid)` como `security definer`, encapsulando a checagem de
+  visibilidade, e trocar a policy para `eh_gestor() OR pode_ver_card(cards.id)`. A função ignora o
+  RLS de `card_visibilidade`, que é exatamente o que se quer aqui.
+
+  **Confirmado com conta real**, não por leitura de policy: o Leonardo (perfil `recepcao`) passou a
+  ver corretamente só o cartão liberado para o perfil dele. Antes da correção, via zero.
+
+  **REGRA GERAL DO PROJETO, a partir daqui:** qualquer policy que precise consultar **outra tabela
+  com RLS restritivo** tem que passar por função `security definer` — **nunca `EXISTS` direto**.
+  Com `eh_gestor()`, `meu_equipe_id()`, `meu_perfil()` e agora `pode_ver_card()`, são quatro casos:
+  isto é **padrão do projeto, não exceção**. Vale integralmente para a Fase 2, que vai escrever
+  policies novas em cima da `equipe` — a tabela mais consultada por policy no banco inteiro.
+
+  Corolário útil: **a `montagem_treinos` está a salvo disso** porque suas policies consultam a
+  `equipe`, que hoje tem policy permissiva (`using(true)`). No dia em que a Fase 2 apertar a
+  `equipe`, aqueles `EXISTS` diretos passam a ter exatamente este bug — silenciosamente. Converter
+  as policies da `montagem_treinos` para `security definer` **antes** de mexer na `equipe`, não
+  depois.
+- **Correção de documentação:** o commit `3adf47a` registrou a `cards_select` com o `EXISTS` direto,
+  ou seja, com o bug. O texto acima é o correto. Registrado aqui em vez de reescrito no histórico
+  porque a versão errada é justamente o que dá contexto à lição.
 - **Grants da Fase 4 (idênticos nas 4 tabelas):** `authenticated` e `postgres` com
   `SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE`; `anon` e `service_role` com
   apenas `REFERENCES, TRIGGER, TRUNCATE` — ou seja, **`anon` sem nenhum CRUD**, como deve ser.
