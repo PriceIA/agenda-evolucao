@@ -473,6 +473,104 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-rodizio .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
 @media(max-width:640px){#page-rodizio{margin:-16px -14px;padding:18px 14px 32px}}
 
+/* PLANEJAMENTO — liquid glass (mesma base de Treinos; nenhum valor novo).
+   DUAS EXCEÇÕES DELIBERADAS, registradas no CLAUDE.md — não "corrigir":
+   1. Os CARTÕES são SÓLIDOS escuros (var(--g1)), nunca vidro e nunca na cor da
+      coluna — só uma faixa de 3px no topo. Mesma regra dos inputs do Login/Config
+      e do antigo keypad: sobre o fundo laranja, onde se lê o conteúdo não leva vidro.
+   2. O cabeçalho da coluna é uma faixa SÓLIDA OPACA na cor da coluna, com o texto no
+      tom escuro da mesma família. Cor e contraste vêm inline, do PLAN_CORES no JS,
+      que é a única fonte das 6 cores aceitas pelo CHECK do banco. */
+.plan-lista-grid{display:flex;flex-direction:column;gap:8px}
+.plan-quadro-card{border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;cursor:pointer;animation:cardIn 0.32s ease both;transition:all 0.18s}
+.plan-quadro-icone{font-size:22px;flex-shrink:0}
+.plan-quadro-body{flex:1;min-width:0}
+.plan-quadro-tema{font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px}
+.plan-quadro-nome{font-size:14px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-quadro-seta{font-size:18px;flex-shrink:0}
+.plan-voltar{background:none;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:12px}
+/* faixa de colunas: lado a lado no desktop, carrossel de uma coluna no mobile */
+.plan-colunas{display:flex;gap:12px;align-items:flex-start;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+.plan-colunas::-webkit-scrollbar{display:none}
+.plan-colunas .empty{flex:1 1 100%}
+.plan-col{flex:0 0 300px;border-radius:16px;position:relative;overflow:hidden;animation:cardIn 0.32s ease both}
+.plan-col-hd{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.plan-col-nome{font-size:13px;font-weight:800;letter-spacing:-0.2px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-col-cnt{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:rgba(0,0,0,0.14);flex-shrink:0}
+.plan-col-acts{display:flex;gap:3px;flex-shrink:0}
+.plan-col-btn{width:20px;height:20px;border-radius:5px;border:none;background:rgba(0,0,0,0.10);color:inherit;cursor:pointer;font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;transition:background 0.15s;padding:0}
+.plan-col-btn:hover:not(:disabled){background:rgba(0,0,0,0.22)}
+.plan-col-btn:disabled{opacity:0.35;cursor:default}
+.plan-col-bd{padding:10px;display:flex;flex-direction:column;gap:8px}
+/* CARTÃO — sólido, nunca vidro (ver exceção 1 no topo do bloco) */
+.plan-card{background:var(--g1);color:var(--white);border:1px solid rgba(255,255,255,0.10);border-radius:10px;padding:12px 12px 10px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.15s}
+.plan-card:hover{border-color:rgba(255,255,255,0.28);transform:translateY(-1px)}
+.plan-card.dragging{opacity:0.4}
+.plan-card-faixa{position:absolute;top:0;left:0;right:0;height:3px;pointer-events:none}
+.plan-card-topo{display:flex;align-items:flex-start;gap:8px}
+.plan-card-titulo{font-size:13px;font-weight:700;letter-spacing:-0.2px;line-height:1.35;flex:1;min-width:0;word-break:break-word}
+.plan-card-desc{font-size:11.5px;color:rgba(255,255,255,0.65);margin-top:5px;line-height:1.45;word-break:break-word}
+.plan-card-lock{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:2px 6px;margin-top:8px}
+.plan-card-menu{width:22px;height:22px;border-radius:6px;border:none;background:rgba(255,255,255,0.10);color:rgba(255,255,255,0.8);cursor:pointer;font-size:12px;line-height:1;flex-shrink:0;font-family:'Inter',sans-serif;padding:0}
+.plan-card-menu:hover{background:rgba(255,255,255,0.2);color:var(--white)}
+/* cartão na ÚLTIMA coluna do quadro = trabalho encerrado, sai de foco.
+   Mesmo 0.6 do .treino-card.st-cancelado. Derivado da posição: a tabela `cards`
+   não tem campo de status, e a Fase 4 não mexe em schema. */
+.plan-card.plan-fim{opacity:0.6}
+.plan-add{width:100%;padding:9px;border-radius:9px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.plan-nova-lista{flex:0 0 200px;padding:14px;font-size:12.5px;font-weight:700;border-radius:16px}
+/* menu "⋮" do cartão — mesmos valores do .tb-more-menu da topbar.
+   position:fixed para escapar do overflow:hidden da coluna. */
+.plan-menu{display:none;position:fixed;background:var(--white);border:1.5px solid var(--bd);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.18);z-index:400;max-height:280px;overflow-y:auto}
+.plan-menu.open{display:block}
+.plan-menu button{display:block;width:100%;text-align:left;padding:11px 13px;border:none;background:none;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--g2);cursor:pointer}
+.plan-menu button:hover:not(:disabled){background:var(--off)}
+.plan-menu button+button{border-top:1px solid var(--bd)}
+.plan-menu button:disabled{color:var(--g5);cursor:default}
+.plan-menu-lbl{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--g4);padding:9px 13px 5px;border-top:1px solid var(--bd)}
+/* paleta e lista de pessoas — vivem nos modais BRANCOS, então usam os tokens claros */
+.plan-cores{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.plan-cor{width:34px;height:34px;border-radius:9px;border:2px solid var(--bd);cursor:pointer;padding:0;transition:all 0.15s;font-family:'Inter',sans-serif}
+.plan-cor:hover{transform:translateY(-1px)}
+.plan-cor.sel{border-color:var(--black)}
+.plan-cor.sem{background:var(--off2);font-size:9px;font-weight:800;color:var(--g3)}
+.plan-vis-lista{max-height:170px;overflow-y:auto;margin-bottom:10px}
+.plan-pessoa{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1.5px solid var(--bd);border-radius:9px;margin-bottom:6px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--g2)}
+.plan-pessoa:hover{border-color:var(--g4)}
+.plan-pessoa input{accent-color:var(--orange);width:15px;height:15px;flex-shrink:0}
+.plan-pessoa-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-pessoa-cargo{font-size:10.5px;font-weight:600;color:var(--g4);flex-shrink:0}
+.plan-vis-aviso{font-size:11.5px;line-height:1.45;color:var(--g3);background:var(--off);border:1px solid var(--bd);border-radius:9px;padding:9px 11px;margin-bottom:13px}
+/* .btn-cancel/.btn-save são declarados DEPOIS deste bloco no arquivo; sem o
+   seletor duplo o empate de especificidade seria vencido por eles. */
+.btn-cancel.plan-btn-del{color:var(--red);border-color:var(--red)}
+.btn-cancel.plan-btn-del:hover{background:#FEF2F2;color:#B91C1C;border-color:#B91C1C}
+.btn-save.plan-btn-apagar:not(:disabled){background:var(--red)}
+.btn-save.plan-btn-apagar:not(:disabled):hover{background:#B91C1C}
+#page-planejamento{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-planejamento .plan-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+#page-planejamento .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-planejamento .plan-quadro-card,#page-planejamento .plan-col{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-planejamento .plan-quadro-card,#page-planejamento .plan-col{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+}
+#page-planejamento .plan-quadro-card::before,#page-planejamento .plan-col::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none;z-index:2}
+#page-planejamento .plan-quadro-card:hover{border-color:rgba(255,255,255,0.65);transform:translateX(3px)}
+#page-planejamento .plan-quadro-nome{color:var(--white)}
+#page-planejamento .plan-quadro-tema,#page-planejamento .plan-quadro-seta{color:rgba(255,255,255,0.7)}
+#page-planejamento .plan-voltar{color:rgba(255,255,255,0.8)}
+#page-planejamento .plan-voltar:hover{color:var(--white)}
+#page-planejamento .btn-add{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+#page-planejamento .btn-add:hover{background:#ffe9d6}
+/* botões tracejados — mesmos valores do #page-rodizio .btn-add */
+#page-planejamento .plan-add{background:rgba(255,255,255,0.08);border:1.5px dashed rgba(255,255,255,0.55);color:var(--white)}
+#page-planejamento .plan-add:hover{background:rgba(255,255,255,0.14)}
+#page-planejamento .plan-col.plan-col-over{border-color:rgba(255,255,255,0.85)}
+#page-planejamento .empty{color:rgba(255,255,255,0.75)}
+#page-planejamento .loading-state{color:rgba(255,255,255,0.75)}
+#page-planejamento .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
+
 /* LOGIN — liquid glass (somente tela de entrada; splash e app intactos) */
 #screen-login{background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
 #screen-login .login-company{color:rgba(255,255,255,0.8);text-shadow:0 1px 4px rgba(0,0,0,0.25)}
@@ -646,7 +744,13 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
   .tb-nav::-webkit-scrollbar{display:none}
   .tb-nav-item{padding:5px 7px;font-size:11px;flex:0 0 auto;scroll-snap-align:start}
   /* a topbar de 2 linhas é mais alta que os 56px fixos usados nas telas de vidro */
-  #page-agenda,#page-rodizio,#page-calendario,#page-treinos,#page-relatorios,#page-config{min-height:calc(100vh - 100px)}
+  #page-agenda,#page-rodizio,#page-calendario,#page-treinos,#page-relatorios,#page-planejamento,#page-config{min-height:calc(100vh - 100px)}
+  #page-planejamento{margin:-16px -14px;padding:18px 14px 32px}
+  /* colunas viram carrossel: uma por vez, encaixando na borda (mesmo scroll-snap da .tb-nav).
+     No mobile não há drag — cada cartão usa o menu "⋮" para mudar de lista. */
+  .plan-colunas{scroll-snap-type:x mandatory}
+  .plan-col{flex:0 0 88%;scroll-snap-align:start}
+  .plan-nova-lista{flex:0 0 60%}
 }
 </style>
 </head>
@@ -698,6 +802,9 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <button class="tb-nav-item" onclick="goPage(&#39;rodizio&#39;,this)">Rodízio</button>
           <button class="tb-nav-item" onclick="goPage(&#39;calendario&#39;,this)">Calendário</button>
           <button class="tb-nav-item" onclick="goPage(&#39;treinos&#39;,this)">Treinos</button>
+          <!-- Planejamento aparece para TODOS os perfis: quem não é gestor entra em
+               modo leitura e o RLS já filtra quais cartões ele enxerga. -->
+          <button class="tb-nav-item" onclick="goPage(&#39;planejamento&#39;,this)">Planejamento</button>
           <button class="tb-nav-item" id="nav-relatorios" style="display:none" onclick="goPage(&#39;relatorios&#39;,this)">Relatórios</button>
           <button class="tb-nav-item" id="nav-config" style="display:none" onclick="goPage(&#39;config&#39;,this)">Config.</button>
         </div>
@@ -782,6 +889,26 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         </div>
         <div class="rel-lista" id="relatorios-lista"></div>
         <div id="relatorios-detalhe"></div>
+      </div>
+
+      <!-- PLANEJAMENTO (Kanban) — lista de quadros e quadro aberto, mesmo padrão
+           "pasta" da tela de Relatórios: um bloco esconde o outro. -->
+      <div class="page" id="page-planejamento">
+        <div id="plan-lista">
+          <div class="sec-head">
+            <div><div class="plan-kicker">Quadros da equipe</div><div class="sec-title">Planejamento</div></div>
+            <button class="btn-add" id="btn-novo-quadro" onclick="openQuadroModal()" style="display:none">+ Novo quadro</button>
+          </div>
+          <div class="plan-lista-grid" id="plan-quadros"></div>
+        </div>
+        <div id="plan-board" style="display:none">
+          <button class="plan-voltar" onclick="fecharQuadro()">‹ Voltar aos quadros</button>
+          <div class="sec-head">
+            <div><div class="plan-kicker" id="plan-board-tema"></div><div class="sec-title" id="plan-board-nome"></div></div>
+            <div class="sec-actions" id="plan-board-acoes"></div>
+          </div>
+          <div class="plan-colunas" id="plan-colunas"></div>
+        </div>
       </div>
 
       <!-- CONFIG -->
@@ -964,6 +1091,95 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <div class="modal-ft"><button class="btn-cancel" onclick="closeTreinoModal()">Cancelar</button><button class="btn-save" id="btn-save-treino" onclick="saveTreino()">Criar treino</button></div>
       </div>
     </div>
+
+    <!-- PLANEJAMENTO: NOVO/EDITAR QUADRO (padrão branco dos demais modais) -->
+    <div class="modal-bg" id="quadro-modal" onclick="if(event.target===this)closeQuadroModal()">
+      <div class="modal-box" style="width:420px">
+        <div class="modal-hd"><div class="modal-ttl" id="quadro-modal-title">Novo quadro</div><button class="modal-cls" onclick="closeQuadroModal()">✕</button></div>
+        <div class="modal-bd">
+          <div class="form-msg" id="quadro-msg"></div>
+          <label class="flabel" for="quadro-tema">Tema</label>
+          <input class="finput" id="quadro-tema" type="text" placeholder="Ex: Operação da academia">
+          <label class="flabel" for="quadro-nome">Nome do quadro</label>
+          <input class="finput" id="quadro-nome" type="text" placeholder="Ex: Reforma da sala de musculação">
+          <div id="quadro-tpl-wrap">
+            <label class="flabel">Modelo de listas</label>
+            <div class="type-grid" id="quadro-tpl" style="grid-template-columns:repeat(3,1fr)">
+              <div class="type-tile sel" onclick="planTemplateSel(&#39;simples&#39;,this)"><span class="ticon">🗂️</span><span class="tname">Simples</span></div>
+              <div class="type-tile" onclick="planTemplateSel(&#39;espera&#39;,this)"><span class="ticon">💡</span><span class="tname">Com espera</span></div>
+              <div class="type-tile" onclick="planTemplateSel(&#39;branco&#39;,this)"><span class="ticon">📄</span><span class="tname">Em branco</span></div>
+            </div>
+            <div class="cfg-note" id="quadro-tpl-desc"></div>
+            <div class="cfg-note" style="margin-bottom:0">O modelo só preenche as listas iniciais. Depois de criado, o quadro não fica preso a ele: dá para adicionar, renomear, reordenar, recolorir e apagar listas quando quiser.</div>
+          </div>
+        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closeQuadroModal()">Cancelar</button><button class="btn-save" id="btn-save-quadro" onclick="saveQuadro()">Criar quadro</button></div>
+      </div>
+    </div>
+
+    <!-- PLANEJAMENTO: NOVA/EDITAR LISTA (coluna) -->
+    <div class="modal-bg" id="coluna-modal" onclick="if(event.target===this)closeColunaModal()">
+      <div class="modal-box" style="width:380px">
+        <div class="modal-hd"><div class="modal-ttl" id="coluna-modal-title">Nova lista</div><button class="modal-cls" onclick="closeColunaModal()">✕</button></div>
+        <div class="modal-bd">
+          <div class="form-msg" id="coluna-msg"></div>
+          <label class="flabel" for="coluna-nome">Nome da lista</label>
+          <input class="finput" id="coluna-nome" type="text" placeholder="Ex: A fazer">
+          <label class="flabel">Cor do cabeçalho</label>
+          <!-- as opções vêm do PLAN_CORES; são exatamente as aceitas pelo CHECK do banco -->
+          <div class="plan-cores" id="coluna-cores"></div>
+        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closeColunaModal()">Cancelar</button><button class="btn-save" id="btn-save-coluna" onclick="saveColuna()">Criar lista</button></div>
+      </div>
+    </div>
+
+    <!-- PLANEJAMENTO: NOVO/EDITAR CARTÃO -->
+    <div class="modal-bg" id="card-modal" onclick="if(event.target===this)closeCardModal()">
+      <div class="modal-box" style="width:420px">
+        <div class="modal-hd"><div class="modal-ttl" id="card-modal-title">Novo cartão</div><button class="modal-cls" onclick="closeCardModal()">✕</button></div>
+        <div class="modal-bd">
+          <div class="form-msg" id="card-msg"></div>
+          <label class="flabel" for="card-titulo">Título</label>
+          <input class="finput" id="card-titulo" type="text" placeholder="Ex: Orçar espelhos novos">
+          <label class="flabel" for="card-desc">Descrição (opcional)</label>
+          <textarea class="finput" id="card-desc" rows="3" placeholder="Detalhes, links, o que precisa acontecer..." style="resize:vertical"></textarea>
+          <label class="flabel">Visível para os perfis</label>
+          <div class="vis-multi" id="card-vis-perfis">
+            <div class="vis-chip" onclick="togglePlanVisPerfil(&#39;professor&#39;,this)" data-vis="professor">🏋️ Professores</div>
+            <div class="vis-chip" onclick="togglePlanVisPerfil(&#39;recepcao&#39;,this)" data-vis="recepcao">🗂️ Recepção</div>
+            <div class="vis-chip" onclick="togglePlanVisPerfil(&#39;gestor&#39;,this)" data-vis="gestor">⚡ Gestores</div>
+          </div>
+          <label class="flabel">E/ou para pessoas específicas</label>
+          <div class="plan-vis-lista" id="card-vis-pessoas"></div>
+          <div class="plan-vis-aviso" id="card-vis-aviso"></div>
+        </div>
+        <div class="modal-ft">
+          <button class="btn-cancel plan-btn-del" id="btn-del-card" style="display:none;margin-right:auto" onclick="deleteCard(editingCardId)">🗑️ Apagar</button>
+          <button class="btn-cancel" onclick="closeCardModal()">Cancelar</button>
+          <button class="btn-save" id="btn-save-card" onclick="saveCard()">Criar cartão</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLANEJAMENTO: APAGAR QUADRO.
+         Confirmação por DIGITAÇÃO do nome, não confirm() simples: o DELETE dispara
+         CASCADE em listas, cartões e visibilidades, e não existe lixeira. -->
+    <div class="modal-bg" id="apagar-quadro-modal" onclick="if(event.target===this)closeApagarQuadroModal()">
+      <div class="modal-box" style="width:400px">
+        <div class="modal-hd"><div class="modal-ttl">Apagar quadro</div><button class="modal-cls" onclick="closeApagarQuadroModal()">✕</button></div>
+        <div class="modal-bd">
+          <div class="form-msg" id="apagar-msg"></div>
+          <div class="cfg-note" id="apagar-resumo"></div>
+          <label class="flabel">Confirme digitando o nome do quadro</label>
+          <div class="cfg-note" style="margin-bottom:6px">Nome exato: <b id="apagar-nome-alvo"></b></div>
+          <input class="finput" id="apagar-confirma" type="text" placeholder="Digite o nome do quadro" oninput="checarNomeApagar()" autocomplete="off" style="margin-bottom:0">
+        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closeApagarQuadroModal()">Cancelar</button><button class="btn-save plan-btn-apagar" id="btn-apagar-quadro" onclick="confirmarApagarQuadro()" disabled>Apagar definitivamente</button></div>
+      </div>
+    </div>
+
+    <!-- menu "⋮" do cartão (position:fixed, preenchido pelo openCardMenu) -->
+    <div class="plan-menu" id="plan-menu"></div>
 
     <!-- TROCAR SENHA -->
     <!-- Segue o padrão dos modais brancos do app (Novo Evento / Nova Escala).
@@ -1154,6 +1370,7 @@ document.addEventListener('click',e=>{
     document.querySelectorAll('.team-select-btn.open').forEach(c=>c.classList.remove('open'));
   }
   if(!e.target.closest('.tb-more-wrap'))closeTbMore();
+  if(!e.target.closest('.plan-menu')&&!e.target.closest('.plan-card-menu'))closePlanMenu();
 });
 
 // Menu "mais opções" da topbar (mobile)
@@ -1298,6 +1515,9 @@ async function logout(){
   currentRole='';currentUserName='';currentEquipeId='';treinos=[];
   // não deixar relatório aberto esperando o próximo login
   relatorioAberto=null;document.getElementById('relatorios-detalhe').innerHTML='';
+  // idem para o Planejamento: quadro aberto e cartões do usuário anterior saem da memória
+  quadros=[];fecharQuadro();
+  document.getElementById('plan-quadros').innerHTML='';
   updateTreinosBadge();
   document.getElementById('tb-user').textContent='';
   document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
@@ -1308,7 +1528,8 @@ function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classLi
   // no mobile o menu rola na horizontal: garante que a aba escolhida fique visível
   try{el.scrollIntoView({inline:'nearest',block:'nearest'});}catch(e){}
   if(name==='treinos')loadTreinos();
-  if(name==='relatorios')loadRelatorios();}
+  if(name==='relatorios')loadRelatorios();
+  if(name==='planejamento')loadQuadros();}
 function goPageDirect(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));document.querySelector('.tb-nav-item').classList.add('active');}
 
 function showNotif(){
@@ -1977,6 +2198,687 @@ async function renderRelTreinosProf(box){
         </div>`;
       }).join('')}
     </div>`;
+}
+
+// ============================================================================
+// PLANEJAMENTO (Kanban) — Fase 4
+// ============================================================================
+// ACESSO: igual à aba Treinos, esta tela usa `sbClient.from()` (AUTENTICADO) e
+// NUNCA os helpers sbGet/sbPost/sbPatch/sbDelete. As 7 policies destas 4 tabelas
+// são para o role `authenticated`; com a anon key dos helpers a resposta seria
+// zero linhas em silêncio — a pegadinha de sempre.
+//
+// O RLS já decide o que cada um vê: gestor recebe tudo; professor/recepção
+// recebem só os cards com linha correspondente em `card_visibilidade`. Não há
+// refiltro por perfil no JavaScript — duplicar a regra criaria duas fontes de
+// verdade. O que existe aqui é ocultação de BOTÃO, que é outra coisa.
+
+// As 6 cores aceitas pelo CHECK de `colunas.cor` (mais NULL). Qualquer outro
+// valor faz o banco recusar o INSERT — por isso esta lista é a única fonte.
+// `texto` é o tom escuro da mesma família, para a faixa sólida do cabeçalho.
+const PLAN_CORES=[
+  {valor:'#3B82F6',rotulo:'Azul',texto:'#042C53'},
+  {valor:'#8B5CF6',rotulo:'Roxo',texto:'#26215C'},
+  {valor:'#EAB308',rotulo:'Dourado',texto:'#412402'},
+  {valor:'#22C55E',rotulo:'Verde',texto:'#173404'},
+  {valor:'#EF4444',rotulo:'Vermelho',texto:'#501313'},
+  {valor:'#64748B',rotulo:'Cinza',texto:'#2C2C2A'},
+  {valor:null,rotulo:'Sem cor',texto:'#FFFFFF'}
+];
+const PLAN_COR_NEUTRA='rgba(30,30,28,0.92)';   // faixa da coluna sem cor (NULL)
+function planCor(cor){return PLAN_CORES.find(c=>c.valor===(cor||null))||PLAN_CORES[PLAN_CORES.length-1];}
+function planFaixa(cor){const c=planCor(cor);return{fundo:c.valor||PLAN_COR_NEUTRA,texto:c.texto};}
+
+// Modelos de quadro: lista fixa usada SÓ no momento da criação. Depois o quadro
+// não fica preso ao modelo — colunas viram dado comum, editável à vontade.
+const TEMPLATES_QUADRO=[
+  {id:'simples',colunas:[{nome:'A fazer',cor:'#3B82F6'},{nome:'Fazendo',cor:'#EAB308'},{nome:'Feito',cor:'#22C55E'}]},
+  {id:'espera',colunas:[{nome:'Ideias',cor:'#3B82F6'},{nome:'A fazer',cor:'#3B82F6'},{nome:'Fazendo',cor:'#EAB308'},{nome:'Feito',cor:'#22C55E'}]},
+  {id:'branco',colunas:[]}
+];
+const PERFIL_ROTULO={professor:'Professores',recepcao:'Recepção',gestor:'Gestores'};
+
+let quadros=[],quadroAberto=null,planColunas=[],planCards=[],planVis=[];
+let planDragCardId=null,planTouchAtual=null;
+let editingQuadroId=null,editingColunaId=null,editingCardId=null,cardModalColunaId=null;
+let planTemplate='simples',planCorSel='#3B82F6',planVisPerfis=[],planVisPessoas=[];
+
+// Ocultar botão é CONVENIÊNCIA DE INTERFACE, não segurança — mesma nota do
+// podeCadastrarTreino(). Quem garante é a policy (`eh_gestor()` no banco).
+function podeEditarPlanejamento(){return currentRole==='gestor';}
+function planErro(msg,err){if(err!==undefined)console.error('Planejamento:',err);toast('❌ '+msg,4500);}
+function showPlanMsg(id,msg,ok){const el=document.getElementById(id);el.textContent=msg;el.className='form-msg '+(ok?'ok':'err');}
+function clearPlanMsg(id){const el=document.getElementById(id);el.textContent='';el.className='form-msg';}
+
+function traduzErroPlan(error){
+  const m=((error&&error.message)||'')+' '+((error&&error.code)||'');
+  if(/row-level security|violates row|42501|permission denied/i.test(m))return'Você não tem permissão para esta ação. Fale com o gestor.';
+  if(/check constraint/i.test(m))return'Algum campo ficou com valor inválido (cor da lista ou visibilidade). Recarregue a página e tente de novo.';
+  if(/foreign key/i.test(m))return'Um item referenciado não existe mais. Recarregue a página e tente de novo.';
+  if(/duplicate key/i.test(m))return'Esse item já existe.';
+  return'Não foi possível salvar. Tente de novo em alguns instantes.';
+}
+
+// Mobile não tem drag (conflita com o scroll da tela): o cartão usa o menu "⋮".
+// Detecção por ponteiro/largura — NUNCA por user-agent.
+function planIsTouch(){
+  try{if(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches)return true;}catch(e){}
+  return window.innerWidth<=900;
+}
+
+// ---------- CARREGAMENTO ----------
+async function loadQuadros(){
+  const c=document.getElementById('plan-quadros');
+  document.getElementById('btn-novo-quadro').style.display=podeEditarPlanejamento()?'flex':'none';
+  if(!sbClient){c.innerHTML='<div class="empty">O componente de login não carregou. Recarregue a página.</div>';return;}
+  if(!quadroAberto)c.innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
+  const{data,error}=await sbClient.from('quadros').select('id,tema,nome,criado_em')
+    .eq('ativo',true).order('criado_em',{ascending:false});
+  if(error){
+    console.error('Erro ao carregar quadros:',error);
+    quadros=[];
+    c.innerHTML='<div class="empty">Não foi possível carregar os quadros. Tente recarregar a página em alguns instantes.</div>';
+    showConnError();
+    return;
+  }
+  quadros=data||[];
+  renderQuadrosLista();
+  if(quadroAberto)await abrirQuadro(quadroAberto);   // reabre ao voltar pra aba
+}
+
+function renderQuadrosLista(){
+  const c=document.getElementById('plan-quadros');
+  if(!quadros.length){
+    c.innerHTML='<div class="empty">'+(podeEditarPlanejamento()
+      ?'Nenhum quadro ainda. Crie o primeiro em "+ Novo quadro".'
+      :'Nenhum quadro disponível para você ainda.')+'</div>';
+    return;
+  }
+  c.innerHTML=quadros.map((q,i)=>`<div class="plan-quadro-card" style="animation-delay:${Math.min(i,12)*35}ms" onclick="abrirQuadro('${esc(q.id)}')">
+    <div class="plan-quadro-icone">🗂️</div>
+    <div class="plan-quadro-body">
+      <div class="plan-quadro-tema">${esc(q.tema)||'—'}</div>
+      <div class="plan-quadro-nome">${esc(q.nome)||'Sem nome'}</div>
+    </div>
+    <div class="plan-quadro-seta">›</div>
+  </div>`).join('');
+}
+
+async function abrirQuadro(id){
+  quadroAberto=id;
+  document.getElementById('plan-lista').style.display='none';
+  document.getElementById('plan-board').style.display='';
+  const q=quadros.find(x=>x.id===id)||{};
+  document.getElementById('plan-board-tema').textContent=q.tema||'Quadro';
+  document.getElementById('plan-board-nome').textContent=q.nome||'—';
+  document.getElementById('plan-board-acoes').innerHTML=podeEditarPlanejamento()
+    ?`<button class="btn-add" onclick="openQuadroModal('${esc(id)}')">✏️ Editar</button>
+      <button class="btn-add" onclick="openApagarQuadroModal()">🗑️ Apagar</button>`:'';
+  document.getElementById('plan-colunas').innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
+  if(await carregarConteudoQuadro(id))renderQuadro();
+}
+
+function fecharQuadro(){
+  quadroAberto=null;planColunas=[];planCards=[];planVis=[];
+  document.getElementById('plan-colunas').innerHTML='';
+  document.getElementById('plan-board').style.display='none';
+  document.getElementById('plan-lista').style.display='';
+}
+
+async function carregarConteudoQuadro(quadroId){
+  planColunas=[];planCards=[];planVis=[];
+  const box=document.getElementById('plan-colunas');
+  const cols=await sbClient.from('colunas').select('id,nome,cor,ordem')
+    .eq('quadro_id',quadroId).order('ordem',{ascending:true});
+  if(cols.error){
+    console.error('Erro ao carregar listas do quadro:',cols.error);
+    box.innerHTML='<div class="empty">Não foi possível carregar as listas deste quadro. Tente recarregar a página.</div>';
+    showConnError();return false;
+  }
+  planColunas=cols.data||[];
+  if(!planColunas.length)return true;
+  const cds=await sbClient.from('cards').select('id,coluna_id,titulo,descricao,ordem')
+    .in('coluna_id',planColunas.map(c=>c.id)).order('ordem',{ascending:true});
+  if(cds.error){
+    console.error('Erro ao carregar cartões:',cds.error);
+    box.innerHTML='<div class="empty">Não foi possível carregar os cartões deste quadro. Tente recarregar a página.</div>';
+    showConnError();return false;
+  }
+  planCards=cds.data||[];
+  // `card_visibilidade` só o gestor lê — a policy vis_all é ALL using eh_gestor().
+  // Para professor/recepção a consulta voltaria com ZERO linhas, sem erro; buscar
+  // mesmo assim seria convidar a pegadinha do RLS de volta. Por isso o cadeado é
+  // gestor-only, e não faz falta aos outros: todo cartão que eles enxergam é, por
+  // definição, um cartão liberado pra eles.
+  if(podeEditarPlanejamento()&&planCards.length){
+    const v=await sbClient.from('card_visibilidade').select('id,card_id,perfil,equipe_id')
+      .in('card_id',planCards.map(c=>c.id));
+    if(v.error){
+      console.error('Erro ao carregar visibilidade dos cartões:',v.error);
+      toast('⚠️ Não foi possível ler a visibilidade dos cartões; os cadeados podem estar incompletos.',5000);
+    }else planVis=v.data||[];
+  }
+  return true;
+}
+
+// ---------- RENDER ----------
+function renderQuadro(){
+  const c=document.getElementById('plan-colunas');
+  const isG=podeEditarPlanejamento();
+  planTouchAtual=planIsTouch();
+  const novaLista=isG?`<button class="plan-add plan-nova-lista" onclick="openColunaModal()">+ Nova lista</button>`:'';
+  if(!planColunas.length){
+    c.innerHTML='<div class="empty">Este quadro ainda não tem listas.</div>'+novaLista;
+    return;
+  }
+  const ultima=planColunas[planColunas.length-1].id;
+  c.innerHTML=planColunas.map((col,i)=>renderColunaHTML(col,i,col.id===ultima)).join('')+novaLista;
+}
+
+function renderColunaHTML(col,idx,ehUltima){
+  const isG=podeEditarPlanejamento();
+  const f=planFaixa(col.cor);
+  const cards=planCards.filter(c=>c.coluna_id===col.id);
+  const acoes=isG?`<div class="plan-col-acts">
+      <button class="plan-col-btn" title="Mover lista para a esquerda"${idx===0?' disabled':''} onclick="moverColuna('${esc(col.id)}',-1)">‹</button>
+      <button class="plan-col-btn" title="Mover lista para a direita"${idx===planColunas.length-1?' disabled':''} onclick="moverColuna('${esc(col.id)}',1)">›</button>
+      <button class="plan-col-btn" title="Renomear ou trocar a cor" onclick="openColunaModal('${esc(col.id)}')">✏️</button>
+      <button class="plan-col-btn" title="Apagar lista" onclick="deleteColuna('${esc(col.id)}')">✕</button>
+    </div>`:'';
+  return`<div class="plan-col" data-col="${esc(col.id)}" style="animation-delay:${Math.min(idx,12)*45}ms"
+      ondragover="onColunaDragOver(event)" ondragleave="onColunaDragLeave(event)" ondrop="onColunaDrop(event)">
+    <div class="plan-col-hd" style="background:${f.fundo};color:${f.texto}">
+      <div class="plan-col-nome">${esc(col.nome)||'Sem nome'}</div>
+      <div class="plan-col-cnt">${cards.length}</div>
+      ${acoes}
+    </div>
+    <div class="plan-col-bd">
+      ${cards.map(cd=>renderCardHTML(cd,col,ehUltima)).join('')}
+      ${isG?`<button class="plan-add" onclick="openCardModal('${esc(col.id)}')">+ Adicionar cartão</button>`:''}
+      ${(!cards.length&&!isG)?'<div class="empty" style="padding:14px;font-size:12px">Nenhum cartão.</div>':''}
+    </div>
+  </div>`;
+}
+
+function renderCardHTML(card,col,ehUltima){
+  const isG=podeEditarPlanejamento();
+  const f=planFaixa(col.cor);
+  const arrastavel=isG&&!planTouchAtual;
+  const lock=isG?rotuloVisibilidade(card.id):null;
+  return`<div class="plan-card${ehUltima?' plan-fim':''}" data-card="${esc(card.id)}"
+      ${arrastavel?'draggable="true" ondragstart="onCardDragStart(event)" ondragend="onCardDragEnd(event)"':''}
+      ${isG?`onclick="openCardModal('${esc(col.id)}','${esc(card.id)}')"`:''}>
+    <div class="plan-card-faixa" style="background:${f.fundo}"></div>
+    <div class="plan-card-topo">
+      <div class="plan-card-titulo">${esc(card.titulo)||'Sem título'}</div>
+      ${isG?`<button class="plan-card-menu" title="Ações do cartão" onclick="event.stopPropagation();openCardMenu(event,'${esc(card.id)}','${esc(col.id)}')">⋮</button>`:''}
+    </div>
+    ${card.descricao?`<div class="plan-card-desc">${esc(card.descricao)}</div>`:''}
+    ${lock?`<div class="plan-card-lock">🔒 ${esc(lock)}</div>`:''}
+  </div>`;
+}
+
+// Label curto do cadeado. Sem nenhuma linha em card_visibilidade = só gestor vê
+// (é assim que a policy cards_select se comporta, não é convenção da interface).
+// Com os três perfis marcados não há restrição nenhuma — aí o cadeado some.
+function rotuloVisibilidade(cardId){
+  const linhas=planVis.filter(v=>v.card_id===cardId);
+  if(!linhas.length)return'Só Gestor';
+  const perfis=linhas.filter(v=>v.perfil).map(v=>v.perfil);
+  const pessoas=linhas.filter(v=>v.equipe_id).length;
+  if(!pessoas&&PERFIS_VALIDOS.every(p=>perfis.includes(p)))return null;
+  const partes=perfis.map(p=>PERFIL_ROTULO[p]||p);
+  if(pessoas)partes.push(pessoas===1?'1 pessoa':pessoas+' pessoas');
+  return partes.join(' · ');
+}
+
+// ---------- MOVIMENTAÇÃO ----------
+function onCardDragStart(e){
+  const el=e.target.closest('.plan-card');if(!el)return;
+  planDragCardId=el.dataset.card;
+  el.classList.add('dragging');
+  try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',planDragCardId);}catch(err){}
+}
+function onCardDragEnd(){
+  planDragCardId=null;
+  document.querySelectorAll('.plan-card.dragging').forEach(el=>el.classList.remove('dragging'));
+  document.querySelectorAll('.plan-col-over').forEach(el=>el.classList.remove('plan-col-over'));
+}
+function onColunaDragOver(e){
+  if(!planDragCardId)return;
+  e.preventDefault();
+  try{e.dataTransfer.dropEffect='move';}catch(err){}
+  const col=e.currentTarget;
+  document.querySelectorAll('.plan-col-over').forEach(el=>{if(el!==col)el.classList.remove('plan-col-over');});
+  col.classList.add('plan-col-over');
+}
+function onColunaDragLeave(e){
+  const col=e.currentTarget;
+  if(!col.contains(e.relatedTarget))col.classList.remove('plan-col-over');
+}
+async function onColunaDrop(e){
+  if(!planDragCardId)return;
+  e.preventDefault();
+  const col=e.currentTarget;col.classList.remove('plan-col-over');
+  const cardId=planDragCardId;planDragCardId=null;
+  await moverCardPara(cardId,col.dataset.col,indiceSolto(col,e.clientY,cardId));
+}
+// Onde encaixar: o primeiro cartão cujo meio está abaixo do cursor.
+function indiceSolto(colEl,clientY,cardId){
+  const cards=[...colEl.querySelectorAll('.plan-card')].filter(el=>el.dataset.card!==cardId);
+  for(let i=0;i<cards.length;i++){
+    const r=cards[i].getBoundingClientRect();
+    if(clientY<r.top+r.height/2)return i;
+  }
+  return cards.length;
+}
+
+// Caminho ÚNICO de movimentação: usado pelo drag do desktop e pelo menu "⋮" do
+// mobile. Reordena em memória, pinta na hora e só então persiste — se o banco
+// recusar, relê tudo em vez de deixar a tela mentindo.
+async function moverCardPara(cardId,colunaDestino,indice){
+  if(!podeEditarPlanejamento())return;
+  const card=planCards.find(c=>c.id===cardId);
+  if(!card||!planColunas.some(c=>c.id===colunaDestino))return;
+  const origem=card.coluna_id;
+  const restantes=planCards.filter(c=>c.coluna_id===colunaDestino&&c.id!==cardId)
+    .sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+  const pos=(indice==null||indice<0||indice>restantes.length)?restantes.length:indice;
+  card.coluna_id=colunaDestino;
+  const destinoFinal=[...restantes.slice(0,pos),card,...restantes.slice(pos)];
+  destinoFinal.forEach((c,i)=>{c.ordem=i;});
+  const afetados=[...destinoFinal];
+  if(origem!==colunaDestino){
+    const sobrou=planCards.filter(c=>c.coluna_id===origem).sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+    sobrou.forEach((c,i)=>{c.ordem=i;});
+    afetados.push(...sobrou);
+  }
+  renderQuadro();
+  if(!await persistirOrdem(afetados))await abrirQuadro(quadroAberto);
+}
+
+// .select('id') em cada UPDATE pelo mesmo motivo do marcarMontado(): RLS que barra
+// devolve 200 com ZERO linhas, não erro. Sem isso, um bloqueio pareceria sucesso.
+async function persistirOrdem(cards){
+  if(!cards.length)return true;
+  const res=await Promise.all(cards.map(c=>sbClient.from('cards')
+    .update({coluna_id:c.coluna_id,ordem:c.ordem,atualizado_em:new Date().toISOString()})
+    .eq('id',c.id).select('id')));
+  const falhou=res.find(r=>r.error);
+  if(falhou){planErro('Não foi possível salvar a nova posição. A tela foi recarregada do banco.',falhou.error);return false;}
+  if(res.some(r=>!r.data||!r.data.length)){
+    planErro('Você não tem permissão para mover cartões neste quadro.');
+    return false;
+  }
+  return true;
+}
+
+function openCardMenu(e,cardId,colunaId){
+  const menu=document.getElementById('plan-menu');
+  const card=planCards.find(c=>c.id===cardId);if(!card)return;
+  const outras=planColunas.filter(c=>c.id!==card.coluna_id);
+  menu.innerHTML=`<button onclick="closePlanMenu();openCardModal('${esc(colunaId)}','${esc(cardId)}')">✏️ Editar cartão</button>
+    <button onclick="closePlanMenu();deleteCard('${esc(cardId)}')">🗑️ Apagar cartão</button>
+    <div class="plan-menu-lbl">Mover para</div>`+
+    (outras.length
+      ?outras.map(c=>`<button onclick="closePlanMenu();moverCardPara('${esc(cardId)}','${esc(c.id)}',null)">→ ${esc(c.nome)}</button>`).join('')
+      :'<button disabled>Não há outra lista neste quadro</button>');
+  menu.classList.add('open');
+  const r=e.currentTarget.getBoundingClientRect();
+  const w=Math.min(240,window.innerWidth-16);
+  menu.style.width=w+'px';
+  menu.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+'px';
+  menu.style.top=Math.min(r.bottom+6,Math.max(8,window.innerHeight-60))+'px';
+}
+function closePlanMenu(){const m=document.getElementById('plan-menu');if(m)m.classList.remove('open');}
+
+// Trocar entre desktop e mobile muda quem pode arrastar; repinta só quando o modo
+// realmente vira, para não redesenhar o quadro a cada pixel de resize.
+window.addEventListener('resize',()=>{
+  if(!quadroAberto||!planColunas.length)return;
+  if(planTouchAtual!==null&&planTouchAtual!==planIsTouch())renderQuadro();
+});
+
+// ---------- QUADRO (CRUD) ----------
+function planTemplateSel(id,el){
+  planTemplate=id;
+  document.querySelectorAll('#quadro-tpl .type-tile').forEach(t=>t.classList.remove('sel'));
+  el.classList.add('sel');
+  atualizarDescTemplate();
+}
+function atualizarDescTemplate(){
+  const t=TEMPLATES_QUADRO.find(x=>x.id===planTemplate);
+  document.getElementById('quadro-tpl-desc').textContent=(t&&t.colunas.length)
+    ?'Cria as listas: '+t.colunas.map(c=>c.nome).join(' · ')
+    :'Cria o quadro sem nenhuma lista — você monta as suas.';
+}
+
+function openQuadroModal(id){
+  if(!podeEditarPlanejamento())return;
+  editingQuadroId=id||null;
+  clearPlanMsg('quadro-msg');
+  const q=id?quadros.find(x=>x.id===id):null;
+  document.getElementById('quadro-tema').value=q?(q.tema||''):'';
+  document.getElementById('quadro-nome').value=q?(q.nome||''):'';
+  // modelo só faz sentido na criação: o quadro não fica preso a ele depois
+  document.getElementById('quadro-tpl-wrap').style.display=id?'none':'';
+  planTemplate='simples';
+  document.querySelectorAll('#quadro-tpl .type-tile').forEach((t,i)=>t.classList.toggle('sel',i===0));
+  atualizarDescTemplate();
+  document.getElementById('quadro-modal-title').textContent=id?'Editar quadro':'Novo quadro';
+  document.getElementById('btn-save-quadro').textContent=id?'Salvar alterações':'Criar quadro';
+  document.getElementById('quadro-modal').classList.add('open');
+}
+function closeQuadroModal(){
+  document.getElementById('quadro-modal').classList.remove('open');
+  editingQuadroId=null;clearPlanMsg('quadro-msg');
+}
+
+async function saveQuadro(){
+  clearPlanMsg('quadro-msg');
+  if(!sbClient){showPlanMsg('quadro-msg','O componente de login não carregou. Recarregue a página.',false);return;}
+  const tema=document.getElementById('quadro-tema').value.trim();
+  const nome=document.getElementById('quadro-nome').value.trim();
+  if(!nome){showPlanMsg('quadro-msg','Digite o nome do quadro.',false);return;}
+  if(!currentEquipeId){showPlanMsg('quadro-msg','Sua conta não está vinculada a ninguém na equipe — avise o gestor.',false);return;}
+  const editando=editingQuadroId;
+  const btn=document.getElementById('btn-save-quadro');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    if(editando){
+      const{data,error}=await sbClient.from('quadros').update({tema,nome}).eq('id',editando).select('id');
+      if(error){console.error('Erro ao editar quadro:',error);showPlanMsg('quadro-msg',traduzErroPlan(error),false);return;}
+      if(!data||!data.length){showPlanMsg('quadro-msg','Você não tem permissão para editar este quadro.',false);return;}
+      closeQuadroModal();toast('✅ Quadro atualizado');
+      await loadQuadros();
+      return;
+    }
+    const{data,error}=await sbClient.from('quadros').insert({tema,nome,criado_por:currentEquipeId}).select('id');
+    if(error){console.error('Erro ao criar quadro:',error);showPlanMsg('quadro-msg',traduzErroPlan(error),false);return;}
+    if(!data||!data.length){showPlanMsg('quadro-msg','Você não tem permissão para criar quadros.',false);return;}
+    const novoId=data[0].id;
+    // As colunas do modelo entram num segundo passo. Se falharem, o quadro já
+    // existe — então o usuário PRECISA saber que ele nasceu vazio. Nunca fingir
+    // que deu tudo certo.
+    const tpl=TEMPLATES_QUADRO.find(t=>t.id===planTemplate)||TEMPLATES_QUADRO[0];
+    let colunasOk=true;
+    if(tpl.colunas.length){
+      const r=await sbClient.from('colunas')
+        .insert(tpl.colunas.map((c,i)=>({quadro_id:novoId,nome:c.nome,cor:c.cor,ordem:i})))
+        .select('id');
+      if(r.error||!r.data||r.data.length!==tpl.colunas.length){
+        console.error('Quadro criado, mas as listas do modelo falharam:',r.error);
+        colunasOk=false;
+      }
+    }
+    closeQuadroModal();
+    toast(colunasOk?'✅ Quadro criado'
+      :'⚠️ Quadro criado, mas as listas do modelo não foram salvas. Crie as listas manualmente.',colunasOk?2800:6000);
+    await loadQuadros();
+    await abrirQuadro(novoId);
+  }catch(err){
+    console.error('Erro inesperado ao salvar quadro:',err);
+    showPlanMsg('quadro-msg','Não foi possível conectar. Verifique sua internet e tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent=editando?'Salvar alterações':'Criar quadro';}
+}
+
+function openApagarQuadroModal(){
+  if(!podeEditarPlanejamento()||!quadroAberto)return;
+  const q=quadros.find(x=>x.id===quadroAberto);if(!q)return;
+  clearPlanMsg('apagar-msg');
+  document.getElementById('apagar-nome-alvo').textContent=q.nome||'';
+  document.getElementById('apagar-resumo').textContent=
+    `Isso apaga o quadro, suas ${planColunas.length} lista(s), ${planCards.length} cartão(ões) e todas as regras de visibilidade deles. Não existe lixeira: não dá para desfazer.`;
+  const inp=document.getElementById('apagar-confirma');inp.value='';
+  document.getElementById('btn-apagar-quadro').disabled=true;
+  document.getElementById('apagar-quadro-modal').classList.add('open');
+  setTimeout(()=>inp.focus(),60);
+}
+function closeApagarQuadroModal(){
+  document.getElementById('apagar-quadro-modal').classList.remove('open');
+  document.getElementById('apagar-confirma').value='';
+  clearPlanMsg('apagar-msg');
+}
+function checarNomeApagar(){
+  const q=quadros.find(x=>x.id===quadroAberto);
+  const digitado=document.getElementById('apagar-confirma').value.trim();
+  document.getElementById('btn-apagar-quadro').disabled=!q||digitado!==(q.nome||'').trim();
+}
+async function confirmarApagarQuadro(){
+  clearPlanMsg('apagar-msg');
+  const q=quadros.find(x=>x.id===quadroAberto);if(!q)return;
+  if(document.getElementById('apagar-confirma').value.trim()!==(q.nome||'').trim())return;
+  const btn=document.getElementById('btn-apagar-quadro');btn.disabled=true;btn.textContent='Apagando...';
+  try{
+    const{data,error}=await sbClient.from('quadros').delete().eq('id',q.id).select('id');
+    if(error){console.error('Erro ao apagar quadro:',error);showPlanMsg('apagar-msg',traduzErroPlan(error),false);return;}
+    if(!data||!data.length){showPlanMsg('apagar-msg','Você não tem permissão para apagar este quadro.',false);return;}
+    closeApagarQuadroModal();
+    fecharQuadro();
+    toast('🗑️ Quadro apagado');
+    await loadQuadros();
+  }catch(err){
+    console.error('Erro inesperado ao apagar quadro:',err);
+    showPlanMsg('apagar-msg','Não foi possível conectar. Verifique sua internet e tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent='Apagar definitivamente';}
+}
+
+// ---------- LISTA / COLUNA (CRUD) ----------
+function planCorSelecionar(valor,el){
+  planCorSel=valor;
+  document.querySelectorAll('#coluna-cores .plan-cor').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function renderPaletaColuna(){
+  document.getElementById('coluna-cores').innerHTML=PLAN_CORES.map(c=>c.valor
+    ?`<button type="button" class="plan-cor${c.valor===planCorSel?' sel':''}" style="background:${c.valor}" title="${c.rotulo}" onclick="planCorSelecionar('${c.valor}',this)"></button>`
+    :`<button type="button" class="plan-cor sem${planCorSel===null?' sel':''}" title="Sem cor" onclick="planCorSelecionar(null,this)">—</button>`).join('');
+}
+function openColunaModal(id){
+  if(!podeEditarPlanejamento()||!quadroAberto)return;
+  editingColunaId=id||null;
+  clearPlanMsg('coluna-msg');
+  const col=id?planColunas.find(c=>c.id===id):null;
+  document.getElementById('coluna-nome').value=col?(col.nome||''):'';
+  planCorSel=col?(col.cor||null):'#3B82F6';
+  renderPaletaColuna();
+  document.getElementById('coluna-modal-title').textContent=id?'Editar lista':'Nova lista';
+  document.getElementById('btn-save-coluna').textContent=id?'Salvar alterações':'Criar lista';
+  document.getElementById('coluna-modal').classList.add('open');
+}
+function closeColunaModal(){
+  document.getElementById('coluna-modal').classList.remove('open');
+  editingColunaId=null;clearPlanMsg('coluna-msg');
+}
+async function saveColuna(){
+  clearPlanMsg('coluna-msg');
+  if(!sbClient){showPlanMsg('coluna-msg','O componente de login não carregou. Recarregue a página.',false);return;}
+  const nome=document.getElementById('coluna-nome').value.trim();
+  if(!nome){showPlanMsg('coluna-msg','Digite o nome da lista.',false);return;}
+  const editando=editingColunaId;
+  const btn=document.getElementById('btn-save-coluna');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    let r;
+    if(editando){
+      r=await sbClient.from('colunas').update({nome,cor:planCorSel}).eq('id',editando).select('id');
+    }else{
+      const ordem=planColunas.length?Math.max(...planColunas.map(c=>c.ordem||0))+1:0;
+      r=await sbClient.from('colunas').insert({quadro_id:quadroAberto,nome,cor:planCorSel,ordem}).select('id');
+    }
+    if(r.error){console.error('Erro ao salvar lista:',r.error);showPlanMsg('coluna-msg',traduzErroPlan(r.error),false);return;}
+    if(!r.data||!r.data.length){showPlanMsg('coluna-msg','Você não tem permissão para alterar as listas deste quadro.',false);return;}
+    closeColunaModal();
+    toast(editando?'✅ Lista atualizada':'✅ Lista criada');
+    await abrirQuadro(quadroAberto);
+  }catch(err){
+    console.error('Erro inesperado ao salvar lista:',err);
+    showPlanMsg('coluna-msg','Não foi possível conectar. Verifique sua internet e tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent=editando?'Salvar alterações':'Criar lista';}
+}
+async function deleteColuna(id){
+  const col=planColunas.find(c=>c.id===id);if(!col)return;
+  const n=planCards.filter(c=>c.coluna_id===id).length;
+  if(!confirm(`Apagar a lista "${col.nome}"?`+(n?`\n\nOs ${n} cartão(ões) dentro dela vão junto. Não dá para desfazer.`:'')))return;
+  try{
+    const{data,error}=await sbClient.from('colunas').delete().eq('id',id).select('id');
+    if(error){planErro('Não foi possível apagar a lista.',error);return;}
+    if(!data||!data.length){planErro('Você não tem permissão para apagar listas neste quadro.');return;}
+    toast('Lista apagada');
+    await abrirQuadro(quadroAberto);
+  }catch(err){planErro('Não foi possível conectar. Verifique sua internet.',err);}
+}
+async function moverColuna(id,dir){
+  const i=planColunas.findIndex(c=>c.id===id);
+  const j=i+dir;
+  if(i<0||j<0||j>=planColunas.length)return;
+  const arr=[...planColunas];
+  arr.splice(j,0,arr.splice(i,1)[0]);
+  arr.forEach((c,k)=>{c.ordem=k;});
+  planColunas=arr;renderQuadro();
+  try{
+    const res=await Promise.all(arr.map(c=>sbClient.from('colunas').update({ordem:c.ordem}).eq('id',c.id).select('id')));
+    const ruim=res.find(r=>r.error||!r.data||!r.data.length);
+    if(ruim){
+      planErro('Não foi possível salvar a nova ordem das listas. A tela foi recarregada do banco.',ruim.error);
+      await abrirQuadro(quadroAberto);
+    }
+  }catch(err){
+    planErro('Não foi possível conectar. A tela foi recarregada do banco.',err);
+    await abrirQuadro(quadroAberto);
+  }
+}
+
+// ---------- CARTÃO (CRUD) ----------
+function openCardModal(colunaId,cardId){
+  if(!podeEditarPlanejamento())return;
+  closePlanMenu();
+  cardModalColunaId=colunaId;editingCardId=cardId||null;
+  clearPlanMsg('card-msg');
+  const cd=cardId?planCards.find(c=>c.id===cardId):null;
+  document.getElementById('card-titulo').value=cd?(cd.titulo||''):'';
+  document.getElementById('card-desc').value=cd?(cd.descricao||''):'';
+  const linhas=cardId?planVis.filter(v=>v.card_id===cardId):[];
+  planVisPerfis=linhas.filter(v=>v.perfil).map(v=>v.perfil);
+  planVisPessoas=linhas.filter(v=>v.equipe_id).map(v=>v.equipe_id);
+  renderVisChips();renderVisPessoas();
+  document.getElementById('card-modal-title').textContent=cardId?'Editar cartão':'Novo cartão';
+  document.getElementById('btn-save-card').textContent=cardId?'Salvar alterações':'Criar cartão';
+  document.getElementById('btn-del-card').style.display=cardId?'':'none';
+  document.getElementById('card-modal').classList.add('open');
+}
+function closeCardModal(){
+  document.getElementById('card-modal').classList.remove('open');
+  editingCardId=null;cardModalColunaId=null;clearPlanMsg('card-msg');
+}
+function togglePlanVisPerfil(p){
+  const i=planVisPerfis.indexOf(p);
+  if(i>-1)planVisPerfis.splice(i,1);else planVisPerfis.push(p);
+  renderVisChips();
+}
+function renderVisChips(){
+  document.querySelectorAll('#card-vis-perfis .vis-chip').forEach(c=>{
+    const p=c.dataset.vis;
+    c.className='vis-chip'+(planVisPerfis.includes(p)?' on-'+p:'');
+  });
+  atualizarAvisoVis();
+}
+function renderVisPessoas(){
+  const box=document.getElementById('card-vis-pessoas');
+  const ativos=equipe.filter(e=>e.ativo).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
+  if(!ativos.length){box.innerHTML='<div class="cfg-note" style="margin-bottom:0">Nenhuma pessoa ativa cadastrada.</div>';return;}
+  box.innerHTML=ativos.map(p=>`<label class="plan-pessoa">
+    <input type="checkbox" ${planVisPessoas.includes(p.id)?'checked':''} onchange="togglePlanVisPessoa('${esc(p.id)}',this.checked)">
+    <span class="plan-pessoa-nome">${esc(p.nome)}</span>
+    <span class="plan-pessoa-cargo">${esc(p.cargo||'')}</span>
+  </label>`).join('');
+}
+function togglePlanVisPessoa(id,marcado){
+  const i=planVisPessoas.indexOf(id);
+  if(marcado&&i<0)planVisPessoas.push(id);
+  if(!marcado&&i>-1)planVisPessoas.splice(i,1);
+  atualizarAvisoVis();
+}
+function atualizarAvisoVis(){
+  document.getElementById('card-vis-aviso').textContent=
+    (!planVisPerfis.length&&!planVisPessoas.length)
+      ?'🔒 Sem nenhuma seleção, este cartão fica visível apenas para gestores.'
+      :'Gestores sempre enxergam todos os cartões — a seleção acima define quem MAIS vê este.';
+}
+
+async function saveCard(){
+  clearPlanMsg('card-msg');
+  if(!sbClient){showPlanMsg('card-msg','O componente de login não carregou. Recarregue a página.',false);return;}
+  const titulo=document.getElementById('card-titulo').value.trim();
+  const descricao=document.getElementById('card-desc').value.trim();
+  if(!titulo){showPlanMsg('card-msg','Digite o título do cartão.',false);return;}
+  if(!currentEquipeId){showPlanMsg('card-msg','Sua conta não está vinculada a ninguém na equipe — avise o gestor.',false);return;}
+  const editando=editingCardId;
+  const btn=document.getElementById('btn-save-card');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    let cardId=editando;
+    if(cardId){
+      const{data,error}=await sbClient.from('cards')
+        .update({titulo,descricao:descricao||null,atualizado_em:new Date().toISOString()})
+        .eq('id',cardId).select('id');
+      if(error){console.error('Erro ao editar cartão:',error);showPlanMsg('card-msg',traduzErroPlan(error),false);return;}
+      if(!data||!data.length){showPlanMsg('card-msg','Você não tem permissão para editar este cartão.',false);return;}
+    }else{
+      const irmaos=planCards.filter(c=>c.coluna_id===cardModalColunaId);
+      const ordem=irmaos.length?Math.max(...irmaos.map(c=>c.ordem||0))+1:0;
+      const{data,error}=await sbClient.from('cards')
+        .insert({coluna_id:cardModalColunaId,titulo,descricao:descricao||null,criado_por:currentEquipeId,ordem})
+        .select('id');
+      if(error){console.error('Erro ao criar cartão:',error);showPlanMsg('card-msg',traduzErroPlan(error),false);return;}
+      if(!data||!data.length){showPlanMsg('card-msg','Você não tem permissão para criar cartões neste quadro.',false);return;}
+      cardId=data[0].id;
+    }
+    const okVis=await sincronizarVisibilidade(cardId,editando);
+    closeCardModal();
+    toast(okVis?'✅ Cartão salvo'
+      :'⚠️ Cartão salvo, mas a visibilidade não foi gravada por completo. Confira abrindo o cartão de novo.',okVis?2800:6000);
+    await abrirQuadro(quadroAberto);
+  }catch(err){
+    console.error('Erro inesperado ao salvar cartão:',err);
+    showPlanMsg('card-msg','Não foi possível conectar. Verifique sua internet e tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent=editando?'Salvar alterações':'Criar cartão';}
+}
+
+// Regrava a visibilidade do zero: apaga as linhas antigas e insere as novas.
+// Cada linha tem EXATAMENTE UM dos dois campos preenchido — o CHECK do banco
+// recusa as duas juntas ou nenhuma, por isso os dois `map` são separados.
+async function sincronizarVisibilidade(cardId,eraEdicao){
+  const antes=eraEdicao?planVis.filter(v=>v.card_id===cardId).length:0;
+  const del=await sbClient.from('card_visibilidade').delete().eq('card_id',cardId).select('id');
+  if(del.error){console.error('Erro ao limpar visibilidade do cartão:',del.error);return false;}
+  // DELETE barrado pelo RLS também volta com zero linhas; só dá para diferenciar
+  // de "não havia nada" porque sabemos quantas linhas existiam antes.
+  if(antes&&(!del.data||!del.data.length)){
+    console.warn('DELETE de card_visibilidade não afetou nenhuma linha — provável bloqueio de RLS para card_id='+cardId);
+    return false;
+  }
+  const linhas=[
+    ...planVisPerfis.map(p=>({card_id:cardId,perfil:p,equipe_id:null})),
+    ...planVisPessoas.map(id=>({card_id:cardId,perfil:null,equipe_id:id}))
+  ];
+  if(!linhas.length)return true;
+  const ins=await sbClient.from('card_visibilidade').insert(linhas).select('id');
+  if(ins.error||!ins.data||ins.data.length!==linhas.length){
+    console.error('Erro ao gravar visibilidade do cartão:',ins.error);
+    return false;
+  }
+  return true;
+}
+
+async function deleteCard(id){
+  const cd=planCards.find(c=>c.id===id);if(!cd)return;
+  if(!confirm(`Apagar o cartão "${cd.titulo}"?\n\nAs regras de visibilidade dele vão junto. Não dá para desfazer.`))return;
+  try{
+    const{data,error}=await sbClient.from('cards').delete().eq('id',id).select('id');
+    if(error){planErro('Não foi possível apagar o cartão.',error);return;}
+    if(!data||!data.length){planErro('Você não tem permissão para apagar este cartão.');return;}
+    closeCardModal();
+    toast('Cartão apagado');
+    await abrirQuadro(quadroAberto);
+  }catch(err){planErro('Não foi possível conectar. Verifique sua internet.',err);}
 }
 
 // CALENDAR PAGE

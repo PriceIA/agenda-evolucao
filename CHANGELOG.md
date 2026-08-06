@@ -78,6 +78,65 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   o bloqueio chega como `200` + zero linhas e vira mensagem na tela. Mesma família da pegadinha
   já registrada para o SELECT.
 
+- **Aba Planejamento (Kanban) — Fase 4, 2026-08-06.** Quadros com listas coloridas e cartões, para
+  o gestor organizar trabalho em andamento e liberar a visão dele para quem interessa. **Todos os
+  perfis veem a aba**; professor e recepção entram em modo somente leitura (nenhum botão de ação é
+  renderizado para eles) e enxergam apenas os cartões que o gestor liberou.
+- **Quatro tabelas novas, criadas direto no painel do Supabase antes desta implementação** — o app
+  só as consome, não cria nem altera schema:
+  - `quadros` — `id` uuid PK, `tema` text, `nome` text, `criado_por` uuid→`equipe.id`,
+    `criado_em` timestamptz, `ativo` boolean default true.
+  - `colunas` — `id` uuid PK, `quadro_id` uuid→`quadros.id` (on delete cascade), `nome` text,
+    `cor` text nullable, `ordem` int.
+  - `cards` — `id` uuid PK, `coluna_id` uuid→`colunas.id` (on delete cascade), `titulo` text,
+    `descricao` text nullable, `criado_por` uuid→`equipe.id`, `ordem` int, `criado_em`,
+    `atualizado_em`.
+  - `card_visibilidade` — `id` uuid PK, `card_id` uuid→`cards.id` (on delete cascade),
+    `perfil` text nullable, `equipe_id` uuid nullable.
+- **Dois CHECKs que o código respeita, sob pena de erro do banco:** `colunas.cor` só aceita
+  `#3B82F6` · `#8B5CF6` · `#EAB308` · `#22C55E` · `#EF4444` · `#64748B` ou `NULL` (por isso a
+  constante `PLAN_CORES` no JS é a única fonte dessas cores); e `card_visibilidade` exige
+  **exatamente um** de `perfil`/`equipe_id` preenchido — nunca os dois, nunca nenhum, o que
+  obriga o `sincronizarVisibilidade()` a montar as linhas em dois `map` separados.
+- **Modelo de visibilidade:** o gestor marca um ou mais perfis e/ou uma ou mais pessoas.
+  **Sem nenhuma seleção o cartão fica visível só para gestores** — isso não é convenção da
+  interface, é como a policy `cards_select` se comporta; o formulário diz isso em texto fixo.
+- **Consumo 100% autenticado via `sbClient.from()`**, como na aba Treinos e ao contrário das telas
+  antigas. As 7 policies são para o role `authenticated`; com a anon key dos helpers
+  `sbGet`/`sbPost` a resposta seria zero linhas em silêncio.
+- Toda escrita encadeia **`.select('id')`**, pelo mesmo motivo já registrado no `marcarMontado()`:
+  RLS que barra devolve `200` com zero linhas, não erro. Vale inclusive para o DELETE de
+  `card_visibilidade`, onde "barrado" e "não havia nada" são indistinguíveis — ali o código compara
+  com a contagem que já tinha em memória antes de decidir se deu certo.
+- **Criar quadro** pede tema, nome e um dos 3 modelos (Simples · Com espera · Em branco). O modelo é
+  só uma lista fixa no JS que popula a tabela `colunas` na criação: depois disso o quadro não fica
+  preso a ele, e listas podem ser criadas, renomeadas, reordenadas, recoloridas e apagadas. As
+  listas entram num segundo passo — se falharem, o quadro já existe e o app **avisa que ele nasceu
+  vazio** em vez de dar sucesso completo.
+- **Apagar quadro exige digitar o nome exato**, não `confirm()` simples: o DELETE dispara CASCADE em
+  listas, cartões e visibilidades, e não existe lixeira. O modal mostra antes quantas listas e
+  quantos cartões vão junto.
+- **Mover cartão:** drag-and-drop nativo em JS puro no desktop (nenhuma dependência nova) e menu
+  `⋮` com "Mover para →" no mobile, onde arrastar brigaria com o scroll da tela. A detecção é por
+  `matchMedia('(pointer:coarse)')` + largura, **nunca por user-agent**, e um listener de `resize`
+  repinta o quadro quando o modo realmente vira. Os dois caminhos passam pela mesma função
+  `moverCardPara()`, que reordena em memória, pinta na hora e relê do banco se a gravação falhar —
+  a tela nunca fica mostrando uma posição que o banco recusou.
+- **Regra visual — os cartões são SÓLIDOS escuros (`var(--g1)`), nunca vidro e nunca na cor da
+  lista;** só levam uma faixa de 3px no topo na cor dela. É a mesma regra já aplicada aos inputs do
+  Login e da Config e ao antigo keypad do PIN: sobre o fundo laranja, onde se lê o conteúdo não
+  leva vidro. O vidro fica nas colunas, que reutilizam os tokens de `#page-treinos` sem inventar
+  valor novo (blur 3px + saturate 180%, borda `1px rgba(255,255,255,0.4)`, raio 16px, linha de
+  highlight no topo). O cabeçalho de cada lista é uma faixa **sólida opaca** na cor, com o texto no
+  tom escuro da mesma família.
+- Cartões na **última coluna do quadro** ficam com `opacity:0.6` (o mesmo valor do
+  `.treino-card.st-cancelado`). **Decisão consciente:** a tabela `cards` não tem campo de status e a
+  Fase 4 não mexeu em schema, então "concluído" é derivado da posição, não de um dado.
+- O **cadeado** de visibilidade no cartão só aparece para o gestor, porque só ele lê
+  `card_visibilidade` (a policy `vis_all` é `ALL using eh_gestor()`). Para os outros perfis não faz
+  falta: todo cartão que eles enxergam é, por definição, um cartão liberado para eles. O app nem
+  consulta essa tabela quando não é gestor — consultar traria zero linhas em silêncio.
+
 ### Corrigido
 - Chamadas `sbGet`/`sbPost`/`sbPatch`/`sbDelete` que falham por erro de conexão agora exibem
   um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"
@@ -144,6 +203,61 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   as três decisões que fizeram diferença aqui: (1) grant de tabela **além** da policy — são coisas
   diferentes e ambas precisam existir; (2) policy separada por operação em vez de um `ALL` genérico;
   (3) teste automatizado com a anon key **provando** o bloqueio, em vez de conferir a policy no olho.
+- **Fase 4 (2026-08-06): as 4 tabelas do Planejamento nascem com RLS de verdade.** Segunda vez que o
+  projeto acerta isso — e desta vez com um desenho melhor que o da `montagem_treinos`. Texto real
+  lido de `pg_policies`, **7 policies, todas para o role `authenticated`**:
+
+  | tabela | policy | cmd | using | with check |
+  |---|---|---|---|---|
+  | `quadros` | `quadros_select` | SELECT | `true` | — |
+  | `quadros` | `quadros_write` | ALL | `eh_gestor()` | `eh_gestor()` |
+  | `colunas` | `colunas_select` | SELECT | `true` | — |
+  | `colunas` | `colunas_write` | ALL | `eh_gestor()` | `eh_gestor()` |
+  | `cards` | `cards_select` | SELECT | ver abaixo | — |
+  | `cards` | `cards_write` | ALL | `eh_gestor()` | `eh_gestor()` |
+  | `card_visibilidade` | `vis_all` | ALL | `eh_gestor()` | `eh_gestor()` |
+
+  ```sql
+  -- cards_select: gestor vê tudo; os demais só o que foi liberado pro perfil ou pra pessoa
+  eh_gestor() OR (EXISTS ( SELECT 1
+     FROM card_visibilidade v
+    WHERE ((v.card_id = cards.id) AND ((v.equipe_id = meu_equipe_id()) OR (v.perfil = meu_perfil())))))
+  ```
+
+  Quadros e listas são legíveis por qualquer autenticado (`using true`) **de propósito**: a estrutura
+  do quadro não é segredo, o conteúdo é. O que filtra de verdade é o `cards_select`.
+- **As 3 funções auxiliares — todas `security definer`, `STABLE`, `SET search_path TO 'public'`:**
+
+  ```sql
+  eh_gestor()     -> boolean : select exists (select 1 from equipe
+                               where auth_user_id = auth.uid() and perfil = 'gestor')
+  meu_equipe_id() -> uuid    : select id from equipe where auth_user_id = auth.uid() limit 1
+  meu_perfil()    -> text    : select perfil from equipe where auth_user_id = auth.uid() limit 1
+  ```
+
+  **Por que elas existem, que é o ponto a não esquecer:** nenhuma das 7 policies consulta a `equipe`
+  diretamente — todas passam por essas funções. Como são `security definer`, rodam com os
+  privilégios do dono e **não são afetadas pelo RLS da `equipe`**. Consequência prática: quando a
+  Fase 2 apertar a `equipe` para cada pessoa ler só a própria linha, **nenhuma policy do
+  Planejamento quebra**. É a mesma preocupação registrada para a `montagem_treinos` (cujas policies
+  foram escritas com o cuidado de só tocar a linha de quem chamou), resolvida aqui de forma
+  estrutural em vez de por disciplina. O `SET search_path TO 'public'` **não é enfeite**: sem ele,
+  `security definer` é um vetor clássico de escalada de privilégio, porque o chamador poderia
+  apontar o `search_path` para um schema com uma tabela `equipe` falsa.
+- **Grants da Fase 4 (idênticos nas 4 tabelas):** `authenticated` e `postgres` com
+  `SELECT, INSERT, UPDATE, DELETE, REFERENCES, TRIGGER, TRUNCATE`; `anon` e `service_role` com
+  apenas `REFERENCES, TRIGGER, TRUNCATE` — ou seja, **`anon` sem nenhum CRUD**, como deve ser.
+- **Pendência de segurança aberta: revogar `TRUNCATE` do `anon` nas 4 tabelas novas.** Veio do
+  `ALTER DEFAULT PRIVILEGES` padrão do Supabase, não de decisão de ninguém. Importa porque
+  **`TRUNCATE` não passa por RLS** — policy nenhuma protege contra ele. Sem caminho de exploração
+  conhecido hoje (o PostgREST não expõe verbo de TRUNCATE), então é risco latente e não buraco
+  aberto; **o Felipe decidiu em 2026-08-06 não revogar agora** e deixar para a Fase 2, junto com o
+  mesmo problema já registrado na `montagem_treinos`:
+  `revoke truncate on quadros, colunas, cards, card_visibilidade from anon;`
+- **`docs/schema.sql` não contém `montagem_treinos` nem as 4 tabelas da Fase 4; conferir no Table
+  Editor antes de confiar nele.** O arquivo também declara `equipe.id` como
+  `bigint generated by default as identity`, enquanto as chaves em uso são UUID. Atualizá-lo é
+  pendência de auditoria — hoje ele descreve um banco que não existe mais.
 - **Policy `anon_all_equipe_authenticated` (ALL para `authenticated`, `USING (true) WITH CHECK
   (true)`) criada em 2026-07-31**, sem tocar na `anon_all_equipe` original. Necessária porque
   depois do login o usuário deixa de ser `anon` e vira `authenticated` — sem ela, a leitura do

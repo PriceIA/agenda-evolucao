@@ -221,6 +221,74 @@ para cada pessoa ler só a própria linha, **nenhuma destas policies quebra**. I
 não deve ser desfeito: qualquer policy nova que precise varrer a `equipe` inteira cria uma
 dependência que trava justamente o aperto que a gente quer fazer.
 
+## Aba Planejamento — Kanban (Fase 4, 2026-08-06)
+Quadros com listas coloridas e cartões. Gestor cria e move; professor e recepção só leem, e só
+enxergam os cartões liberados para eles. A aba aparece para **todos** os perfis.
+
+### Schema (criado no painel antes da implementação; o app só consome)
+| tabela | colunas |
+|---|---|
+| `quadros` | `id` uuid PK, `tema` text, `nome` text, `criado_por` uuid→`equipe.id`, `criado_em` timestamptz, `ativo` bool default true |
+| `colunas` | `id` uuid PK, `quadro_id` uuid→`quadros.id` (cascade), `nome` text, `cor` text nullable, `ordem` int |
+| `cards` | `id` uuid PK, `coluna_id` uuid→`colunas.id` (cascade), `titulo` text, `descricao` text nullable, `criado_por` uuid→`equipe.id`, `ordem` int, `criado_em`, `atualizado_em` |
+| `card_visibilidade` | `id` uuid PK, `card_id` uuid→`cards.id` (cascade), `perfil` text nullable, `equipe_id` uuid nullable |
+
+**Dois CHECKs que quebram o INSERT se ignorados:**
+- `colunas.cor` só aceita `#3B82F6` (azul), `#8B5CF6` (roxo), `#EAB308` (dourado), `#22C55E`
+  (verde), `#EF4444` (vermelho), `#64748B` (cinza) ou `NULL`. No JS a constante `PLAN_CORES` é a
+  **única** fonte dessas cores — não escrever hex de coluna em nenhum outro lugar.
+- `card_visibilidade` exige **exatamente um** de `perfil`/`equipe_id`. Nunca os dois na mesma linha,
+  nunca nenhum. Por isso `sincronizarVisibilidade()` monta as linhas em dois `map` separados.
+
+### Acesso — mesmo desvio deliberado da aba Treinos
+- Usa **`sbClient.from()` (autenticado)**, nunca `sbGet`/`sbPost`/`sbPatch`/`sbDelete`. As policies
+  são para o role `authenticated`; com a anon key dos helpers a resposta é zero linhas em silêncio.
+- Toda escrita encadeia **`.select('id')`** — RLS que barra devolve `200` com zero linhas, não erro.
+  Inclusive o DELETE de `card_visibilidade`, onde "barrado" e "não havia nada" são indistinguíveis:
+  ali o código compara com a contagem que já tinha em memória.
+- `podeEditarPlanejamento()` (só gestor) é **conveniência de interface, não segurança** — igual ao
+  `podeCadastrarTreino()`. Quem garante é a policy.
+
+### Modelo de visibilidade
+O gestor marca um ou mais **perfis** e/ou uma ou mais **pessoas** da `equipe` (ativas).
+**Sem nenhuma seleção o cartão fica visível só para gestores** — isso é o comportamento da policy
+`cards_select`, não convenção da tela; o formulário diz isso em texto fixo.
+
+O **cadeado** no cartão só aparece para o gestor, porque só ele lê `card_visibilidade` (policy
+`vis_all` = `ALL using eh_gestor()`). O app **nem consulta** essa tabela quando não é gestor —
+consultar traria zero linhas em silêncio, sem erro. Para professor/recepção o cadeado não faz falta:
+todo cartão que eles enxergam é, por definição, um cartão liberado para eles.
+
+### RLS — 7 policies e 3 funções `security definer`
+Todas para `authenticated`. `quadros_select` e `colunas_select` são `using (true)` **de propósito**:
+a estrutura do quadro não é segredo, o conteúdo é. Quem filtra é o `cards_select`:
+```sql
+eh_gestor() OR (EXISTS ( SELECT 1 FROM card_visibilidade v
+  WHERE ((v.card_id = cards.id) AND ((v.equipe_id = meu_equipe_id()) OR (v.perfil = meu_perfil())))))
+```
+As demais (`quadros_write`, `colunas_write`, `cards_write`, `vis_all`) são `ALL` com
+`using eh_gestor()` e `with check eh_gestor()`.
+
+As 3 funções (`eh_gestor()`, `meu_equipe_id()`, `meu_perfil()`) são `security definer`, `STABLE` e
+`SET search_path TO 'public'`. **Não removê-las nem trocá-las por consulta direta à `equipe`:** como
+são `security definer`, elas ignoram o RLS da `equipe`, e é isso que garante que **a Fase 2 possa
+apertar a `equipe` sem quebrar nenhuma policy do Planejamento**. O `search_path` fixo também não é
+enfeite — sem ele, `security definer` vira vetor de escalada de privilégio.
+
+### Regra visual (exceção deliberada — não "corrigir")
+- **Os cartões são SÓLIDOS escuros (`var(--g1)`), nunca vidro, nunca na cor da lista.** Só levam uma
+  faixa de 3px no topo na cor dela. Mesma regra dos inputs do Login/Config e do antigo keypad do
+  PIN: sobre o fundo laranja, onde se lê o conteúdo não leva vidro.
+- O **vidro** fica nas colunas, com os tokens de `#page-treinos` (blur 3px + saturate 180%, borda
+  `1px rgba(255,255,255,0.4)`, raio 16px, linha de highlight no topo). Nenhum valor novo foi criado.
+- O cabeçalho de cada lista é faixa **sólida opaca** na cor, com texto no tom escuro da mesma
+  família (vem do `PLAN_CORES`, aplicado inline).
+- Cartões na **última coluna** ficam com `opacity:0.6` (mesmo valor do `.treino-card.st-cancelado`).
+  **"Concluído" é derivado da posição, não de um campo** — a tabela `cards` não tem status e a
+  Fase 4 não mexeu em schema. Se um dia virar campo de verdade, é decisão a tomar, não detalhe.
+- **Mobile não tem drag** (brigaria com o scroll): cada cartão usa o menu `⋮` com "Mover para →".
+  Detecção por `matchMedia('(pointer:coarse)')` + largura, **nunca por user-agent**.
+
 ## Incidente conhecido (jul/2026)
 - Supabase free tier pausa após 7 dias de inatividade. O app engolia o erro de conexão
   silenciosamente (catch(e){return null}) e mostrava "0 eventos" em vez de avisar — parecia que
@@ -261,11 +329,17 @@ dependência que trava justamente o aperto que a gente quer fazer.
   para outra pessoa (a tela mostraria "montado por Fulano" sem ter sido). Não é escalada de
   privilégio — é integridade de dado. Só dá pra fechar com trigger ou grant por coluna; avaliar na
   Fase 2 se vale a complexidade num app de uso interno.
-- **`docs/schema.sql` está desatualizado.** Não tem a `montagem_treinos`, e declara
-  `equipe.id` como `bigint generated by default as identity` — mas as chaves em uso hoje são UUID
+- **`anon` também tem `TRUNCATE` nas 4 tabelas da Fase 4 — revogar junto.** Mesma origem (default do
+  Supabase) e mesma gravidade do item acima: **`TRUNCATE` não passa por RLS**. Decisão do Felipe em
+  2026-08-06: **não revogar agora**, deixar para a Fase 2. A correção é uma linha:
+  `revoke truncate on quadros, colunas, cards, card_visibilidade from anon;`
+- **`docs/schema.sql` não contém `montagem_treinos` nem as 4 tabelas da Fase 4; conferir no Table
+  Editor antes de confiar nele.** Além disso declara `equipe.id` como
+  `bigint generated by default as identity` — mas as chaves em uso hoje são UUID
   (ex.: `ced151d4-9f3e-4930-b830-befaa003d406`), e `montagem_treinos.professor_id` é `uuid`.
   Ou a coluna mudou de tipo em algum momento sem o arquivo acompanhar, ou o arquivo nunca esteve
-  certo. Conferir no Table Editor antes de confiar nele. Detectado em 2026-08-02.
+  certo. Hoje o arquivo descreve um banco que não existe mais — atualizá-lo é pendência de
+  auditoria. Detectado em 2026-08-02, ampliado em 2026-08-06.
 - Coluna `pin` da tabela `config` virou **dado morto** — nada no app lê ou escreve nela desde
   2026-07-31. Não foi removida (a Fase 1 não mexeu em schema além da `equipe`). Candidata a
   `drop column` na Fase 2, junto com o resto do hardening.
