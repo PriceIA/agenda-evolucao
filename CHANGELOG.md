@@ -306,13 +306,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   **Confirmado com conta real**, não por leitura de policy: o Leonardo (perfil `recepcao`) passou a
   ver corretamente só o cartão liberado para o perfil dele. Antes da correção, via zero.
 
-  **Cobertura do teste — o que ficou provado e o que não ficou.** O `pode_ver_card()` tem dois
-  ramos (`v.equipe_id = meu_equipe_id()` **ou** `v.perfil = meu_perfil()`) e o teste do Leonardo
-  exercitou **só o ramo de perfil**. O ramo de **pessoa específica (`equipe_id`)** ainda não teve
-  resultado registrado — foi executado em 2026-08-06 (card apontado para o Leonardo Aparecido via
-  `equipe_id` em vez de perfil), mas o resultado não chegou a ser anotado. **Não presumir que
-  passou:** é uma linha diferente da tabela e uma comparação diferente na função. Refazer e
-  registrar aqui.
+  **Cobertura do teste — os dois ramos do `pode_ver_card()` estão validados** com dado e sessão
+  reais, em 2026-08-06. Isso importa porque a função tem dois caminhos independentes, e passar num
+  não prova nada sobre o outro: são linhas diferentes da `card_visibilidade` (uma com `perfil`
+  preenchido e `equipe_id` nulo, outra ao contrário) e comparações diferentes na função.
+
+  | ramo | cartão usado | conta | resultado |
+  |---|---|---|---|
+  | `v.perfil = meu_perfil()` | "Campanha de Reavaliação" | Leonardo, perfil `recepcao` | vê o cartão (antes da correção, via zero) |
+  | `v.equipe_id = meu_equipe_id()` | "Design" (sem perfil marcado, badge "1 PESSOA") | Leonardo Aparecido, por `equipe_id` | vê o cartão |
+
+  Nenhum dos dois foi verificado por leitura de policy — só por login real numa conta que não é
+  gestor, que é o único jeito de provar que o `cards_select` filtra como deveria.
 
   **REGRA GERAL DO PROJETO, a partir daqui:** qualquer policy que precise consultar **outra tabela
   com RLS restritivo** tem que passar por função `security definer` — **nunca `EXISTS` direto**.
