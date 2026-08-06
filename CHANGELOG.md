@@ -228,18 +228,43 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **As 4 funções auxiliares — todas `security definer`, `STABLE`, `SET search_path TO 'public'`:**
 
   ```sql
-  eh_gestor()               -> boolean : select exists (select 1 from equipe
-                                         where auth_user_id = auth.uid() and perfil = 'gestor')
-  meu_equipe_id()           -> uuid    : select id from equipe where auth_user_id = auth.uid() limit 1
-  meu_perfil()              -> text    : select perfil from equipe where auth_user_id = auth.uid() limit 1
-  pode_ver_card(p_card_id)  -> boolean : encapsula a checagem em card_visibilidade
-                                         (linha do card batendo com meu_equipe_id() ou meu_perfil())
+  eh_gestor()      -> boolean : select exists (select 1 from equipe
+                                where auth_user_id = auth.uid() and perfil = 'gestor')
+  meu_equipe_id()  -> uuid    : select id from equipe where auth_user_id = auth.uid() limit 1
+  meu_perfil()     -> text    : select perfil from equipe where auth_user_id = auth.uid() limit 1
+
   ```
 
-  As três primeiras foram lidas de `pg_proc` em 2026-08-06. **O corpo literal de `pode_ver_card()`
-  ainda não foi extraído** — o que está acima é o contrato dela, descrito por quem a criou. Rodar
-  para completar o registro:
-  `select pg_get_functiondef(oid) from pg_proc where proname = 'pode_ver_card';`
+  E a `pode_ver_card()`, criada na correção de 2026-08-06, com a definição completa:
+
+  ```sql
+  create or replace function public.pode_ver_card(p_card_id uuid)
+  returns boolean
+  language sql
+  security definer
+  stable
+  set search_path = public
+  as $$
+    select exists (
+      select 1 from card_visibilidade v
+      where v.card_id = p_card_id
+        and (v.equipe_id = meu_equipe_id() or v.perfil = meu_perfil())
+    );
+  $$;
+  ```
+
+  Corpos lidos do banco em 2026-08-06.
+
+  **Olhe o corpo dela e compare com o `EXISTS` quebrado logo abaixo: é a mesma consulta.** Mesmo
+  `select exists`, mesma tabela, mesmas comparações. A única coisa que mudou foi *onde* ela roda —
+  dentro de uma função `security definer` em vez de inline na policy. **A lógica nunca esteve
+  errada.** É por isso que esse bug é tão difícil de enxergar lendo a policy: não há nada de errado
+  para ver.
+
+  Dois detalhes do `pode_ver_card()` que parecem descuido e não são: (a) ele não precisa testar se
+  `perfil`/`equipe_id` é nulo, porque o CHECK garante que só um dos dois está preenchido e
+  `NULL = valor` resulta em `NULL`, nunca em `true`; (b) quem não tem linha na `equipe` recebe
+  `NULL` das duas funções, não casa com nada e não vê cartão nenhum — que é o comportamento certo.
 
   **Por que elas existem, que é o ponto a não esquecer:** nenhuma das 7 policies consulta `equipe`
   ou `card_visibilidade` diretamente — todas passam por essas funções. Como são `security definer`,
@@ -280,6 +305,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
   **Confirmado com conta real**, não por leitura de policy: o Leonardo (perfil `recepcao`) passou a
   ver corretamente só o cartão liberado para o perfil dele. Antes da correção, via zero.
+
+  **Cobertura do teste — o que ficou provado e o que não ficou.** O `pode_ver_card()` tem dois
+  ramos (`v.equipe_id = meu_equipe_id()` **ou** `v.perfil = meu_perfil()`) e o teste do Leonardo
+  exercitou **só o ramo de perfil**. O ramo de **pessoa específica (`equipe_id`)** ainda não teve
+  resultado registrado — foi executado em 2026-08-06 (card apontado para o Leonardo Aparecido via
+  `equipe_id` em vez de perfil), mas o resultado não chegou a ser anotado. **Não presumir que
+  passou:** é uma linha diferente da tabela e uma comparação diferente na função. Refazer e
+  registrar aqui.
 
   **REGRA GERAL DO PROJETO, a partir daqui:** qualquer policy que precise consultar **outra tabela
   com RLS restritivo** tem que passar por função `security definer` — **nunca `EXISTS` direto**.
