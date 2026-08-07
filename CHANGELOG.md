@@ -137,6 +137,76 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   falta: todo cartão que eles enxergam é, por definição, um cartão liberado para eles. O app nem
   consulta essa tabela quando não é gestor — consultar traria zero linhas em silêncio.
 
+- **Planejamento: prazo por quadro (início e fim previsto), 2026-08-07.** Primeira parte da
+  atualização do Kanban. O gestor define um período opcional para o quadro e a lista de quadros
+  passa a mostrar o andamento. **Etapa 100% de app/UI: nenhuma policy, função `security definer`
+  ou grant foi criada ou alterada.** A etapa seguinte (quadro privado) é commit separado e aí sim
+  mexe em RLS.
+- **Duas colunas novas na `quadros`, criadas direto no painel antes desta implementação** — o app
+  só as consome: `data_inicio` (date, nullable) e `data_fim_prevista` (date, nullable). Nullable de
+  propósito: quadro sem prazo é o caso mais comum e continua funcionando exatamente como antes,
+  sem nenhuma mudança visual.
+- **Os campos entraram no modal que já existia, em vez de um "Editar quadro" novo.** O
+  `#quadro-modal` da Fase 4 já servia criação e edição (título dinâmico, `#quadro-tpl-wrap` que se
+  esconde na edição, UPDATE com `.select('id')`); o que faltava era só a **porta de entrada pela
+  lista** — até aqui só dava pra editar entrando no quadro. Criar um segundo modal para a mesma
+  tabela produziria duas fontes de verdade, e uma delas envelheceria esquecida.
+- Botão `✏️` no card da lista, **só para quem `podeEditarPlanejamento()`** — conveniência de
+  interface, não segurança, igual ao resto da aba: quem garante é a policy `quadros_write`
+  (`ALL using eh_gestor()`), que não foi tocada. O botão leva `event.stopPropagation()` porque o
+  card inteiro já tem `onclick="abrirQuadro(...)"`.
+- **`input type="date"` nativo, e não o date picker customizado do app.** Decisão consciente: o
+  picker (`dpDates`/`dpCals`) foi feito para data única obrigatória, e plugar duas chaves novas nos
+  dois objetos globais seria mais superfície de bug do que ganho. Mesmo precedente do `type="time"`
+  no modal de evento. Os dois campos usam a `.frow`, que já existia no CSS **sem nenhum uso** — e
+  empilham no mobile via media query, senão ficariam espremidos no modal estreito.
+- Validação: campo vazio grava **NULL**, não string vazia; as duas datas invertidas (`fim < inicio`)
+  são recusadas com mensagem no modal. **Só uma das datas é permitido** — as colunas são
+  independentes, o quadro apenas não ganha indicador. As datas vão no UPDATE mesmo quando nulas,
+  que é o que permite limpar um prazo já gravado.
+- **Cinco estados de badge**, calculados no cliente por `statusPrazoQuadro()`:
+  sem as duas datas → **nenhum badge**; antes do início → "Ainda não começou"; dentro do período →
+  "Em andamento" + barra de progresso; depois do fim com cartão fora da última lista → "⚠️
+  Atrasado"; depois do fim sem nada pendente → "Encerrado".
+- O texto do andamento sai em **semanas quando o período fecha redondo** ("3 de 6 semanas") e em
+  dias quando não fecha ("7 de 31 dias"). O período é inclusivo nas duas pontas, então 20/07 a
+  30/08 são 42 dias = 6 semanas. As diferenças em dias reusam a `diasEntre()` já escrita para os
+  Relatórios, que é imune a fuso e horário de verão; a comparação entre datas é string-compare, que
+  em `YYYY-MM-DD` ordena certo.
+- **"Concluído" continua derivado da POSIÇÃO do cartão** (última lista), o mesmo conceito do
+  `.plan-fim` da Fase 4 — a tabela `cards` segue sem campo de status e esta etapa não mexeu em
+  schema.
+- **Nenhuma cor nova.** Os três estilos de badge são exatamente os que a aba Treinos já usa, com a
+  mesma semântica: branco sólido = pede atenção (`.treino-status.st-pendente`), vidro contornado =
+  encerrado (`.treino-status.st-montado`), vermelho translúcido = alerta (os 3 valores do
+  `.cfg-danger`). A barra usa `rgba(255,255,255,0.18)` no trilho (o mesmo do `.treino-avatar`) e
+  `var(--white)` no preenchimento.
+- **O card atrasado leva borda E fundo vermelhos, não só borda.** Verificado em preview: sobre o
+  gradiente laranja, a borda vermelha sozinha praticamente não se distingue da borda branca padrão
+  — o "destaque duplo" só existe de fato com o fundo junto, que é como o `.cfg-danger` sempre
+  funcionou nas telas de vidro.
+- **A contagem de pendentes só roda para os quadros JÁ VENCIDOS** (`carregarPendenciasVencidos()`).
+  No caso comum não há quadro vencido e a função **não faz consulta nenhuma**; quando há, são no
+  máximo duas (`colunas` e `cards`, ambas por `sbClient.from()` autenticado, como o resto da aba).
+- **⚠️ A contagem passa pelo RLS, então pode divergir entre perfis.** O `cards_select` entrega a
+  cada um só os cartões liberados para ele: um cartão pendente invisível para o professor não entra
+  na conta dele, e o mesmo quadro pode aparecer como "Encerrado" para ele e "Atrasado" para o
+  gestor. **Não é bug** — a alternativa (contar cartões que a pessoa não pode ver) vazaria a
+  existência deles. **Decisão do Felipe em 2026-08-07:** o badge aparece para todos os perfis,
+  com essa divergência assumida, porque quem executa o trabalho precisa enxergar o prazo.
+- **Falha na conferência nunca vira "Encerrado".** Se a consulta de listas/cartões der erro, ou se
+  o PostgREST truncar o resultado (o corte é em 1000 linhas por padrão, e um corte aqui esconderia
+  justamente o cartão pendente), o quadro é mostrado como **"Atrasado" sem contagem** e o motivo
+  vai pro console. Falso alarme que faz o gestor abrir o quadro é muito menos grave que dizer
+  "Encerrado" para algo pendente — mesmo raciocínio do aviso de truncamento nos Relatórios.
+- **Testado antes do commit, não só lido:** as funções puras (`statusPrazoQuadro`, `fmtPeriodo`)
+  passaram por 15 casos em Node, incluindo primeiro e último dia do período, período de 1 dia,
+  período que não fecha em semanas, e fim anterior ao início; a `carregarPendenciasVencidos()`
+  passou por 10 casos com um cliente Supabase falso — listas fora de ordem, dois quadros vencidos
+  simultâneos, quadro sem lista, quadro sem cartão, e os dois caminhos de erro. **Nenhum teste
+  tocou o banco de produção.** O visual foi conferido em preview isolado (desktop e 390px), com o
+  CSS e o JS reais extraídos do `index.html`.
+
 ### Corrigido
 - Chamadas `sbGet`/`sbPost`/`sbPatch`/`sbDelete` que falham por erro de conexão agora exibem
   um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"

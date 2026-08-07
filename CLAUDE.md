@@ -228,7 +228,7 @@ enxergam os cartões liberados para eles. A aba aparece para **todos** os perfis
 ### Schema (criado no painel antes da implementação; o app só consome)
 | tabela | colunas |
 |---|---|
-| `quadros` | `id` uuid PK, `tema` text, `nome` text, `criado_por` uuid→`equipe.id`, `criado_em` timestamptz, `ativo` bool default true |
+| `quadros` | `id` uuid PK, `tema` text, `nome` text, `criado_por` uuid→`equipe.id`, `criado_em` timestamptz, `ativo` bool default true, **`data_inicio` date nullable**, **`data_fim_prevista` date nullable** (2026-08-07) |
 | `colunas` | `id` uuid PK, `quadro_id` uuid→`quadros.id` (cascade), `nome` text, `cor` text nullable, `ordem` int |
 | `cards` | `id` uuid PK, `coluna_id` uuid→`colunas.id` (cascade), `titulo` text, `descricao` text nullable, `criado_por` uuid→`equipe.id`, `ordem` int, `criado_em`, `atualizado_em` |
 | `card_visibilidade` | `id` uuid PK, `card_id` uuid→`cards.id` (cascade), `perfil` text nullable, `equipe_id` uuid nullable |
@@ -302,6 +302,46 @@ do projeto, não exceção.**
 exatamente este bug, em silêncio, e a aba Treinos para de mostrar linha para todo mundo.**
 Converter a `montagem_treinos` para `security definer` **antes** de mexer na `equipe`, nunca depois.
 
+### Prazo do quadro (2026-08-07) — só app/UI, nenhuma policy tocada
+`data_inicio` e `data_fim_prevista` são **opcionais**. Sem as **duas** preenchidas o quadro não
+mostra badge nenhum e o card fica idêntico ao de antes. Só uma das datas é permitido (as colunas
+são independentes); as duas invertidas são recusadas no modal. Campo vazio grava **NULL**, e as
+datas vão no UPDATE mesmo nulas — é o que permite limpar um prazo.
+
+**Não existe um modal "Editar quadro" separado.** O `#quadro-modal` serve criação e edição desde a
+Fase 4; a edição agora tem duas portas: o `✏️` no card da lista e o "✏️ Editar" dentro do quadro
+aberto. Não criar um segundo modal — seriam duas fontes de verdade para a mesma tabela.
+
+Os campos usam `input type="date"` **nativo**, e não o date picker customizado (`dpDates`/`dpCals`):
+o picker é para data única obrigatória, e duas chaves novas nos globais dele seria mais risco que
+ganho. Mesmo precedente do `type="time"` no modal de evento.
+
+Cinco estados, em `statusPrazoQuadro()`:
+
+| condição | badge |
+|---|---|
+| falta uma das datas | nenhum |
+| hoje < início | "Ainda não começou" (neutro) |
+| dentro do período | "Em andamento" + barra ("3 de 6 semanas" ou "7 de 31 dias") |
+| passou do fim, sobrou cartão fora da última lista | "⚠️ Atrasado" (vermelho) |
+| passou do fim, nada pendente | "Encerrado" (neutro) |
+
+"Concluído" segue **derivado da posição** (última lista), como o `.plan-fim` — `cards` continua sem
+campo de status. O período é **inclusivo** nas duas pontas: 20/07 a 30/08 = 42 dias = 6 semanas.
+Reusa a `diasEntre()` dos Relatórios (imune a fuso); comparação de datas é string-compare, que em
+`YYYY-MM-DD` ordena certo.
+
+**⚠️ A contagem de pendentes passa pelo RLS e pode divergir entre perfis.** A
+`carregarPendenciasVencidos()` só roda para quadros já vencidos (no caso comum, **zero consultas**)
+e conta em cima do que o `cards_select` entregou **àquele usuário**. Um cartão pendente não
+liberado para o professor não entra na conta dele, então o mesmo quadro pode ser "Encerrado" para
+ele e "Atrasado" para o gestor. Não é bug: contar cartão invisível vazaria a existência dele.
+Decisão do Felipe (2026-08-07): o badge aparece para **todos os perfis** mesmo assim.
+
+**Falha na conferência nunca vira "Encerrado".** Erro na consulta ou truncamento do PostgREST
+(corte em 1000 linhas) → o quadro é mostrado como "Atrasado" **sem contagem** e o motivo vai pro
+console. Falso alarme é muito menos grave que dizer "encerrado" para algo pendente.
+
 ### Regra visual (exceção deliberada — não "corrigir")
 - **Os cartões são SÓLIDOS escuros (`var(--g1)`), nunca vidro, nunca na cor da lista.** Só levam uma
   faixa de 3px no topo na cor dela. Mesma regra dos inputs do Login/Config e do antigo keypad do
@@ -315,6 +355,12 @@ Converter a `montagem_treinos` para `security definer` **antes** de mexer na `eq
   Fase 4 não mexeu em schema. Se um dia virar campo de verdade, é decisão a tomar, não detalhe.
 - **Mobile não tem drag** (brigaria com o scroll): cada cartão usa o menu `⋮` com "Mover para →".
   Detecção por `matchMedia('(pointer:coarse)')` + largura, **nunca por user-agent**.
+- **Badges de prazo não usam `PLAN_CORES`** — aquilo é exclusivo de cor de lista, com CHECK no
+  banco. Os três estilos vêm da aba Treinos, com a mesma semântica: **branco sólido = pede
+  atenção** (`.treino-status.st-pendente`), **vidro contornado = encerrado**
+  (`.treino-status.st-montado`), **vermelho translúcido = alerta** (os 3 valores do `.cfg-danger`).
+  O card atrasado leva **borda E fundo** vermelhos: sobre o gradiente laranja a borda sozinha não
+  se distingue da branca padrão, então "destaque duplo" só existe de fato com o fundo junto.
 
 ## Incidente conhecido (jul/2026)
 - Supabase free tier pausa após 7 dias de inatividade. O app engolia o erro de conexão

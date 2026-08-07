@@ -488,6 +488,18 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .plan-quadro-tema{font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px}
 .plan-quadro-nome{font-size:14px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .plan-quadro-seta{font-size:18px;flex-shrink:0}
+/* PRAZO DO QUADRO — badge + barra de andamento no card da lista de quadros.
+   Nenhuma cor nova: "Atrasado" reusa os 3 valores do .cfg-danger (vermelho
+   translúcido de alerta), "Em andamento" é branco sólido e os estados neutros
+   são vidro contornado — exatamente a semântica já usada nos status da aba
+   Treinos (branco = pede atenção, vidro = encerrado). */
+.plan-quadro-prazo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px}
+.plan-quadro-badge{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;text-transform:uppercase;white-space:nowrap}
+.plan-quadro-datas{font-size:11.5px}
+.plan-barra{width:100%;height:4px;border-radius:2px;overflow:hidden}
+.plan-barra-fill{height:100%;border-radius:2px}
+/* mesmos valores do .ev-btn (+ override de vidro logo abaixo) */
+.plan-quadro-edit{width:26px;height:26px;border-radius:6px;border:1.5px solid var(--bd);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--g4);flex-shrink:0;font-family:'Inter',sans-serif;padding:0;transition:all 0.15s}
 .plan-voltar{background:none;border:none;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:12px}
 /* faixa de colunas: lado a lado no desktop, carrossel de uma coluna no mobile */
 .plan-colunas{display:flex;gap:12px;align-items:flex-start;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
@@ -559,6 +571,21 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-planejamento .plan-quadro-card:hover{border-color:rgba(255,255,255,0.65);transform:translateX(3px)}
 #page-planejamento .plan-quadro-nome{color:var(--white)}
 #page-planejamento .plan-quadro-tema,#page-planejamento .plan-quadro-seta{color:rgba(255,255,255,0.7)}
+/* estados do prazo — os 3 valores do vermelho vêm do .cfg-danger; o branco
+   sólido e o vidro contornado, dos .treino-status. Nada inventado aqui. */
+#page-planejamento .plan-quadro-badge.pz-andamento{background:var(--white);color:#8a3400}
+#page-planejamento .plan-quadro-badge.pz-neutro{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.4)}
+#page-planejamento .plan-quadro-badge.pz-atrasado{background:rgba(180,30,20,0.18);border:1.5px solid rgba(255,90,70,0.7);color:#ffb4ab}
+#page-planejamento .plan-quadro-datas{color:rgba(255,255,255,0.7)}
+#page-planejamento .plan-barra{background:rgba(255,255,255,0.18)}
+#page-planejamento .plan-barra-fill{background:var(--white)}
+/* destaque duplo do atraso: além do badge, o card inteiro vira alerta. Borda E
+   fundo, os dois valores do .cfg-danger — sobre o gradiente laranja a borda
+   vermelha sozinha quase não se distingue da borda branca padrão. */
+#page-planejamento .plan-quadro-card.plan-atrasado{border:1.5px solid rgba(255,90,70,0.7);background:rgba(180,30,20,0.18)}
+#page-planejamento .plan-quadro-card.plan-atrasado:hover{border-color:#ff5a46}
+#page-planejamento .plan-quadro-edit{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.8)}
+#page-planejamento .plan-quadro-edit:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
 #page-planejamento .plan-voltar{color:rgba(255,255,255,0.8)}
 #page-planejamento .plan-voltar:hover{color:var(--white)}
 #page-planejamento .btn-add{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
@@ -751,6 +778,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
   .plan-colunas{scroll-snap-type:x mandatory}
   .plan-col{flex:0 0 88%;scroll-snap-align:start}
   .plan-nova-lista{flex:0 0 60%}
+  /* as duas datas empilham: lado a lado no modal estreito o campo fica espremido */
+  .plan-datas{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -1102,6 +1131,21 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           <input class="finput" id="quadro-tema" type="text" placeholder="Ex: Operação da academia">
           <label class="flabel" for="quadro-nome">Nome do quadro</label>
           <input class="finput" id="quadro-nome" type="text" placeholder="Ex: Reforma da sala de musculação">
+          <!-- Datas OPCIONAIS. Input nativo type="date" (e não o date picker
+               customizado do app): aqui são duas datas opcionais e independentes,
+               enquanto o picker foi feito pra data única obrigatória. Mesmo
+               precedente do type="time" no modal de evento. -->
+          <div class="frow plan-datas">
+            <div>
+              <label class="flabel" for="quadro-inicio">Início (opcional)</label>
+              <input class="finput" id="quadro-inicio" type="date" style="margin-bottom:0">
+            </div>
+            <div>
+              <label class="flabel" for="quadro-fim">Fim previsto (opcional)</label>
+              <input class="finput" id="quadro-fim" type="date" style="margin-bottom:0">
+            </div>
+          </div>
+          <div class="cfg-note">Preencha as duas para o quadro mostrar o andamento na lista e avisar quando passar do prazo. Só uma das datas não gera indicador nenhum.</div>
           <div id="quadro-tpl-wrap">
             <label class="flabel">Modelo de listas</label>
             <div class="type-grid" id="quadro-tpl" style="grid-template-columns:repeat(3,1fr)">
@@ -1516,7 +1560,7 @@ async function logout(){
   // não deixar relatório aberto esperando o próximo login
   relatorioAberto=null;document.getElementById('relatorios-detalhe').innerHTML='';
   // idem para o Planejamento: quadro aberto e cartões do usuário anterior saem da memória
-  quadros=[];fecharQuadro();
+  quadros=[];planPendentes={};fecharQuadro();
   document.getElementById('plan-quadros').innerHTML='';
   updateTreinosBadge();
   document.getElementById('tb-user').textContent='';
@@ -2239,6 +2283,10 @@ const TEMPLATES_QUADRO=[
 const PERFIL_ROTULO={professor:'Professores',recepcao:'Recepção',gestor:'Gestores'};
 
 let quadros=[],quadroAberto=null,planColunas=[],planCards=[],planVis=[];
+// Quantos cartões estão FORA da última lista, por quadro. Preenchido só para os
+// quadros já vencidos (ver carregarPendenciasVencidos) — é o que separa "Atrasado"
+// de "Encerrado". Chave ausente = não foi possível conferir.
+let planPendentes={};
 let planDragCardId=null,planTouchAtual=null;
 let editingQuadroId=null,editingColunaId=null,editingCardId=null,cardModalColunaId=null;
 let planTemplate='simples',planCorSel='#3B82F6',planVisPerfis=[],planVisPessoas=[];
@@ -2266,22 +2314,126 @@ function planIsTouch(){
   return window.innerWidth<=900;
 }
 
+// ---------- PRAZO DO QUADRO ----------
+// `data_inicio` e `data_fim_prevista` são colunas NULLABLE criadas direto no painel
+// (2026-08-07). Sem as DUAS preenchidas o quadro não mostra indicador nenhum e o
+// card fica exatamente como era antes.
+//
+// "Concluído" continua sendo derivado da POSIÇÃO do cartão (última lista), o mesmo
+// conceito do .plan-fim: a tabela `cards` segue sem campo de status.
+function hojeStr(){return dateToStr(new Date());}
+
+// "3 de 6 semanas" quando o período fecha em semanas inteiras; senão, em dias.
+// Período é INCLUSIVO nas duas pontas — 1º a 14 é "14 dias", ou seja, 2 semanas.
+function fmtPeriodo(dia,total){
+  if(total%7===0&&total>=14){
+    const sem=Math.min(Math.floor((dia-1)/7)+1,total/7);
+    return sem+' de '+(total/7)+' semanas';
+  }
+  return dia+' de '+total+(total===1?' dia':' dias');
+}
+
+// Devolve null quando não há o que mostrar. Comparação de datas é string-compare:
+// em YYYY-MM-DD isso ordena certo e evita fuso. As diferenças em dias usam a
+// diasEntre(), que já existe no bloco de Relatórios e é imune a horário de verão.
+function statusPrazoQuadro(q){
+  if(!q||!q.data_inicio||!q.data_fim_prevista)return null;
+  const hoje=hojeStr();
+  const periodo=fmtDate(q.data_inicio)+' → '+fmtDate(q.data_fim_prevista);
+  if(hoje<q.data_inicio)
+    return{tipo:'futuro',classe:'pz-neutro',rotulo:'Ainda não começou',detalhe:periodo,progresso:null};
+  if(hoje<=q.data_fim_prevista){
+    const total=(diasEntre(q.data_inicio,q.data_fim_prevista)||0)+1;
+    const dia=Math.min((diasEntre(q.data_inicio,hoje)||0)+1,total);
+    return{tipo:'andamento',classe:'pz-andamento',rotulo:'Em andamento',
+      detalhe:fmtPeriodo(dia,total)+' · '+periodo,
+      progresso:Math.max(0,Math.min(100,Math.round(dia/total*100)))};
+  }
+  const atraso=diasEntre(q.data_fim_prevista,hoje)||0;
+  const p=planPendentes[q.id];
+  // p===0: prazo acabou e não sobrou trabalho — encerrado, não atrasado.
+  if(p===0)
+    return{tipo:'encerrado',classe:'pz-neutro',rotulo:'Encerrado',
+      detalhe:'Prazo terminou '+fmtDate(q.data_fim_prevista),progresso:null};
+  // p indefinido = a conferência falhou. Nesse caso avisa como atrasado, SEM a
+  // contagem: falso alarme que faz abrir o quadro é melhor do que dizer "Encerrado"
+  // pra algo que pode estar pendente.
+  return{tipo:'atrasado',classe:'pz-atrasado',rotulo:'⚠️ Atrasado',
+    detalhe:'Venceu há '+atraso+(atraso===1?' dia':' dias')+
+      (p>0?' · '+p+(p===1?' cartão em aberto':' cartões em aberto'):''),
+    progresso:null};
+}
+
+// Só os quadros JÁ VENCIDOS precisam saber se sobrou cartão fora da última lista —
+// os demais não geram consulta nenhuma, então no caso comum o custo é zero.
+//
+// ATENÇÃO: a contagem passa pelo RLS (cards_select), ou seja, é o que AQUELE usuário
+// enxerga. Um cartão pendente não liberado pra ele não entra na conta, então
+// professor/recepção podem ver "Encerrado" onde o gestor vê "Atrasado". É o lado
+// certo do trade-off: contar cartão invisível vazaria a existência dele. Decisão do
+// Felipe em 2026-08-07 — o badge aparece para todos os perfis mesmo assim.
+async function carregarPendenciasVencidos(){
+  planPendentes={};
+  const hoje=hojeStr();
+  const vencidos=quadros.filter(q=>q.data_inicio&&q.data_fim_prevista&&hoje>q.data_fim_prevista);
+  if(!vencidos.length)return;
+  const cols=await sbClient.from('colunas').select('id,quadro_id,ordem')
+    .in('quadro_id',vencidos.map(q=>q.id)).order('ordem',{ascending:true});
+  if(cols.error){
+    console.warn('Não foi possível conferir as listas dos quadros vencidos:',cols.error);
+    return;   // sem dado: os vencidos ficam como "Atrasado" sem contagem
+  }
+  const todas=cols.data||[];
+  const porQuadro={};
+  todas.forEach(c=>{(porQuadro[c.quadro_id]=porQuadro[c.quadro_id]||[]).push(c);});
+  // quadro vencido sem nenhuma lista não tem cartão: encerrado, não atrasado
+  vencidos.forEach(q=>{if(!porQuadro[q.id])planPendentes[q.id]=0;});
+  if(!todas.length)return;
+  const cds=await sbClient.from('cards').select('id,coluna_id',{count:'exact'}).in('coluna_id',todas.map(c=>c.id));
+  if(cds.error){
+    console.warn('Não foi possível conferir os cartões dos quadros vencidos:',cds.error);
+    return;
+  }
+  // O PostgREST corta em 1000 linhas por padrão. Um corte aqui poderia esconder
+  // justamente o cartão pendente e transformar "Atrasado" em "Encerrado" — que é o
+  // erro caro. Sem contagem confiável, prefere-se não afirmar nada (chave ausente
+  // = atrasado sem contagem). Mesmo cuidado do aviso de truncamento em Relatórios.
+  if(cds.count!=null&&cds.count>(cds.data||[]).length){
+    console.warn('Contagem de cartões truncada pela API ('+(cds.data||[]).length+' de '+cds.count+
+      '): não dá para afirmar que os quadros vencidos estão encerrados.');
+    planPendentes={};
+    return;
+  }
+  const quadroDaColuna={};todas.forEach(c=>{quadroDaColuna[c.id]=c.quadro_id;});
+  const ultimaDoQuadro={};
+  Object.keys(porQuadro).forEach(qid=>{
+    const arr=porQuadro[qid].slice().sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+    ultimaDoQuadro[qid]=arr[arr.length-1].id;
+    planPendentes[qid]=0;
+  });
+  (cds.data||[]).forEach(c=>{
+    const qid=quadroDaColuna[c.coluna_id];
+    if(qid&&c.coluna_id!==ultimaDoQuadro[qid])planPendentes[qid]++;
+  });
+}
+
 // ---------- CARREGAMENTO ----------
 async function loadQuadros(){
   const c=document.getElementById('plan-quadros');
   document.getElementById('btn-novo-quadro').style.display=podeEditarPlanejamento()?'flex':'none';
   if(!sbClient){c.innerHTML='<div class="empty">O componente de login não carregou. Recarregue a página.</div>';return;}
   if(!quadroAberto)c.innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
-  const{data,error}=await sbClient.from('quadros').select('id,tema,nome,criado_em')
+  const{data,error}=await sbClient.from('quadros').select('id,tema,nome,criado_em,data_inicio,data_fim_prevista')
     .eq('ativo',true).order('criado_em',{ascending:false});
   if(error){
     console.error('Erro ao carregar quadros:',error);
-    quadros=[];
+    quadros=[];planPendentes={};
     c.innerHTML='<div class="empty">Não foi possível carregar os quadros. Tente recarregar a página em alguns instantes.</div>';
     showConnError();
     return;
   }
   quadros=data||[];
+  await carregarPendenciasVencidos();
   renderQuadrosLista();
   if(quadroAberto)await abrirQuadro(quadroAberto);   // reabre ao voltar pra aba
 }
@@ -2294,14 +2446,27 @@ function renderQuadrosLista(){
       :'Nenhum quadro disponível para você ainda.')+'</div>';
     return;
   }
-  c.innerHTML=quadros.map((q,i)=>`<div class="plan-quadro-card" style="animation-delay:${Math.min(i,12)*35}ms" onclick="abrirQuadro('${esc(q.id)}')">
+  const isG=podeEditarPlanejamento();
+  c.innerHTML=quadros.map((q,i)=>{
+    const st=statusPrazoQuadro(q);
+    return`<div class="plan-quadro-card${st&&st.tipo==='atrasado'?' plan-atrasado':''}" style="animation-delay:${Math.min(i,12)*35}ms" onclick="abrirQuadro('${esc(q.id)}')">
     <div class="plan-quadro-icone">🗂️</div>
     <div class="plan-quadro-body">
       <div class="plan-quadro-tema">${esc(q.tema)||'—'}</div>
       <div class="plan-quadro-nome">${esc(q.nome)||'Sem nome'}</div>
+      ${st?renderPrazoHTML(st):''}
     </div>
+    ${isG?`<button class="plan-quadro-edit" title="Editar nome, tema e datas" onclick="event.stopPropagation();openQuadroModal('${esc(q.id)}')">✏️</button>`:''}
     <div class="plan-quadro-seta">›</div>
-  </div>`).join('');
+  </div>`;}).join('');
+}
+
+function renderPrazoHTML(st){
+  return`<div class="plan-quadro-prazo">
+    <span class="plan-quadro-badge ${st.classe}">${esc(st.rotulo)}</span>
+    <span class="plan-quadro-datas">${esc(st.detalhe)}</span>
+    ${st.progresso==null?'':`<div class="plan-barra"><div class="plan-barra-fill" style="width:${st.progresso}%"></div></div>`}
+  </div>`;
 }
 
 async function abrirQuadro(id){
@@ -2560,6 +2725,10 @@ function openQuadroModal(id){
   const q=id?quadros.find(x=>x.id===id):null;
   document.getElementById('quadro-tema').value=q?(q.tema||''):'';
   document.getElementById('quadro-nome').value=q?(q.nome||''):'';
+  // o PostgREST devolve `date` como YYYY-MM-DD, que é exatamente o formato que o
+  // input type="date" espera — sem conversão nenhuma no meio
+  document.getElementById('quadro-inicio').value=q?(q.data_inicio||''):'';
+  document.getElementById('quadro-fim').value=q?(q.data_fim_prevista||''):'';
   // modelo só faz sentido na criação: o quadro não fica preso a ele depois
   document.getElementById('quadro-tpl-wrap').style.display=id?'none':'';
   planTemplate='simples';
@@ -2579,20 +2748,29 @@ async function saveQuadro(){
   if(!sbClient){showPlanMsg('quadro-msg','O componente de login não carregou. Recarregue a página.',false);return;}
   const tema=document.getElementById('quadro-tema').value.trim();
   const nome=document.getElementById('quadro-nome').value.trim();
+  // campo vazio vira NULL, não string vazia — a coluna é date nullable
+  const dataInicio=document.getElementById('quadro-inicio').value||null;
+  const dataFim=document.getElementById('quadro-fim').value||null;
   if(!nome){showPlanMsg('quadro-msg','Digite o nome do quadro.',false);return;}
+  // só uma das datas é permitido (o quadro apenas não ganha indicador); as duas
+  // invertidas, não — daria progresso negativo e badge sem sentido
+  if(dataInicio&&dataFim&&dataFim<dataInicio){showPlanMsg('quadro-msg','O fim previsto não pode ser antes do início.',false);return;}
   if(!currentEquipeId){showPlanMsg('quadro-msg','Sua conta não está vinculada a ninguém na equipe — avise o gestor.',false);return;}
   const editando=editingQuadroId;
   const btn=document.getElementById('btn-save-quadro');btn.disabled=true;btn.textContent='Salvando...';
   try{
     if(editando){
-      const{data,error}=await sbClient.from('quadros').update({tema,nome}).eq('id',editando).select('id');
+      // as datas vão no UPDATE mesmo quando nulas: é o que permite LIMPAR uma data
+      const{data,error}=await sbClient.from('quadros')
+        .update({tema,nome,data_inicio:dataInicio,data_fim_prevista:dataFim}).eq('id',editando).select('id');
       if(error){console.error('Erro ao editar quadro:',error);showPlanMsg('quadro-msg',traduzErroPlan(error),false);return;}
       if(!data||!data.length){showPlanMsg('quadro-msg','Você não tem permissão para editar este quadro.',false);return;}
       closeQuadroModal();toast('✅ Quadro atualizado');
       await loadQuadros();
       return;
     }
-    const{data,error}=await sbClient.from('quadros').insert({tema,nome,criado_por:currentEquipeId}).select('id');
+    const{data,error}=await sbClient.from('quadros')
+      .insert({tema,nome,criado_por:currentEquipeId,data_inicio:dataInicio,data_fim_prevista:dataFim}).select('id');
     if(error){console.error('Erro ao criar quadro:',error);showPlanMsg('quadro-msg',traduzErroPlan(error),false);return;}
     if(!data||!data.length){showPlanMsg('quadro-msg','Você não tem permissão para criar quadros.',false);return;}
     const novoId=data[0].id;
