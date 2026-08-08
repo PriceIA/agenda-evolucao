@@ -207,6 +207,71 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   tocou o banco de produção.** O visual foi conferido em preview isolado (desktop e 390px), com o
   CSS e o JS reais extraídos do `index.html`.
 
+- **Planejamento: quadro privado — Fase 4.1, 2026-08-07.** O gestor marca um quadro como privado e
+  ele deixa de aparecer para todo mundo que não seja o criador — **inclusive para outros gestores**.
+  O RLS desta etapa **já estava em produção e testado com contas reais antes desta implementação**
+  (Felipe vê e edita o quadro marcado; Leonardo Neves, outro gestor, vê o quadro sumir da lista
+  dele). Esta entrada cobre só a UI: **nenhuma policy, função ou tabela foi criada ou alterada.**
+- Já existiam no banco, e o app apenas consome: a coluna
+  `quadros.privado boolean not null default false`, a função `security definer`
+  `posso_ver_quadro(p_quadro_id uuid)`, e as 7 policies do Kanban já reescritas em cima dela.
+- **Checkbox "Privado" no modal, que é um só** — o `#quadro-modal` serve criação e edição desde a
+  Fase 4. Nasce **desmarcado** na criação (quadro público segue sendo o comportamento padrão;
+  privacidade por acidente seria pior que a falta dela) e reflete `quadros.privado` na edição.
+  Reusa `.plan-pessoa` (a linha de checkbox da lista de pessoas do cartão) e `.plan-vis-aviso`
+  (o aviso fixo da visibilidade do cartão) — **nenhum CSS novo no modal**.
+- `privado` entra no INSERT e no UPDATE, mantendo o `.select('id')` já padrão da aba. No UPDATE o
+  campo vai **mesmo quando `false`** — é o que permite desmarcar e voltar o quadro a público.
+- **Selo `🔒 PRIVADO` na lista de quadros**, na linha do tema, herdando dela tamanho, peso e
+  uppercase. `privado` entrou no SELECT do `loadQuadros()` só para alimentar o selo e o checkbox:
+  **não há refiltro por `privado` no JavaScript**, porque o quadro privado de outra pessoa nem
+  chega no array — quem filtra é a policy `quadros_select`.
+- **O selo leva os TRÊS valores do `.cfg-danger` (fundo + borda + texto), não só a cor do texto.**
+  Testadas três variantes em preview sobre o gradiente real: `#ffb4ab` como texto solto lê como
+  rosa desbotado, **mais fraco que o próprio tema ao lado** — o oposto do que um marcador de
+  privacidade deveria fazer; `#ff5a46` melhora pouco, porque vermelho sobre laranja é contraste
+  ruim por natureza. O vermelho do `.cfg-danger` sempre veio do **fundo**, e sem ele o alerta se
+  perde. Fica `inline` de propósito, para o selo quebrar junto com o texto quando o tema é longo.
+
+- **Trava do checkbox "Privado" para quem não criou o quadro (mitigação de risco, 2026-08-07).**
+  Identificado **antes de qualquer teste em produção**: a policy `quadros_write` é
+  `eh_gestor() AND posso_ver_quadro(id)`, então qualquer gestor pode editar um quadro público que
+  não é dele — inclusive marcá-lo privado. Como a `posso_ver_quadro()` libera quadro privado só
+  para o `criado_por`, o quadro **sumiria da lista de quem acabou de marcar**, sem forma de
+  desfazer, porque a pessoa perderia o acesso junto. O banco não erraria; o resultado é que seria
+  absurdo.
+- Mitigação: `souCriadorDoQuadro(q)` compara `quadros.criado_por` com `currentEquipeId` (para isso
+  o `criado_por` passou a ser lido no SELECT, o que antes não acontecia). No modal de edição, quem
+  não é o criador vê o checkbox **desabilitado e explicado**, com o nome de quem criou — e não
+  escondido: sumir sem dizer nada deixaria o gestor procurando a opção. No save, `privado` fica
+  **fora do payload** nesse caso, então o PostgREST nem toca a coluna. A criação nunca trava
+  (`!id || souCriadorDoQuadro(q)`), porque ali o criador é sempre quem está criando.
+- **Uma função só para as duas pontas**, de propósito: checagem duplicada entre modal e save
+  poderia divergir num refactor futuro e o campo voltaria a escapar para o payload.
+- **Isto é conveniência de interface, não segurança** — mesma natureza do
+  `podeEditarPlanejamento()` e do `podeCadastrarTreino()`. A `quadros_write` continua permitindo,
+  pelo DevTools, que um gestor marque privado um quadro alheio. Fechar de verdade exigiria um
+  `WITH CHECK` na policy (algo como `criado_por = meu_equipe_id()` quando `privado = true`), o que
+  é mudança de RLS: **decisão consciente do Felipe de não fazer agora** e avaliar junto com a
+  Fase 2.
+- Cobertura: 16 casos em Node sobre `souCriadorDoQuadro`/`nomeCriador` e a montagem do payload,
+  incluindo não-criador com o checkbox forçado a `true`, conta sem vínculo na equipe, criador
+  desativado (fora do array `equipe`, que só tem gente ativa) e **`criado_por` nulo com
+  `currentEquipeId` nulo** — este último é o perigoso: sem o `!!` na função, `null === null` daria
+  `true` e liberaria a trava exatamente para quem não deveria.
+
+- **⚠️ RESSALVA CONHECIDA E NÃO TESTADA — Fase 4.1 subiu com ela em aberto (2026-08-07).**
+  **Não testado ainda: se a trava do checkbox "Privado" (para não-criador) interfere na edição
+  normal de outros campos (tema/nome/datas) do mesmo modal. Testar na próxima sessão antes de
+  confiar 100% na Fase 4.1 em uso real por outro gestor que não o criador do quadro.**
+  Contexto para quem for testar: a leitura do código sugere que **não** interfere — o `disabled`
+  age só no próprio checkbox, os demais campos são lidos separadamente no `saveQuadro()`, e o
+  payload do não-criador (`tema`, `nome`, `data_inicio`, `data_fim_prevista`) é aceito pela
+  `quadros_write`, já que num quadro público a `posso_ver_quadro()` devolve `true` para qualquer
+  gestor. **Mas isso é raciocínio sobre o código, não observação** — e este projeto já tem
+  histórico de RLS que barra em silêncio, devolvendo zero linhas em vez de erro. Só vale como
+  testado depois de rodar com a conta de um segundo gestor.
+
 ### Corrigido
 - Chamadas `sbGet`/`sbPost`/`sbPatch`/`sbDelete` que falham por erro de conexão agora exibem
   um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"

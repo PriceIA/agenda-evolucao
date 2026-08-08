@@ -488,6 +488,13 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .plan-quadro-tema{font-size:9.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px}
 .plan-quadro-nome{font-size:14px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .plan-quadro-seta{font-size:18px;flex-shrink:0}
+/* selo PRIVADO — vive na linha do tema, então herda dela o tamanho, o peso e o
+   uppercase. Leva os TRÊS valores do .cfg-danger (fundo + borda + texto), não só a
+   cor do texto: comparado em preview, `#ffb4ab` solto sobre o laranja lê como rosa
+   desbotado, mais fraco que o próprio tema ao lado — o vermelho do .cfg-danger vem
+   do fundo, e sem ele o alerta se perde. Fica `inline` de propósito, para o selo
+   quebrar junto com o texto quando o tema é longo. */
+.plan-tag-privado{margin-left:7px;white-space:nowrap;border-radius:20px;padding:1px 7px}
 /* PRAZO DO QUADRO — badge + barra de andamento no card da lista de quadros.
    Nenhuma cor nova: "Atrasado" reusa os 3 valores do .cfg-danger (vermelho
    translúcido de alerta), "Em andamento" é branco sólido e os estados neutros
@@ -549,6 +556,10 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .plan-vis-lista{max-height:170px;overflow-y:auto;margin-bottom:10px}
 .plan-pessoa{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1.5px solid var(--bd);border-radius:9px;margin-bottom:6px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--g2)}
 .plan-pessoa:hover{border-color:var(--g4)}
+/* linha de checkbox travada (o "Privado" de quem não criou o quadro). Mesmo 0.6 do
+   .treino-acao:disabled — não é estado novo, é o desabilitado que o app já usa. */
+.plan-pessoa.plan-pessoa-off{opacity:0.6;cursor:not-allowed}
+.plan-pessoa.plan-pessoa-off:hover{border-color:var(--bd)}
 .plan-pessoa input{accent-color:var(--orange);width:15px;height:15px;flex-shrink:0}
 .plan-pessoa-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .plan-pessoa-cargo{font-size:10.5px;font-weight:600;color:var(--g4);flex-shrink:0}
@@ -571,6 +582,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 #page-planejamento .plan-quadro-card:hover{border-color:rgba(255,255,255,0.65);transform:translateX(3px)}
 #page-planejamento .plan-quadro-nome{color:var(--white)}
 #page-planejamento .plan-quadro-tema,#page-planejamento .plan-quadro-seta{color:rgba(255,255,255,0.7)}
+#page-planejamento .plan-tag-privado{background:rgba(180,30,20,0.18);border:1px solid rgba(255,90,70,0.7);color:#ffb4ab}
 /* estados do prazo — os 3 valores do vermelho vêm do .cfg-danger; o branco
    sólido e o vidro contornado, dos .treino-status. Nada inventado aqui. */
 #page-planejamento .plan-quadro-badge.pz-andamento{background:var(--white);color:#8a3400}
@@ -1146,6 +1158,16 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
             </div>
           </div>
           <div class="cfg-note">Preencha as duas para o quadro mostrar o andamento na lista e avisar quando passar do prazo. Só uma das datas não gera indicador nenhum.</div>
+          <!-- Privado (Fase 4.1). Reusa .plan-pessoa (a mesma linha de checkbox da
+               lista de pessoas do cartão) e .plan-vis-aviso (o mesmo aviso fixo da
+               visibilidade do cartão) — nenhum CSS novo. Quem garante é a policy
+               via posso_ver_quadro(), não este checkbox. -->
+          <label class="plan-pessoa" id="quadro-privado-row">
+            <input type="checkbox" id="quadro-privado">
+            <span class="plan-pessoa-nome">🔒 Quadro privado</span>
+          </label>
+          <!-- texto trocado pelo openQuadroModal: muda quando quem edita não é o criador -->
+          <div class="plan-vis-aviso" id="quadro-privado-aviso"></div>
           <div id="quadro-tpl-wrap">
             <label class="flabel">Modelo de listas</label>
             <div class="type-grid" id="quadro-tpl" style="grid-template-columns:repeat(3,1fr)">
@@ -2294,6 +2316,24 @@ let planTemplate='simples',planCorSel='#3B82F6',planVisPerfis=[],planVisPessoas=
 // Ocultar botão é CONVENIÊNCIA DE INTERFACE, não segurança — mesma nota do
 // podeCadastrarTreino(). Quem garante é a policy (`eh_gestor()` no banco).
 function podeEditarPlanejamento(){return currentRole==='gestor';}
+
+// SÓ O CRIADOR mexe no `privado` — e isso não é preciosismo de interface.
+// A policy `quadros_write` é `eh_gestor() AND posso_ver_quadro(id)`, e a
+// `posso_ver_quadro()` libera quadro privado só para quem criou. Ou seja: um gestor
+// PODE marcar como privado um quadro que não é dele, e no instante em que salvasse o
+// quadro sumiria da lista dele — sem conseguir desfazer, porque perderia o acesso
+// junto. O banco não erraria; o resultado é que seria absurdo.
+// A trava evita esse caminho; quem garante o resto continua sendo a policy.
+function souCriadorDoQuadro(q){return !!q&&!!currentEquipeId&&q.criado_por===currentEquipeId;}
+
+// Nome de quem criou, só para o aviso do "Privado" travado. O array `equipe` tem
+// apenas gente ATIVA, então pode não achar (criador desativado) — aí devolve vazio e
+// o aviso sai sem o nome, em vez de com um "—" que não explica nada.
+function nomeCriador(q){
+  if(!q||!q.criado_por)return'';
+  const m=equipe.find(e=>e.id===q.criado_por);
+  return m&&m.nome?m.nome:'';
+}
 function planErro(msg,err){if(err!==undefined)console.error('Planejamento:',err);toast('❌ '+msg,4500);}
 function showPlanMsg(id,msg,ok){const el=document.getElementById(id);el.textContent=msg;el.className='form-msg '+(ok?'ok':'err');}
 function clearPlanMsg(id){const el=document.getElementById(id);el.textContent='';el.className='form-msg';}
@@ -2423,7 +2463,11 @@ async function loadQuadros(){
   document.getElementById('btn-novo-quadro').style.display=podeEditarPlanejamento()?'flex':'none';
   if(!sbClient){c.innerHTML='<div class="empty">O componente de login não carregou. Recarregue a página.</div>';return;}
   if(!quadroAberto)c.innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
-  const{data,error}=await sbClient.from('quadros').select('id,tema,nome,criado_em,data_inicio,data_fim_prevista')
+  // `privado` só alimenta o selo na lista e o checkbox do modal. Quem filtra o que
+  // aparece aqui é a policy quadros_select via posso_ver_quadro() — o quadro privado
+  // de outra pessoa nem chega neste array, então NÃO há refiltro por `privado` no JS.
+  // `criado_por` é lido para saber quem pode mexer no `privado` (ver souCriadorDoQuadro).
+  const{data,error}=await sbClient.from('quadros').select('id,tema,nome,criado_em,criado_por,data_inicio,data_fim_prevista,privado')
     .eq('ativo',true).order('criado_em',{ascending:false});
   if(error){
     console.error('Erro ao carregar quadros:',error);
@@ -2452,7 +2496,7 @@ function renderQuadrosLista(){
     return`<div class="plan-quadro-card${st&&st.tipo==='atrasado'?' plan-atrasado':''}" style="animation-delay:${Math.min(i,12)*35}ms" onclick="abrirQuadro('${esc(q.id)}')">
     <div class="plan-quadro-icone">🗂️</div>
     <div class="plan-quadro-body">
-      <div class="plan-quadro-tema">${esc(q.tema)||'—'}</div>
+      <div class="plan-quadro-tema">${esc(q.tema)||'—'}${q.privado?'<span class="plan-tag-privado">🔒 Privado</span>':''}</div>
       <div class="plan-quadro-nome">${esc(q.nome)||'Sem nome'}</div>
       ${st?renderPrazoHTML(st):''}
     </div>
@@ -2729,6 +2773,21 @@ function openQuadroModal(id){
   // input type="date" espera — sem conversão nenhuma no meio
   document.getElementById('quadro-inicio').value=q?(q.data_inicio||''):'';
   document.getElementById('quadro-fim').value=q?(q.data_fim_prevista||''):'';
+  // criação nasce SEMPRE desmarcado: quadro público é o comportamento de antes da
+  // Fase 4.1, e privacidade por acidente seria pior que a falta dela
+  const chkPriv=document.getElementById('quadro-privado');
+  chkPriv.checked=q?!!q.privado:false;
+  // Na CRIAÇÃO o criador é sempre quem está criando, então nunca trava. Na edição,
+  // só o criador mexe (ver souCriadorDoQuadro). Fica DESABILITADO e explicado em vez
+  // de escondido: sumir sem dizer nada deixaria o gestor procurando a opção.
+  const podeMexerPrivado=!id||souCriadorDoQuadro(q);
+  chkPriv.disabled=!podeMexerPrivado;
+  document.getElementById('quadro-privado-row').classList.toggle('plan-pessoa-off',!podeMexerPrivado);
+  const criador=podeMexerPrivado?'':nomeCriador(q);
+  document.getElementById('quadro-privado-aviso').textContent=podeMexerPrivado
+    ?'Só você vai ver este quadro — nem outros gestores. As listas e os cartões dentro dele seguem a mesma regra.'
+    :'Só quem criou o quadro pode torná-lo privado'+(criador?' — este foi criado por '+criador:'')+
+     '. O resto (tema, nome e datas) você edita normalmente.';
   // modelo só faz sentido na criação: o quadro não fica preso a ele depois
   document.getElementById('quadro-tpl-wrap').style.display=id?'none':'';
   planTemplate='simples';
@@ -2751,6 +2810,7 @@ async function saveQuadro(){
   // campo vazio vira NULL, não string vazia — a coluna é date nullable
   const dataInicio=document.getElementById('quadro-inicio').value||null;
   const dataFim=document.getElementById('quadro-fim').value||null;
+  const privado=document.getElementById('quadro-privado').checked;
   if(!nome){showPlanMsg('quadro-msg','Digite o nome do quadro.',false);return;}
   // só uma das datas é permitido (o quadro apenas não ganha indicador); as duas
   // invertidas, não — daria progresso negativo e badge sem sentido
@@ -2760,9 +2820,16 @@ async function saveQuadro(){
   const btn=document.getElementById('btn-save-quadro');btn.disabled=true;btn.textContent='Salvando...';
   try{
     if(editando){
-      // as datas vão no UPDATE mesmo quando nulas: é o que permite LIMPAR uma data
+      // as datas vão no UPDATE mesmo quando nulas: é o que permite LIMPAR uma data.
+      // `privado` idem — mandar sempre é o que permite DESMARCAR (voltar a público) —
+      // MAS só quando quem edita é o criador. Para os demais o campo fica FORA do
+      // payload, então o valor atual do quadro nem é tocado. Mesma condição que
+      // desabilitou o checkbox no openQuadroModal: uma fonte só, sem risco de as duas
+      // pontas discordarem.
+      const payload={tema,nome,data_inicio:dataInicio,data_fim_prevista:dataFim};
+      if(souCriadorDoQuadro(quadros.find(x=>x.id===editando)))payload.privado=privado;
       const{data,error}=await sbClient.from('quadros')
-        .update({tema,nome,data_inicio:dataInicio,data_fim_prevista:dataFim}).eq('id',editando).select('id');
+        .update(payload).eq('id',editando).select('id');
       if(error){console.error('Erro ao editar quadro:',error);showPlanMsg('quadro-msg',traduzErroPlan(error),false);return;}
       if(!data||!data.length){showPlanMsg('quadro-msg','Você não tem permissão para editar este quadro.',false);return;}
       closeQuadroModal();toast('✅ Quadro atualizado');
@@ -2770,7 +2837,7 @@ async function saveQuadro(){
       return;
     }
     const{data,error}=await sbClient.from('quadros')
-      .insert({tema,nome,criado_por:currentEquipeId,data_inicio:dataInicio,data_fim_prevista:dataFim}).select('id');
+      .insert({tema,nome,criado_por:currentEquipeId,data_inicio:dataInicio,data_fim_prevista:dataFim,privado}).select('id');
     if(error){console.error('Erro ao criar quadro:',error);showPlanMsg('quadro-msg',traduzErroPlan(error),false);return;}
     if(!data||!data.length){showPlanMsg('quadro-msg','Você não tem permissão para criar quadros.',false);return;}
     const novoId=data[0].id;

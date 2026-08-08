@@ -228,7 +228,7 @@ enxergam os cartões liberados para eles. A aba aparece para **todos** os perfis
 ### Schema (criado no painel antes da implementação; o app só consome)
 | tabela | colunas |
 |---|---|
-| `quadros` | `id` uuid PK, `tema` text, `nome` text, `criado_por` uuid→`equipe.id`, `criado_em` timestamptz, `ativo` bool default true, **`data_inicio` date nullable**, **`data_fim_prevista` date nullable** (2026-08-07) |
+| `quadros` | `id` uuid PK, `tema` text, `nome` text, `criado_por` uuid→`equipe.id`, `criado_em` timestamptz, `ativo` bool default true, **`data_inicio` date nullable**, **`data_fim_prevista` date nullable** (2026-08-07), **`privado` bool not null default false** (Fase 4.1, 2026-08-07) |
 | `colunas` | `id` uuid PK, `quadro_id` uuid→`quadros.id` (cascade), `nome` text, `cor` text nullable, `ordem` int |
 | `cards` | `id` uuid PK, `coluna_id` uuid→`colunas.id` (cascade), `titulo` text, `descricao` text nullable, `criado_por` uuid→`equipe.id`, `ordem` int, `criado_em`, `atualizado_em` |
 | `card_visibilidade` | `id` uuid PK, `card_id` uuid→`cards.id` (cascade), `perfil` text nullable, `equipe_id` uuid nullable |
@@ -342,6 +342,37 @@ Decisão do Felipe (2026-08-07): o badge aparece para **todos os perfis** mesmo 
 (corte em 1000 linhas) → o quadro é mostrado como "Atrasado" **sem contagem** e o motivo vai pro
 console. Falso alarme é muito menos grave que dizer "encerrado" para algo pendente.
 
+### Quadro privado (Fase 4.1, 2026-08-07)
+Quadro marcado como privado **só aparece para quem o criou — inclusive outros gestores deixam de
+ver**. O RLS já estava em produção e validado com contas reais antes da UI; a Fase 4.1 no
+`index.html` **não criou nem alterou policy, função ou tabela**.
+
+Já existiam no banco: `quadros.privado`, a função `security definer` `posso_ver_quadro(uuid)`, e as
+**7 policies do Kanban já reescritas em cima dela**. Não mexer nelas sem decisão explícita.
+
+Na tela: checkbox no `#quadro-modal` (o mesmo que serve criação e edição), selo `🔒 PRIVADO` na
+linha do tema, e `privado` nos dois payloads. No UPDATE o campo vai **mesmo quando `false`** — é o
+que permite voltar o quadro a público. Não há refiltro por `privado` no JS: quadro privado alheio
+nem chega no array, quem filtra é a `quadros_select`.
+
+**⚠️ TRAVA: só o CRIADOR mexe no `privado`.** A `quadros_write` é
+`eh_gestor() AND posso_ver_quadro(id)`, então qualquer gestor pode editar quadro público alheio —
+e marcá-lo privado faria o quadro **sumir da lista dele no instante do save**, sem desfazer,
+porque perderia o acesso junto. Por isso `souCriadorDoQuadro(q)` (compara `criado_por` com
+`currentEquipeId`): para não-criador o checkbox fica **desabilitado e explicado** (não escondido) e
+`privado` fica **fora do payload**, deixando a coluna intocada. Criação nunca trava.
+**Uma função só para o modal e o save** — checagem duplicada divergiria num refactor e o campo
+voltaria a escapar. Cuidado ao mexer: o `!!` da função existe para impedir que `criado_por` nulo
+case com `currentEquipeId` nulo e libere a trava para quem não deveria.
+
+**É conveniência de interface, não segurança** — igual ao `podeEditarPlanejamento()`. Pelo DevTools
+ainda dá para marcar privado um quadro alheio. Fechar exigiria `WITH CHECK` na `quadros_write`
+(`criado_por = meu_equipe_id()` quando `privado = true`); **decisão do Felipe: avaliar na Fase 2**,
+não agora.
+
+**Pendência de teste (ver backlog):** falta confirmar que a trava não atrapalha a edição de
+tema/nome/datas do mesmo modal por um não-criador.
+
 ### Regra visual (exceção deliberada — não "corrigir")
 - **Os cartões são SÓLIDOS escuros (`var(--g1)`), nunca vidro, nunca na cor da lista.** Só levam uma
   faixa de 3px no topo na cor dela. Mesma regra dos inputs do Login/Config e do antigo keypad do
@@ -374,6 +405,15 @@ console. Falso alarme é muito menos grave que dizer "encerrado" para algo pende
   se uma nova chamada falhar depois.
 
 ## Pendências (backlog)
+- **⚠️ Fase 4.1 subiu para produção com uma ressalva ABERTA (2026-08-07) — testar antes de confiar.**
+  **Não foi testado se a trava do checkbox "Privado" (para não-criador) interfere na edição normal
+  dos outros campos (tema/nome/datas) do mesmo modal.** Testar na próxima sessão, com a conta de um
+  segundo gestor, antes de confiar 100% na Fase 4.1 em uso real por quem não criou o quadro.
+  A leitura do código sugere que **não** interfere (o `disabled` age só no próprio checkbox; os
+  demais campos são lidos à parte no `saveQuadro()`; e num quadro público a `posso_ver_quadro()`
+  devolve `true` para qualquer gestor, então a `quadros_write` aceita o UPDATE). **Mas isso é
+  raciocínio sobre o código, não observação** — e aqui RLS que barra devolve zero linhas em
+  silêncio, não erro. Só conta como testado depois de rodar com conta real.
 - **Passo 6 da aba Treinos (PDF) — pausado em 2026-08-03, sem prazo de retomada.** Decisão do
   Felipe: outro projeto tem prioridade, e ele volta a este quando puder. **Não é urgência e não
   bloqueia nada** — a aba Treinos está completa e em uso até o Passo 5 (Relatórios).
