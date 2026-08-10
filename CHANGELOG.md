@@ -11,6 +11,34 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Unreleased]
 
 ### Adicionado
+- **Menu lateral (drawer) substituindo a barra de abas, 2026-08-10.** A navegação passou a ser
+  um único drawer que desliza da esquerda, aberto por um chip escuro no canto superior esquerdo
+  da topbar. **Feito em duas etapas, com validação do Felipe no celular entre elas:** a etapa 1
+  construiu o drawer convivendo com as abas antigas; a etapa 2 removeu as abas.
+  - **Motivo:** a `.tb-nav` já estava no limite. Com 7 abas, o mobile precisava quebrar a topbar
+    em duas linhas e dar scroll horizontal ao menu — e cada aba nova piorava isso. O drawer tem
+    espaço vertical de sobra e não muda de forma conforme o app cresce.
+  - **Um componente só, desktop E mobile.** Duas navegações (abas no desktop, drawer no celular)
+    seriam duas fontes de verdade, e toda página nova teria que ser cadastrada nos dois lugares.
+  - **Três grupos com rótulo visual, sem accordion:** *Agenda* (Agenda, Calendário, Rodízio),
+    *Operação* (Treinos, Planejamento) e *Gestão* (Relatórios, Config.). Com 7 itens cabe tudo
+    visível ao mesmo tempo; accordion só acrescentaria um clique e esconderia opção.
+  - **Grupo sem nenhum item visível para o perfil não é renderizado — o título junto.** Não é
+    detalhe teórico: "Gestão" só tem itens de gestor, então some inteiro para professor e
+    recepção. Título de grupo sozinho, sem item embaixo, é bug visual.
+  - Registry `NAV_GRUPOS` como **fonte única** dos itens, mesmo precedente do registry
+    `RELATORIOS`: página nova é uma entrada ali, sem tocar em CSS nem no `goPage()`. O `soGestor`
+    de Relatórios e Config. substituiu os dois `style.display` que o `enterApp()` fazia nos
+    botões de aba. **Continua sendo conveniência de interface, não segurança** — igual ao
+    `podeCadastrarTreino()` e ao `podeEditarPlanejamento()`; quem garante é o RLS.
+  - Fecha por backdrop, ESC, botão ✕ e ao navegar. Trava o scroll com `body.drawer-open`, que age
+    na `.app-content` — **o `body` já é `overflow:hidden`, quem rola de verdade é ela**. A posição
+    do scroll é salva e restaurada em JS, porque alternar `overflow` pode zerá-la.
+- **Nome da página na topbar (etapa 2, 2026-08-10),** ocupando o espaço que era da barra de abas.
+  É orientação visual: não é clicável, não tem hover e usa o cinza discreto que as abas tinham
+  quando **não** estavam ativas — de propósito, para não competir com o item ativo do drawer
+  (branco sólido). O texto sai do `rotuloPagina()`, que lê o `NAV_GRUPOS`: **nome de página não
+  pode existir em dois lugares.**
 - **Login real com usuário + senha via Supabase Auth (Fase 1 de 5), 2026-07-31.** Substitui a
   seleção de perfil + PIN. O usuário digita só o login (ex.: `FelipePolenta`) e nunca vê email:
   o app monta `usuario.trim().toLowerCase() + '@equipe.evolucaofit.app'` e chama
@@ -531,6 +559,19 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   `drop column` na Fase 2.
 
 ### Removido
+- **Barra de abas `.tb-nav`, em todas as suas partes (2026-08-10, etapa 2 do drawer):** os 7
+  botões `.tb-nav-item`, o CSS deles (normal/hover/active), as regras de scroll horizontal do
+  mobile e os dois `style.display` que o `enterApp()` fazia em `#nav-relatorios` e `#nav-config`.
+  O `goPage()` perdeu o parâmetro `el` (só existia para marcar a aba clicada) e o
+  `irParaTreinos()` deixou de procurar o botão **pelo texto**, virando `goPage('treinos')`.
+  Removida junto a compensação `min-height:calc(100vh - 100px)` do mobile, que só existia porque
+  a barra de abas ocupava uma segunda linha na topbar — voltou ao `calc(100vh - 56px)` geral.
+  - **⚠️ Consequência que exigiu decisão: no celular a marca "EVOLUÇÃO" saiu da topbar** e o nome
+    da página ocupou o lugar dela. Medido em 390px: chip 34 + marca 92 + página 75 + nome 78 +
+    badge 66 + ⋯ 34, com os gaps dá ~409px para 366px úteis — os dois não cabiam. Entre manter o
+    que nunca muda (nome da empresa) e o que muda (onde estou), o Felipe escolheu o segundo.
+    Com isso a topbar mobile ficou em **51px de altura, uma linha só**, o que é o que torna a
+    volta ao `calc(100vh - 56px)` correta. A marca continua no desktop, no splash e no login.
 - **PIN do Gestor, em todas as suas partes (2026-07-31):** o overlay com teclado numérico, o CSS
   do teclado e do modal, as funções `pinKey`/`pinDel`/`updateDots`/`openPinOverlay`/
   `closePinOverlay`, os globais `currentPIN`/`pinBuffer`, e também o card "PIN do Gestor" na tela

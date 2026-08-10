@@ -393,6 +393,70 @@ tema/nome/datas do mesmo modal por um não-criador.
   O card atrasado leva **borda E fundo** vermelhos: sobre o gradiente laranja a borda sozinha não
   se distingue da branca padrão, então "destaque duplo" só existe de fato com o fundo junto.
 
+## Navegação — menu lateral (drawer), 2026-08-10
+A barra de abas **não existe mais**. A navegação é um drawer que desliza da esquerda, aberto pelo
+chip escuro no canto superior esquerdo da topbar. **O mesmo componente vale no desktop e no
+mobile** — duas navegações seriam duas fontes de verdade, e toda página nova teria que ser
+cadastrada em dois lugares.
+
+Motivo da troca: com 7 abas a `.tb-nav` já obrigava a topbar a quebrar em duas linhas no celular,
+com scroll horizontal no menu. Cada aba nova piorava isso; o drawer não muda de forma conforme o
+app cresce.
+
+### `NAV_GRUPOS` é a fonte única dos itens
+Página nova = **uma entrada no `NAV_GRUPOS`**, sem tocar em CSS nem no `goPage()`. Mesmo
+precedente do registry `RELATORIOS`. Três grupos com rótulo visual, **sem accordion** (com 7 itens
+cabe tudo visível; accordion só somaria um clique e esconderia opção):
+
+| grupo | itens |
+|---|---|
+| Agenda | Agenda, Calendário, Rodízio |
+| Operação | Treinos, Planejamento |
+| Gestão | Relatórios, Config. — os dois com `soGestor:true` |
+
+**Grupo sem nenhum item visível para o perfil não é renderizado — o título junto.** Não é regra
+teórica: "Gestão" só tem itens de gestor, então **some inteiro para professor e recepção**.
+Título de grupo sozinho, sem item embaixo, é bug visual.
+
+O `soGestor` substituiu os `style.display` que o `enterApp()` fazia nos botões de aba. Como antes,
+**é conveniência de interface, não segurança** — igual ao `podeCadastrarTreino()` e ao
+`podeEditarPlanejamento()`. Quem garante é o RLS.
+
+### Detalhes que quebram se mexidos sem cuidado
+- **O drawer começa ABAIXO da topbar, e o `top` é medido em JS** (`posicionarDrawer()`), não é
+  fixo. Dois motivos: (1) o painel é de vidro, e vidro sobre a topbar **branca** apaga o texto;
+  (2) o `.notif-banner` aparece e some, mudando a altura. A medida usa
+  `topbar.offsetTop + offsetHeight` (offset **dentro** do `#screen-app`) e **não**
+  `getBoundingClientRect()`: a `.screen` tem `will-change:transform`, o que a torna o containing
+  block deste `position:fixed`, e durante a transição de entrada o rect de viewport chega a dar
+  negativo. Já aconteceu — o drawer abriu a `-889px`.
+- **Os ITENS do drawer são sólidos escuros (`var(--g1)`), nunca vidro.** Mesma exceção deliberada
+  dos cartões do Kanban e dos inputs do Login/Config: onde se lê conteúdo não leva vidro. Aqui não
+  é só estética — com vidro dentro de vidro o texto da página atrás **vaza por dentro** do item.
+  O painel continua de vidro; só os itens é que não.
+- **A trava de scroll age na `.app-content`, não no `body`** — o `body` já é `overflow:hidden` e
+  quem rola de verdade é ela. O `scrollTop` é salvo e restaurado em JS porque alternar `overflow`
+  pode zerá-lo.
+- `.modal-cls.drawer-cls` usa **seletor duplo de propósito**: a `.modal-cls` é declarada bem
+  depois no arquivo e venceria o empate de especificidade, deixando o ✕ cinza sobre o vidro.
+  Mesmo motivo do `.btn-cancel.plan-btn-del`.
+- O `☰` do menu de ações (Senha/Exportar/Sair) no mobile **virou `⋯`**: o `☰` agora é o chip de
+  navegação, e dois ícones iguais com funções diferentes na mesma barra confundem. As ações não
+  saíram do lugar.
+
+### Nome da página na topbar
+Onde ficava a barra de abas. É **orientação visual**: não é clicável, não tem hover, e usa o cinza
+discreto que as abas tinham quando **não** estavam ativas — para não competir com o item ativo do
+drawer, que é branco sólido. O texto vem do `rotuloPagina()`, que lê o `NAV_GRUPOS`: **nome de
+página não pode existir em dois lugares.**
+
+**No celular a marca "EVOLUÇÃO" sai da topbar** e o nome da página ocupa o lugar dela. Medido em
+390px, os dois não cabem (~409px necessários para 366px úteis). Decisão do Felipe (2026-08-10):
+entre o que nunca muda (nome da empresa) e o que muda (onde estou), fica o segundo. A marca
+continua no desktop, no splash e no login. É isso que mantém a topbar mobile em **uma linha
+(51px)** e o que torna correto o `min-height:calc(100vh - 56px)` das telas de vidro — a
+compensação de `100px`, que existia por causa da segunda linha, foi removida.
+
 ## Incidente conhecido (jul/2026)
 - Supabase free tier pausa após 7 dias de inatividade. O app engolia o erro de conexão
   silenciosamente (catch(e){return null}) e mostrava "0 eventos" em vez de avisar — parecia que

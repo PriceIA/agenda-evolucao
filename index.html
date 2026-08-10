@@ -66,10 +66,12 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .tb-left{display:flex;align-items:center;gap:14px}
 .tb-wordmark{font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase}
 .tb-div{width:1px;height:18px;background:var(--bd)}
-.tb-nav{display:flex;gap:2px}
-.tb-nav-item{padding:6px 11px;border-radius:7px;font-size:12.5px;font-weight:500;cursor:pointer;color:var(--g3);border:none;background:none;font-family:'Inter',sans-serif;transition:all 0.15s}
-.tb-nav-item:hover{color:var(--black);background:var(--off)}
-.tb-nav-item.active{color:var(--black);background:var(--off2);font-weight:700}
+/* Nome da página atual, onde ficava a barra de abas. É ORIENTAÇÃO VISUAL, não
+   navegação: não é clicável, não tem hover e não repete o destaque do item ativo
+   do drawer (aquele é branco sólido; este é o cinza discreto que as abas usavam
+   quando NÃO estavam ativas). O texto vem do NAV_GRUPOS, mesma fonte do rótulo
+   do drawer — nome de página não pode existir em dois lugares. */
+.tb-page{font-size:12.5px;font-weight:600;color:var(--g3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tb-right{display:flex;align-items:center;gap:8px}
 .tb-user{font-size:12px;font-weight:600;color:var(--g2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .role-badge{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px}
@@ -90,6 +92,63 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .tb-more-menu button{display:block;width:100%;text-align:left;padding:12px 14px;border:none;background:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--g2);cursor:pointer}
 .tb-more-menu button:hover{background:var(--off)}
 .tb-more-menu button+button{border-top:1px solid var(--bd)}
+
+/* DRAWER (menu lateral) — vale no desktop E no mobile, é o mesmo componente.
+   Nenhum valor novo: o vidro, a borda, a linha de highlight e o item ativo vêm
+   dos mesmos tokens da aba Treinos; o backdrop e o z-index, da topbar/modais.
+
+   ⚠️ O drawer começa ABAIXO da topbar (o `top` é medido em JS na abertura), e não
+   no topo da tela. Motivo: a topbar é a única superfície BRANCA do app, e vidro
+   branco sobre branco apaga o texto. Os 56px aqui são só o valor inicial —
+   no mobile a topbar tem duas linhas e o .notif-banner acima dela vai e vem. */
+.drawer-bg{position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(15,15,15,0.55);z-index:200;opacity:0;visibility:hidden;transition:opacity 0.35s ease,visibility 0.35s}
+.drawer-bg.open{opacity:1;visibility:visible}
+/* opacity+visibility em vez de display:none — display não anima, e é a transição
+   que faz o painel deslizar em vez de aparecer estalado */
+.drawer{position:absolute;top:0;left:0;bottom:0;width:280px;max-width:84vw;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.76,0,0.24,1);background:rgba(43,22,8,0.62);border-right:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .drawer{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+}
+.drawer-bg.open .drawer{transform:translateX(0)}
+.drawer::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+.drawer-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;flex-shrink:0}
+.drawer-ttl{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+/* seletor DUPLO de propósito: .modal-cls é declarado bem depois neste arquivo e,
+   com a mesma especificidade, venceria o empate — o mesmo motivo do
+   .btn-cancel.plan-btn-del lá embaixo. Sem isso o ✕ fica cinza sobre o vidro. */
+.modal-cls.drawer-cls{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.8)}
+.modal-cls.drawer-cls:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
+.drawer-bd{padding:0 12px 18px}
+/* título de grupo: mesmos valores dos kickers (.treinos-kicker/.plan-kicker).
+   Grupo sem nenhum item visível não é renderizado — título órfão é bug visual. */
+.drawer-grupo{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);text-shadow:0 1px 4px rgba(0,0,0,0.25);padding:14px 6px 7px}
+/* ITEM: SÓLIDO escuro, nunca vidro — mesmos valores do .plan-card do Kanban. É a
+   mesma exceção deliberada já registrada no projeto (inputs do Login/Config,
+   cartões do Planejamento): onde se LÊ o conteúdo não leva vidro. Aqui isso não é
+   só estética — com vidro dentro de vidro o texto da página atrás vaza por dentro
+   do item e briga com o rótulo. */
+.drawer-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;margin-bottom:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.10);background:var(--g1);color:var(--white);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:-0.2px;cursor:pointer;transition:all 0.15s}
+.drawer-item:hover{border-color:rgba(255,255,255,0.28)}
+/* ativo: branco sólido, mesma semântica do .treino-status.st-pendente e do
+   .view-btn.active — branco cheio é o destaque do app sobre o gradiente */
+.drawer-item.active{background:var(--white);color:#8a3400;border-color:var(--white)}
+.drawer-item-ic{font-size:15px;flex-shrink:0}
+/* trava do scroll com o drawer aberto: o body já é overflow:hidden, quem rola de
+   verdade é a .app-content. O scrollTop é salvo/restaurado no JS. */
+body.drawer-open .app-content{overflow:hidden}
+
+/* CHIP do hambúrguer — bloco escuro sólido: três traços soltos sobre a topbar
+   branca leem como enfeite, o bloco lê como botão. Mesmo 34px/raio 9px do
+   .plan-cor. Traços SEM contorno: em 3px de altura o contorno come o
+   preenchimento e o branco vira cinza. */
+.tb-menu-chip{width:34px;height:34px;border-radius:9px;background:var(--black);border:none;cursor:pointer;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;flex-shrink:0;transition:all 0.15s}
+.tb-menu-chip:hover{background:var(--g1)}
+.tb-menu-chip span{display:block;width:16px;height:3px;border-radius:2px;background:var(--white);transition:transform 0.2s,opacity 0.2s}
+.tb-menu-chip span:nth-child(2){background:var(--orange)}
+/* aberto: vira X mantendo uma haste branca e uma laranja (o traço 3 sai) */
+.tb-menu-chip.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.tb-menu-chip.open span:nth-child(2){transform:rotate(-45deg)}
+.tb-menu-chip.open span:nth-child(3){opacity:0}
 .app-content{flex:1;overflow-y:auto;padding:22px 24px}
 .page{display:none;animation:fadeUp 0.3s ease both}
 .page.active{display:block}
@@ -762,30 +821,36 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
   .rodizio-grid{grid-template-columns:1fr}
   .app-content{padding:16px 14px}
   .login-card,.btn-enter,.login-form{width:290px}
-  /* TOPBAR EM DUAS LINHAS.
-     Linha 1: marca + nome/badge + ☰   |   Linha 2: menu de abas, largura inteira.
-     Motivo: só o conteúdo da direita (nome+badge+3 botões) já pedia ~395px, e a
-     esquerda outros ~469px — não cabem lado a lado em ~390px de tela.
+  /* TOPBAR EM UMA LINHA SÓ.
+     chip ☰ | marca | página atual | nome/badge | ⋯
+     Antes eram duas linhas porque a barra de abas ocupava a segunda inteira. Sem
+     ela, tudo cabe em ~390px — e o `min-height:calc(100vh - 100px)` das telas de
+     vidro voltou para os 56px do caso geral, que é o valor da topbar de uma linha.
      `display:contents` no .tb-left promove os filhos a itens do flex da .topbar,
      permitindo reordenar sem mexer no HTML nem no desktop. */
-  .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;row-gap:8px}
+  /* column-gap porque com display:contents os filhos da .tb-left perdem o gap:14px
+     dela e o chip encostaria no nome da página. Mesmo 6px que a .tb-right usa. */
+  .topbar{flex-wrap:wrap;height:auto;padding:8px 12px;row-gap:8px;column-gap:6px}
   .tb-left{display:contents}
-  .tb-wordmark{order:1}
+  /* com display:contents o chip vira filho direto da .topbar e precisa de order
+     próprio, senão cairia fora do canto esquerdo */
+  .tb-menu-chip{order:0}
+  /* A MARCA SAI NO CELULAR e o nome da página ocupa o lugar dela.
+     Medido em 390px: chip 34 + marca 92 + página 75 + nome 78 + badge 66 + ⋯ 34,
+     com os gaps dá ~409px para 366px úteis — não cabe. Como os dois não cabem,
+     fica o que muda (onde estou) no lugar do que nunca muda (o nome da empresa).
+     A marca continua no desktop, no splash e na tela de login. */
+  .tb-wordmark{display:none}
   .tb-div{display:none}
+  /* o nome da página encolhe antes de empurrar qualquer coisa (tem ellipsis) */
+  .tb-page{order:1;font-size:12px;font-weight:700;color:var(--black);flex:0 1 auto}
   .tb-right{order:2;margin-left:auto;gap:6px}
   .tb-user{max-width:90px;font-size:11.5px}
-  /* os 3 botões viram itens do dropdown (o ☰ não é filho direto, então escapa) */
+  /* os 3 botões viram itens do dropdown (o ⋯ não é filho direto, então escapa) */
   .tb-right>.tb-btn{display:none}
   .tb-more-wrap{display:block}
-  /* abas: rolagem horizontal, sem barra visível. Com 5 abas elas costumam caber
-     inteiras; a rolagem é seguro para telas estreitas ou uma aba a mais no futuro. */
-  .tb-nav{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
-  .tb-nav::-webkit-scrollbar{display:none}
-  .tb-nav-item{padding:5px 7px;font-size:11px;flex:0 0 auto;scroll-snap-align:start}
-  /* a topbar de 2 linhas é mais alta que os 56px fixos usados nas telas de vidro */
-  #page-agenda,#page-rodizio,#page-calendario,#page-treinos,#page-relatorios,#page-planejamento,#page-config{min-height:calc(100vh - 100px)}
   #page-planejamento{margin:-16px -14px;padding:18px 14px 32px}
-  /* colunas viram carrossel: uma por vez, encaixando na borda (mesmo scroll-snap da .tb-nav).
+  /* colunas viram carrossel: uma por vez, encaixando na borda.
      No mobile não há drag — cada cartão usa o menu "⋮" para mudar de lista. */
   .plan-colunas{scroll-snap-type:x mandatory}
   .plan-col{flex:0 0 88%;scroll-snap-align:start}
@@ -836,19 +901,16 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
     </div>
     <div class="topbar">
       <div class="tb-left">
+        <!-- abre o menu lateral (desktop e mobile, mesmo componente) -->
+        <button class="tb-menu-chip" id="tb-menu-chip" onclick="toggleDrawer(event)"
+                aria-label="Abrir menu" aria-expanded="false" aria-controls="drawer">
+          <span></span><span></span><span></span>
+        </button>
         <div class="tb-wordmark" id="topbar-name">Evolução</div>
         <div class="tb-div"></div>
-        <div class="tb-nav">
-          <button class="tb-nav-item active" onclick="goPage(&#39;agenda&#39;,this)">Agenda</button>
-          <button class="tb-nav-item" onclick="goPage(&#39;rodizio&#39;,this)">Rodízio</button>
-          <button class="tb-nav-item" onclick="goPage(&#39;calendario&#39;,this)">Calendário</button>
-          <button class="tb-nav-item" onclick="goPage(&#39;treinos&#39;,this)">Treinos</button>
-          <!-- Planejamento aparece para TODOS os perfis: quem não é gestor entra em
-               modo leitura e o RLS já filtra quais cartões ele enxerga. -->
-          <button class="tb-nav-item" onclick="goPage(&#39;planejamento&#39;,this)">Planejamento</button>
-          <button class="tb-nav-item" id="nav-relatorios" style="display:none" onclick="goPage(&#39;relatorios&#39;,this)">Relatórios</button>
-          <button class="tb-nav-item" id="nav-config" style="display:none" onclick="goPage(&#39;config&#39;,this)">Config.</button>
-        </div>
+        <!-- Nome da página atual. Preenchido pelo goPage() a partir do NAV_GRUPOS —
+             não escrever nome de página aqui, senão vira segunda fonte de verdade. -->
+        <div class="tb-page" id="tb-page"></div>
       </div>
       <div class="tb-right">
         <span class="tb-user" id="tb-user"></span>
@@ -859,7 +921,9 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
         <button class="tb-btn" onclick="logout()">Sair</button>
         <!-- mesmas 3 ações, agrupadas; só aparece no mobile via CSS -->
         <div class="tb-more-wrap">
-          <button class="tb-btn tb-more" onclick="toggleTbMore(event)" aria-label="Mais opções" aria-haspopup="true">☰</button>
+          <!-- "⋯" e não "☰": o ☰ agora é o chip de NAVEGAÇÃO na esquerda, e dois
+               ícones iguais com funções diferentes na mesma barra confundem. -->
+          <button class="tb-btn tb-more" onclick="toggleTbMore(event)" aria-label="Mais opções" aria-haspopup="true">⋯</button>
           <div class="tb-more-menu" id="tb-more-menu">
             <button onclick="closeTbMore();openPwdModal()">🔑 Trocar senha</button>
             <button onclick="closeTbMore();openExport()">↑ Exportar</button>
@@ -867,6 +931,20 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- MENU LATERAL (drawer). O corpo é montado por renderDrawer() a partir do
+         registry NAV_GRUPOS — item novo entra lá, não aqui. Fica ANTES dos modais
+         no DOM: em empate de z-index quem está depois vence, então o modal fica por
+         cima do drawer, que é o que a gente quer. -->
+    <div class="drawer-bg" id="drawer-bg" onclick="if(event.target===this)closeDrawer()">
+      <nav class="drawer" id="drawer" role="navigation" aria-label="Menu principal">
+        <div class="drawer-hd">
+          <div class="drawer-ttl">Menu</div>
+          <button class="modal-cls drawer-cls" id="drawer-cls" onclick="closeDrawer()" aria-label="Fechar menu">✕</button>
+        </div>
+        <div class="drawer-bd" id="drawer-bd"></div>
+      </nav>
     </div>
 
     <div class="app-content">
@@ -1443,6 +1521,95 @@ document.addEventListener('click',e=>{
 function toggleTbMore(e){if(e)e.stopPropagation();document.getElementById('tb-more-menu').classList.toggle('open');}
 function closeTbMore(){const m=document.getElementById('tb-more-menu');if(m)m.classList.remove('open');}
 
+// ---------- MENU LATERAL (drawer) ----------
+// FONTE ÚNICA dos itens de navegação, mesmo precedente do registry RELATORIOS:
+// página nova = uma entrada aqui, sem mexer em CSS nem no goPage().
+// Vale no desktop E no mobile — é o mesmo componente, não duas navegações.
+//
+// ACESSO: `soGestor` espelha exatamente a regra que o enterApp() já aplica nas abas
+// (Relatórios e Config. só para gestor). Isso é CONVENIÊNCIA DE INTERFACE, não
+// segurança — igual ao podeCadastrarTreino() e ao podeEditarPlanejamento(). Quem
+// garante é o RLS.
+const NAV_GRUPOS=[
+  {titulo:'Agenda',itens:[
+    {pagina:'agenda',rotulo:'Agenda',icone:'📅'},
+    {pagina:'calendario',rotulo:'Calendário',icone:'🗓️'},
+    {pagina:'rodizio',rotulo:'Rodízio',icone:'🔄'}]},
+  {titulo:'Operação',itens:[
+    {pagina:'treinos',rotulo:'Treinos',icone:'🏋️'},
+    {pagina:'planejamento',rotulo:'Planejamento',icone:'🗂️'}]},
+  {titulo:'Gestão',itens:[
+    {pagina:'relatorios',rotulo:'Relatórios',icone:'📊',soGestor:true},
+    {pagina:'config',rotulo:'Config.',icone:'⚙️',soGestor:true}]},
+];
+function podeVerNavItem(it){return !it.soGestor||currentRole==='gestor';}
+
+// O nome que aparece na topbar sai DAQUI, não de um texto solto no HTML: é o mesmo
+// rótulo do item do drawer. Página nova ganha nome nos dois lugares de uma vez.
+function rotuloPagina(nome){
+  for(const g of NAV_GRUPOS){const it=g.itens.find(i=>i.pagina===nome);if(it)return it.rotulo;}
+  return'';
+}
+function atualizarBreadcrumb(nome){const el=document.getElementById('tb-page');if(el)el.textContent=rotuloPagina(nome);}
+
+// Grupo sem NENHUM item visível não é renderizado — nem o título. Hoje isso
+// acontece de verdade: "Gestão" só tem itens de gestor, então some inteiro para
+// professor e recepção.
+function renderDrawer(){
+  const bd=document.getElementById('drawer-bd');
+  if(!bd)return;
+  const ativa=(document.querySelector('.page.active')||{id:'page-agenda'}).id.replace('page-','');
+  bd.innerHTML=NAV_GRUPOS.map(g=>{
+    const itens=g.itens.filter(podeVerNavItem);
+    if(!itens.length)return'';
+    return`<div class="drawer-grupo">${g.titulo}</div>`+itens.map(it=>
+      `<button class="drawer-item${it.pagina===ativa?' active':''}" data-page="${it.pagina}" onclick="goPage('${it.pagina}')">
+        <span class="drawer-item-ic">${it.icone}</span><span>${it.rotulo}</span>
+      </button>`).join('');
+  }).join('');
+}
+
+// O drawer começa abaixo da topbar (ver o comentário do CSS: vidro sobre a topbar
+// branca some). A altura é MEDIDA, não fixa: no mobile a topbar tem duas linhas e o
+// .notif-banner acima dela aparece e some.
+// Mede pelo offset DENTRO do #screen-app, não por coordenada de viewport: a .screen
+// tem `will-change:transform`, o que a torna o containing block deste fixed — e
+// durante a transição de entrada (0.5s) o rect de viewport chega a dar negativo.
+// offsetTop já inclui o .notif-banner quando ele está aberto.
+function posicionarDrawer(){
+  const bg=document.getElementById('drawer-bg'),tb=document.querySelector('.topbar');
+  if(bg&&tb)bg.style.top=(tb.offsetTop+tb.offsetHeight)+'px';
+}
+function drawerAberto(){const bg=document.getElementById('drawer-bg');return!!bg&&bg.classList.contains('open');}
+let drawerScrollTop=0;
+function openDrawer(){
+  const bg=document.getElementById('drawer-bg'),chip=document.getElementById('tb-menu-chip');
+  if(!bg)return;
+  posicionarDrawer();
+  bg.classList.add('open');
+  if(chip){chip.classList.add('open');chip.setAttribute('aria-expanded','true');chip.setAttribute('aria-label','Fechar menu');}
+  // trava o scroll da página atrás. Guarda a posição: alternar overflow pode zerá-la.
+  const c=document.querySelector('.app-content');
+  if(c)drawerScrollTop=c.scrollTop;
+  document.body.classList.add('drawer-open');
+  const cls=document.getElementById('drawer-cls');if(cls)cls.focus();
+}
+function closeDrawer(){
+  const bg=document.getElementById('drawer-bg'),chip=document.getElementById('tb-menu-chip');
+  if(!bg||!bg.classList.contains('open'))return;
+  bg.classList.remove('open');
+  if(chip){chip.classList.remove('open');chip.setAttribute('aria-expanded','false');chip.setAttribute('aria-label','Abrir menu');}
+  document.body.classList.remove('drawer-open');
+  const c=document.querySelector('.app-content');
+  if(c)c.scrollTop=drawerScrollTop;
+  if(chip)chip.focus();
+}
+function toggleDrawer(e){if(e)e.stopPropagation();drawerAberto()?closeDrawer():openDrawer();}
+// ESC fecha (não havia nenhum handler de ESC no app, então não conflita com nada)
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drawerAberto())closeDrawer();});
+// a topbar muda de altura ao girar a tela ou ao fechar o banner de notificação
+window.addEventListener('resize',()=>{if(drawerAberto())posicionarDrawer();});
+
 // SPLASH + BOOT
 async function runSplash(){
   // A sessão é decidida ANTES de qualquer chamada de rede: getSession() lê o
@@ -1558,11 +1725,12 @@ async function enterApp(role){
   document.getElementById('btn-novo').style.display=isG?'flex':'none';
   document.getElementById('btn-nova-escala').style.display=isG?'flex':'none';
   document.getElementById('lock-rodizio').style.display=isG?'none':'flex';
-  // Relatórios: só gestor. Recepção cadastra treino mas não vê análise da equipe.
-  // Ocultar a aba é decisão de produto, não barreira de segurança — ver o bloco RELATÓRIOS.
-  document.getElementById('nav-relatorios').style.display=isG?'block':'none';
-  document.getElementById('nav-config').style.display=isG?'block':'none';
   document.getElementById('btn-novo-treino').style.display=podeCadastrarTreino()?'flex':'none';
+  // Quem esconde Relatórios e Config. de quem não é gestor agora é o `soGestor` do
+  // NAV_GRUPOS — não há mais botão de aba para ocultar aqui. Continua sendo decisão
+  // de produto, não barreira de segurança (ver o bloco RELATÓRIOS).
+  renderDrawer();   // depois do currentRole: é ele que decide quais grupos existem
+  goPage('agenda'); // marca o item do drawer e escreve o nome na topbar
   if(isG){document.getElementById('cfg-company').value=companyName;document.getElementById('cfg-short').value=companyShort;}
   document.getElementById('cards-view').innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
   document.getElementById('rodizio-container').innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
@@ -1576,6 +1744,8 @@ async function enterApp(role){
 
 async function logout(){
   if(sbClient){const{error}=await sbClient.auth.signOut();if(error)console.error('Erro ao sair:',error);}
+  // o drawer sai da tela e é esvaziado: itens de gestor não ficam no DOM deslogado
+  closeDrawer();document.getElementById('drawer-bd').innerHTML='';
   document.getElementById('screen-app').classList.remove('visible');document.getElementById('screen-app').classList.add('hidden-up');
   showLoginScreen();
   currentRole='';currentUserName='';currentEquipeId='';treinos=[];
@@ -1590,13 +1760,15 @@ async function logout(){
   clearLoginError();
   goPageDirect('agenda');
 }
-function goPage(name,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));el.classList.add('active');
-  // no mobile o menu rola na horizontal: garante que a aba escolhida fique visível
-  try{el.scrollIntoView({inline:'nearest',block:'nearest'});}catch(e){}
+// ÚNICO caminho de troca de página do app (a barra de abas saiu na etapa 2).
+function goPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.drawer-item').forEach(b=>b.classList.toggle('active',b.dataset.page===name));
+  atualizarBreadcrumb(name);
+  closeDrawer();
   if(name==='treinos')loadTreinos();
   if(name==='relatorios')loadRelatorios();
   if(name==='planejamento')loadQuadros();}
-function goPageDirect(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+name).classList.add('active');document.querySelectorAll('.tb-nav-item').forEach(b=>b.classList.remove('active'));document.querySelector('.tb-nav-item').classList.add('active');}
+function goPageDirect(name){goPage(name);}
 
 function showNotif(){
   const today=new Date();today.setHours(0,0,0,0);
@@ -1608,7 +1780,8 @@ function showNotif(){
   document.getElementById('notif-text').textContent=`Próximo: ${next.titulo} — ${when} às ${next.hora.slice(0,5)}`;
   document.getElementById('notif-banner').classList.remove('hidden');
 }
-function dismissNotif(){document.getElementById('notif-banner').classList.add('hidden');}
+// fechar o banner encolhe a topbar: o topo do drawer aberto tem que acompanhar
+function dismissNotif(){document.getElementById('notif-banner').classList.add('hidden');if(drawerAberto())setTimeout(posicionarDrawer,350);}
 
 function canSee(ev){
   if(currentRole==='gestor')return true;
@@ -1903,10 +2076,7 @@ function updateTreinosBadge(){
     el.textContent='';el.removeAttribute('title');el.classList.remove('show');
   }
 }
-function irParaTreinos(){
-  const b=[...document.querySelectorAll('.tb-nav-item')].find(x=>x.textContent.trim()==='Treinos');
-  if(b)goPage('treinos',b);
-}
+function irParaTreinos(){goPage('treinos');}
 
 function renderTreinos(){
   const c=document.getElementById('treinos-container');
@@ -2063,7 +2233,7 @@ async function saveTreino(){
 // um novo, basta um objeto aqui + a função de render — sem mexer em navbar,
 // goPage() ou CSS.
 //
-// ACESSO: a aba só aparece para gestor (ver applyRole). Isso é CONVENIÊNCIA DE
+// ACESSO: o item só aparece para gestor (`soGestor` no NAV_GRUPOS). Isso é CONVENIÊNCIA DE
 // INTERFACE, não segurança — igual ao podeCadastrarTreino(). Quem garante é o
 // RLS: treinos_select_gestor_recepcao entrega todas as linhas a gestor/recepção
 // e treinos_select_professor entrega só as dele ao professor. Recepção não vê a
