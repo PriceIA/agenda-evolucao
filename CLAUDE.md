@@ -373,6 +373,37 @@ não agora.
 **Pendência de teste (ver backlog):** falta confirmar que a trava não atrapalha a edição de
 tema/nome/datas do mesmo modal por um não-criador.
 
+### Refino da base de vidro (2026-08-10) — PROTÓTIPO, só nesta aba
+Três camadas sobre os elementos de vidro **apenas do Planejamento**. Blur, saturate, raio e cor de
+base são os **mesmos tokens de antes**; o refino só acrescenta. Aprovado no celular físico.
+
+1. **Reflexo de borda esticado ao longo da aresta** (não circular): dois `radial-gradient` por
+   canto, um achatado na horizontal e outro na vertical. Superior-esquerdo branco forte (fonte de
+   luz), inferior-direito quente e mais discreto. **Quente e não escuro:** sobre fundo escuro um
+   tom escuro some.
+2. **Contorno de 2px** nos mesmos dois cantos, por `box-shadow: inset`, por cima do `border` de 1px.
+3. **Sombra de flutuação em tom quente escuro** — preto puro sobre o gradiente laranja parece
+   colado, sem naturalidade.
+
+**A posição do brilho é FIXA** (superior-esquerdo / inferior-direito) em todo elemento, mesmo
+quando o glow do fundo daquela tela está em outro canto. É consistência entre telas, não espelho
+do gradiente de cada uma. **Não "corrigir" para acompanhar o glow local.**
+
+Os valores vivem em `--vidro-refl`, `--vidro-borda` e `--vidro-sombra`, declarados no
+`#page-planejamento`. **Não são enfeite de organização:** o `.plan-atrasado` sobrescreve o
+`background` inteiro, e sem o token ele seria o único card sem reflexo — falha silenciosa. Regra
+nova que troque `background` nesses elementos **tem que repetir o `var(--vidro-refl)`**.
+
+O que ficou de fora, de propósito: os **cartões continuam sólidos** (os reflexos entram por cima
+do `var(--g1)`, sem blur — a exceção abaixo segue valendo) e o **`#quadro-modal` não foi tocado**
+(é branco e usa a `.modal-box` compartilhada por todos os modais do app).
+
+A `::before` de 1px no topo **saiu destes dois elementos**: o inset branco de 2px é a mesma
+refração, mais forte e na largura inteira.
+
+**⚠️ Isto é uma divergência temporária assumida:** as outras seis telas continuam na base antiga.
+Ver o backlog antes de propagar.
+
 ### Regra visual (exceção deliberada — não "corrigir")
 - **Os cartões são SÓLIDOS escuros (`var(--g1)`), nunca vidro, nunca na cor da lista.** Só levam uma
   faixa de 3px no topo na cor dela. Mesma regra dos inputs do Login/Config e do antigo keypad do
@@ -469,6 +500,22 @@ compensação de `100px`, que existia por causa da segunda linha, foi removida.
   se uma nova chamada falhar depois.
 
 ## Pendências (backlog)
+- **Propagar o refino do vidro para as outras seis telas — decidido, não feito (2026-08-10).**
+  Hoje só o Planejamento tem as três camadas novas; Login, Config, Treinos, Agenda, Calendário e
+  Rodízio seguem na base antiga. **A divergência é assumida, não esquecimento** — o Planejamento
+  é o protótipo. Ao propagar, subir os três valores para o `:root` em vez de duplicar o bloco de
+  custom properties em cada `#page-*`, e conferir em cada tela se alguma regra sobrescreve
+  `background` (como o `.plan-atrasado` faz aqui) — essas precisam repetir o `var(--vidro-refl)`.
+- **⚠️ Achado aberto do refino: nas COLUNAS o reflexo superior-esquerdo fica invisível.** O
+  `.plan-col-hd` é faixa sólida opaca na cor da lista e ocupa exatamente o topo da coluna,
+  cobrindo o reflexo branco e o inset de 2px. Sobra só o brilho quente inferior-direito, então o
+  efeito fica pela metade **e assimétrico em relação aos cartões**, onde os dois cantos aparecem
+  (a faixa de 3px é fina o bastante para a luz passar). Não foi mexido porque o cabeçalho sólido
+  opaco é regra registrada acima. Saídas possíveis: levar o reflexo para o próprio cabeçalho
+  colorido, ou aceitar que na coluna a luz entra só pela lateral. **Decisão do Felipe, pendente.**
+- **O ramo de fallback do refino (`@supports` sem `backdrop-filter`) nunca foi visto renderizado.**
+  Estruturalmente os reflexos foram aplicados junto da cor de base opaca, mas isso é leitura de
+  código, não observação — só apareceria em navegador sem suporte a `backdrop-filter`.
 - **⚠️ Fase 4.1 subiu para produção com uma ressalva ABERTA (2026-08-07) — testar antes de confiar.**
   **Não foi testado se a trava do checkbox "Privado" (para não-criador) interfere na edição normal
   dos outros campos (tema/nome/datas) do mesmo modal.** Testar na próxima sessão, com a conta de um

@@ -582,6 +582,37 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   O perfil agora vem do banco, pela pessoa autenticada — não é mais escolha do usuário.
 
 ### Alterado
+- **Refino da base de vidro — SÓ na aba Planejamento, como protótipo (2026-08-10).** Três camadas
+  novas sobre os elementos de vidro, aprovadas no celular físico. Blur, saturate, raio e cor de
+  base seguem os **mesmos tokens de antes** — o refino só acrescenta.
+  1. **Reflexo de borda nos dois cantos opostos, esticado ao longo da aresta** (não circular):
+     dois `radial-gradient` por canto, um achatado na horizontal e outro na vertical.
+     Superior-esquerdo em branco forte (a fonte de luz), inferior-direito em tom quente
+     (`rgba(255,220,180,…)`) e mais discreto. **Quente e não escuro de propósito:** sobre fundo
+     escuro um tom escuro simplesmente some.
+  2. **Contorno de 2px nos mesmos dois cantos**, via `box-shadow: inset`, por cima do `border`
+     de 1px que continua dando a volta.
+  3. **Sombra externa de flutuação em tom quente escuro** (`rgba(20,6,2,0.55)`) — preto puro
+     sobre o gradiente laranja parece colado, sem naturalidade.
+  - **A posição do brilho é FIXA** (superior-esquerdo / inferior-direito) em todos os elementos,
+    mesmo quando o glow de fundo daquela tela está em outro canto. É consistência entre telas,
+    não espelho do gradiente de cada uma.
+  - Os três valores vivem em **custom properties** no `#page-planejamento` (`--vidro-refl`,
+    `--vidro-borda`, `--vidro-sombra`). Dois motivos: é protótipo feito para ajuste fino, então o
+    tuning fica num lugar só; e o `.plan-atrasado` **sobrescreve o `background` inteiro** — sem o
+    token ele seria o único card sem reflexo, e falharia calado.
+  - **Os cartões do quadro (`.plan-card`) continuam SÓLIDOS.** Os reflexos entram por cima do
+    `var(--g1)` (o gradiente vem antes da cor no mesmo `background`), sem blur e sem translucidez:
+    a exceção registrada segue valendo, o cartão só ganhou a luz na aresta.
+  - **O `#quadro-modal` não foi tocado** — é branco e usa a `.modal-box` compartilhada por todos
+    os modais do app. Reflexo branco sobre fundo branco não aparece, e mexer ali vazaria para os
+    outros modais, muito além de um protótipo.
+  - A `::before` de 1px no topo **saiu desses dois elementos**: o novo inset branco de 2px é a
+    mesma refração, mais forte e na largura inteira; manter as duas dobrava o destaque justamente
+    na aresta que o refino quer mostrar.
+  - **⚠️ Divergência temporária e consciente:** Login, Config, Treinos, Agenda, Calendário e
+    Rodízio continuam na base antiga. A propagação depende de validar esta tela primeiro — ver o
+    backlog no `CLAUDE.md`, inclusive o achado das colunas.
 - Tela de Configurações redesenhada com liquid glass — última tela do redesign (todas as
   telas do app agora seguem o mesmo visual): cards de seção em vidro translúcido, inputs
   mantidos SÓLIDOS (brancos opacos, sem vidro onde se digita), botões de ação em branco

@@ -632,12 +632,48 @@ body.drawer-open .app-content{overflow:hidden}
 #page-planejamento{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
 #page-planejamento .plan-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
 #page-planejamento .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
-/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
-#page-planejamento .plan-quadro-card,#page-planejamento .plan-col{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
-@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #page-planejamento .plan-quadro-card,#page-planejamento .plan-col{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+/* ---------- REFINO DA BASE DE VIDRO — PROTÓTIPO, SÓ NESTA ABA (2026-08-10) ----------
+   Aprovado visualmente pelo Felipe para avaliar aqui ANTES de propagar. Login,
+   Config, Treinos, Agenda, Calendário e Rodízio continuam na base antiga de
+   propósito — divergência temporária e consciente, não esquecimento.
+
+   Blur, saturate, raio e cor de base seguem os MESMOS tokens de antes; o refino
+   só acrescenta três camadas. Elas vivem em custom properties por dois motivos:
+   é um protótipo feito para ser ajustado no visual real (um lugar só para mexer),
+   e o `.plan-atrasado` sobrescreve o `background` inteiro — sem o token ele
+   perderia os reflexos em silêncio.
+
+   O brilho fica SEMPRE no superior-esquerdo (fonte de luz) e no inferior-direito,
+   mesmo quando o glow do fundo daquela tela está em outro canto: é consistência
+   entre telas, não espelho do gradiente de cada uma. */
+#page-planejamento{
+  /* reflexo ESTICADO ao longo da aresta (não circular): um radial na horizontal e
+     outro na vertical por canto. Inferior-direito é quente e mais discreto que o
+     superior-esquerdo — em tom ESCURO ele sumiria sobre o fundo escuro. */
+  --vidro-refl:
+    radial-gradient(100px 14px at 0 0,rgba(255,255,255,0.95),rgba(255,255,255,0) 80%),
+    radial-gradient(14px 100px at 0 0,rgba(255,255,255,0.95),rgba(255,255,255,0) 80%),
+    radial-gradient(85px 13px at 100% 100%,rgba(255,220,180,0.85),rgba(255,255,255,0) 80%),
+    radial-gradient(13px 85px at 100% 100%,rgba(255,220,180,0.85),rgba(255,255,255,0) 80%);
+  /* contorno de 2px nos mesmos dois cantos, por cima do border de 1px */
+  --vidro-borda:inset 2px 2px 0 rgba(255,255,255,0.75),inset -2px -2px 0 rgba(255,220,180,0.6);
+  /* sombra de flutuação em tom QUENTE escuro: preto puro sobre o gradiente laranja
+     parece colado, sem naturalidade */
+  --vidro-sombra:0 14px 28px rgba(20,6,2,0.55);
 }
-#page-planejamento .plan-quadro-card::before,#page-planejamento .plan-col::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none;z-index:2}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-planejamento .plan-quadro-card,#page-planejamento .plan-col{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:var(--vidro-borda),var(--vidro-sombra)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  #page-planejamento .plan-quadro-card,#page-planejamento .plan-col{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.12)}
+}
+/* O CARTÃO CONTINUA SÓLIDO (`var(--g1)`), sem blur e sem translucidez — a exceção
+   registrada no CLAUDE.md segue valendo. Os reflexos entram POR CIMA da cor sólida
+   (o gradiente vem antes dela no mesmo `background`), então ele só ganha a luz na
+   aresta; não virou vidro. */
+#page-planejamento .plan-card{background:var(--vidro-refl),var(--g1);box-shadow:var(--vidro-borda),var(--vidro-sombra)}
+/* a ::before de 1px no topo saiu DESTES elementos: o novo inset branco de 2px é a
+   mesma refração, mais forte e na largura inteira — manter as duas dobrava o
+   destaque justamente na aresta que o refino quer mostrar */
 #page-planejamento .plan-quadro-card:hover{border-color:rgba(255,255,255,0.65);transform:translateX(3px)}
 #page-planejamento .plan-quadro-nome{color:var(--white)}
 #page-planejamento .plan-quadro-tema,#page-planejamento .plan-quadro-seta{color:rgba(255,255,255,0.7)}
@@ -653,7 +689,9 @@ body.drawer-open .app-content{overflow:hidden}
 /* destaque duplo do atraso: além do badge, o card inteiro vira alerta. Borda E
    fundo, os dois valores do .cfg-danger — sobre o gradiente laranja a borda
    vermelha sozinha quase não se distingue da borda branca padrão. */
-#page-planejamento .plan-quadro-card.plan-atrasado{border:1.5px solid rgba(255,90,70,0.7);background:rgba(180,30,20,0.18)}
+/* o --vidro-refl é repetido aqui de propósito: esta regra troca o `background`
+   inteiro, e sem ele o card atrasado seria o único sem os reflexos */
+#page-planejamento .plan-quadro-card.plan-atrasado{border:1.5px solid rgba(255,90,70,0.7);background:var(--vidro-refl),rgba(180,30,20,0.18)}
 #page-planejamento .plan-quadro-card.plan-atrasado:hover{border-color:#ff5a46}
 #page-planejamento .plan-quadro-edit{border-color:rgba(255,255,255,0.35);color:rgba(255,255,255,0.8)}
 #page-planejamento .plan-quadro-edit:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
