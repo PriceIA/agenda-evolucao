@@ -582,7 +582,39 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   O perfil agora vem do banco, pela pessoa autenticada — não é mais escolha do usuário.
 
 ### Alterado
-- **Refino da base de vidro — SÓ na aba Planejamento, como protótipo (2026-08-10).** Três camadas
+- **Refino da base de vidro propagado para o app inteiro (2026-08-10).** As três camadas validadas
+  no Planejamento (ver o item seguinte) passaram a valer em **todas as 7 telas** — Agenda,
+  Calendário, Rodízio, Treinos, Relatórios, Config e Login — **e no drawer**, que era o último
+  painel de vidro na base antiga. Aprovado em teste real a cada etapa.
+  - **Os três valores subiram do `#page-planejamento` para o `:root`.** Três valores repetidos em
+    sete telas seriam sete fontes de verdade — a mesma armadilha que o `PLAN_CORES` evita nas
+    cores de lista.
+  - Elementos refinados: `.stat`/`.ev-card`/`.tl-card` (Agenda), `.cal-wrap`/`.cal-day-panel`/
+    `.ev-card` (Calendário), `.rodo-card` (Rodízio), `.treino-card` (Treinos), `.rel-card`/
+    `.rel-totais`/`.rel-tabela` (Relatórios), `.cfg-card` (Config), `.login-card` (Login) e
+    `.drawer`.
+  - **Não tocados, pela regra dos opacos:** inputs do Login e do Config, cartões sólidos do
+    Kanban, itens do drawer, botões brancos, badges e pills. Verificado por script: zero
+    elementos sólidos receberam reflexo.
+  - **9 regras que trocam `background` de elemento de vidro precisaram repetir o
+    `var(--vidro-refl)`** — quase todas dentro do `@supports`, onde cada elemento redefine a
+    própria opacidade. Sem isso o reflexo sumiria em silêncio naquele elemento.
+  - A `::before` de 1px no topo saiu de todos os elementos refinados: o inset branco de 2px é a
+    mesma refração, mais forte e na largura inteira.
+- **Destaque de STATUS ficou de fora do refino, por decisão (2026-08-10).**
+  `#page-agenda .ev-card.cat-reuniao` e `#page-treinos .treino-card.st-pendente` mantêm o
+  `box-shadow` original (borda esquerda branca de 3px + glow interno), sem reflexo de canto e sem
+  contorno de 2px. Os dois efeitos disputam a mesma aresta esquerda, e ali o destaque é
+  **informação** ("isto é uma reunião", "isto pede ação") enquanto o refino é **acabamento** — com
+  o refino aplicado a hierarquia chegava a inverter, deixando o cartão pendente com menos contorno
+  que os já montados e cancelados. A exclusão vale nos **dois** lugares (o `box-shadow` da regra
+  de destaque e o `background` dentro do `@supports`); tirar só o contorno deixaria o reflexo
+  competindo do mesmo jeito.
+- **Removido o glow decorativo do `.cal-day-panel` (2026-08-10).** Era um `::after` no canto
+  superior-**direito**, a única luz num terceiro canto em todo o app, maior e mais forte que a
+  própria fonte de luz do refino. Com ele, aquele painel tinha três luzes enquanto todo o resto
+  tem duas. **Não recriar.**
+- **Refino da base de vidro — protótipo na aba Planejamento (2026-08-10).** Três camadas
   novas sobre os elementos de vidro, aprovadas no celular físico. Blur, saturate, raio e cor de
   base seguem os **mesmos tokens de antes** — o refino só acrescenta.
   1. **Reflexo de borda nos dois cantos opostos, esticado ao longo da aresta** (não circular):
@@ -610,9 +642,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - A `::before` de 1px no topo **saiu desses dois elementos**: o novo inset branco de 2px é a
     mesma refração, mais forte e na largura inteira; manter as duas dobrava o destaque justamente
     na aresta que o refino quer mostrar.
-  - **⚠️ Divergência temporária e consciente:** Login, Config, Treinos, Agenda, Calendário e
-    Rodízio continuam na base antiga. A propagação depende de validar esta tela primeiro — ver o
-    backlog no `CLAUDE.md`, inclusive o achado das colunas.
+  - Na época, divergência temporária e consciente: as outras telas seguiam na base antiga até
+    esta ser validada. **Propagado no mesmo dia** — ver o item no topo desta seção.
 - Tela de Configurações redesenhada com liquid glass — última tela do redesign (todas as
   telas do app agora seguem o mesmo visual): cards de seção em vidro translúcido, inputs
   mantidos SÓLIDOS (brancos opacos, sem vidro onde se digita), botões de ação em branco

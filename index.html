@@ -18,6 +18,34 @@
   --g1:#1A1A1A;--g2:#3D3D3D;--g3:#6B6B6B;--g4:#9B9B9B;--g5:#CDCDCD;--g6:#E8E8E8;
   --bd:#E2E2E0;--red:#E24B4A;--amber:#E8A020;--blue:#3B82F6;--blue-l:#EFF6FF;
   --green:#16A34A;--green-l:#F0FDF4;--purple:#7C3AED;--purple-l:#F5F3FF;
+
+  /* ---------- REFINO DA BASE DE VIDRO (validado no Planejamento, propagado 2026-08-10) ----------
+     Três camadas que TODO elemento de vidro do app usa. Ficam no :root e não por
+     página: três valores repetidos em sete telas seriam sete fontes de verdade —
+     a mesma armadilha que o PLAN_CORES evita nas cores de lista.
+
+     ⚠️ SÓ para elemento que JÁ era vidro translúcido (tem backdrop-filter).
+     NUNCA em elemento sólido opaco — inputs do Login/Config, cartões do Kanban e
+     do Treinos, botões brancos. Essa distinção já existia no projeto.
+
+     ⚠️ Regra que troca o `background` de um elemento de vidro TEM QUE repetir o
+     var(--vidro-refl), senão o reflexo some em silêncio. */
+
+  /* reflexo ESTICADO ao longo da aresta (não circular): um radial na horizontal e
+     outro na vertical por canto. Superior-esquerdo branco forte = a fonte de luz;
+     inferior-direito quente e mais discreto — em tom ESCURO ele sumiria sobre o
+     fundo escuro. A posição é FIXA em todas as telas, mesmo onde o glow do fundo
+     está em outro canto: é consistência entre telas, não espelho de cada uma. */
+  --vidro-refl:
+    radial-gradient(100px 14px at 0 0,rgba(255,255,255,0.95),rgba(255,255,255,0) 80%),
+    radial-gradient(14px 100px at 0 0,rgba(255,255,255,0.95),rgba(255,255,255,0) 80%),
+    radial-gradient(85px 13px at 100% 100%,rgba(255,220,180,0.85),rgba(255,255,255,0) 80%),
+    radial-gradient(13px 85px at 100% 100%,rgba(255,220,180,0.85),rgba(255,255,255,0) 80%);
+  /* contorno de 2px nos mesmos dois cantos, por cima do border de 1px */
+  --vidro-borda:inset 2px 2px 0 rgba(255,255,255,0.75),inset -2px -2px 0 rgba(255,220,180,0.6);
+  /* sombra de flutuação em tom QUENTE escuro: preto puro sobre o gradiente laranja
+     parece colado, sem naturalidade */
+  --vidro-sombra:0 14px 28px rgba(20,6,2,0.55);
 }
 html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color:var(--black);overflow:hidden}
 #app{width:100%;height:100vh;position:relative;overflow:hidden}
@@ -105,12 +133,16 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .drawer-bg.open{opacity:1;visibility:visible}
 /* opacity+visibility em vez de display:none — display não anima, e é a transição
    que faz o painel deslizar em vez de aparecer estalado */
-.drawer{position:absolute;top:0;left:0;bottom:0;width:280px;max-width:84vw;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.76,0,0.24,1);background:rgba(43,22,8,0.62);border-right:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18)}
+/* o painel entrou na propagação do refino (2026-08-10): é vidro como qualquer
+   painel do app, e ficar de fora o deixaria como o único na base antiga — ele
+   abre por cima de todas as telas já refinadas. Os ITENS dentro dele continuam
+   sólidos, sem refino, como manda a regra dos elementos opacos. */
+.drawer{position:absolute;top:0;left:0;bottom:0;width:280px;max-width:84vw;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.76,0,0.24,1);background:var(--vidro-refl),rgba(43,22,8,0.62);border-right:1px solid rgba(255,255,255,0.4);box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  .drawer{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+  .drawer{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.12)}
 }
 .drawer-bg.open .drawer{transform:translateX(0)}
-.drawer::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+/* a ::before de 1px no topo saiu daqui também (mesmo critério das demais telas) */
 .drawer-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 10px;flex-shrink:0}
 .drawer-ttl{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);text-shadow:0 1px 4px rgba(0,0,0,0.25)}
 /* seletor DUPLO de propósito: .modal-cls é declarado bem depois neste arquivo e,
@@ -305,15 +337,22 @@ body.drawer-open .app-content{overflow:hidden}
 @media(max-width:900px){#page-calendario.active{grid-template-columns:1fr}#page-calendario .cal-wrap{grid-column:1;grid-row:2;margin-top:0}#page-calendario #cal-day-events{grid-column:1;grid-row:3;margin-top:0}}
 #page-calendario .sec-title{color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
 /* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
-#page-calendario .cal-wrap,#page-calendario .cal-day-panel,#page-calendario .ev-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.32);border-radius:18px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.28),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+#page-calendario .cal-wrap,#page-calendario .cal-day-panel,#page-calendario .ev-card{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.32);border-radius:18px;position:relative;overflow:hidden;box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   #page-calendario .cal-wrap,#page-calendario .cal-day-panel,#page-calendario .ev-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%)}
-  #page-calendario .cal-wrap{background:rgba(255,255,255,0.08)}
-  #page-calendario .cal-day-panel{background:rgba(255,255,255,0.14)}
-  #page-calendario .ev-card{background:rgba(255,255,255,0.10)}
+  /* cada um repete o var(--vidro-refl): sem ele, esta troca de cor de base
+     apagaria o reflexo em silêncio */
+  #page-calendario .cal-wrap{background:var(--vidro-refl),rgba(255,255,255,0.08)}
+  #page-calendario .cal-day-panel{background:var(--vidro-refl),rgba(255,255,255,0.14)}
+  #page-calendario .ev-card{background:var(--vidro-refl),rgba(255,255,255,0.10)}
 }
-#page-calendario .cal-wrap::before,#page-calendario .cal-day-panel::before,#page-calendario .ev-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
-#page-calendario .cal-day-panel::after{content:'';position:absolute;top:-44px;right:-34px;width:190px;height:150px;background:radial-gradient(closest-side,rgba(255,255,255,0.30),transparent);pointer-events:none}
+/* a ::before de 1px no topo saiu dos elementos refinados: o inset branco de 2px é
+   a mesma refração, mais forte e na largura inteira (mesmo critério do protótipo) */
+/* O glow decorativo que ficava aqui (::after no canto superior-DIREITO) foi
+   removido em 2026-08-10, na propagação do refino: ele era uma terceira fonte de
+   luz, num canto que nenhum outro elemento do app usa, e competia com o reflexo
+   superior-esquerdo — maior e mais forte que a própria fonte. Agora este painel
+   tem as mesmas duas luzes de todo o resto. Não recriar. */
 #page-calendario .cal-day-panel{padding:20px 22px;margin-bottom:10px}
 #page-calendario .cal-day-num{font-size:48px;font-weight:500;color:var(--white);line-height:1;text-shadow:0 2px 10px rgba(0,0,0,0.35)}
 #page-calendario .cal-day-lbl{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-top:8px}
@@ -344,15 +383,23 @@ body.drawer-open .app-content{overflow:hidden}
 #page-agenda .agenda-date{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px}
 #page-agenda .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
 /* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
-#page-agenda .stat,#page-agenda .ev-card,#page-agenda .tl-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+#page-agenda .stat,#page-agenda .ev-card,#page-agenda .tl-card{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;overflow:hidden;box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   #page-agenda .stat,#page-agenda .ev-card,#page-agenda .tl-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%)}
-  #page-agenda .stat,#page-agenda .tl-card{background:rgba(255,255,255,0.12)}
-  #page-agenda .ev-card{background:rgba(255,255,255,0.14)}
+  /* cada um repete o var(--vidro-refl): sem ele, esta troca de cor de base
+     apagaria o reflexo em silêncio */
+  #page-agenda .stat,#page-agenda .tl-card{background:var(--vidro-refl),rgba(255,255,255,0.12)}
+  #page-agenda .ev-card{background:var(--vidro-refl),rgba(255,255,255,0.14)}
+  /* SEM var(--vidro-refl) de propósito — ver a regra de destaque logo abaixo */
   #page-agenda .ev-card.cat-reuniao{background:rgba(255,255,255,0.16)}
 }
-#page-agenda .stat::before,#page-agenda .ev-card::before,#page-agenda .tl-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
-/* destaque de reuniões: barra lateral branca de 3px com leve glow */
+/* a ::before de 1px no topo saiu dos elementos refinados (mesmo critério do protótipo) */
+/* DESTAQUE DE REUNIÕES — FICA FORA DO REFINO, decisão do Felipe (2026-08-10).
+   Barra lateral branca de 3px + glow interno, exatamente como era antes da
+   propagação. Motivo: os dois disputam a mesma aresta esquerda, e o contorno de
+   2px do refino embaralhava o sinal de status em vez de reforçá-lo. O destaque
+   aqui é INFORMAÇÃO (é uma reunião), não acabamento — informação ganha.
+   Um `.ev-card` normal, sem este modificador, segue com o refino completo. */
 #page-agenda .ev-card.cat-reuniao{border-left:3px solid rgba(255,255,255,0.95);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 10px 0 18px -10px rgba(255,255,255,0.55)}
 #page-agenda .stat-n{color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.35)}
 #page-agenda .stat.accent .stat-n{color:var(--white)}
@@ -413,13 +460,19 @@ body.drawer-open .app-content{overflow:hidden}
 #page-treinos .treinos-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
 #page-treinos .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
 /* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
-#page-treinos .treino-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+#page-treinos .treino-card{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #page-treinos .treino-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+  /* repete o var(--vidro-refl) junto da cor de base, senão o reflexo some calado */
+  #page-treinos .treino-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.12)}
+  /* SEM var(--vidro-refl) de propósito — ver a regra de destaque logo abaixo */
   #page-treinos .treino-card.st-pendente{background:rgba(255,255,255,0.16)}
 }
-#page-treinos .treino-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
-/* pendente em destaque: mesma barra lateral branca usada nas reuniões da Agenda */
+/* a ::before de 1px no topo saiu dos elementos refinados (mesmo critério do protótipo) */
+/* PENDENTE EM DESTAQUE — FICA FORA DO REFINO, mesma decisão da .cat-reuniao da
+   Agenda (2026-08-10): barra lateral branca + glow interno, como era antes da
+   propagação. Sem isso, o cartão que PEDE AÇÃO ficava com menos contorno que os
+   já montados e cancelados — a hierarquia invertia.
+   Um `.treino-card` sem este modificador segue com o refino completo. */
 #page-treinos .treino-card.st-pendente{border-left:3px solid rgba(255,255,255,0.95);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 10px 0 18px -10px rgba(255,255,255,0.55)}
 #page-treinos .treino-card.st-cancelado{opacity:0.6}
 #page-treinos .treino-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.45);color:var(--white);font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -472,12 +525,13 @@ body.drawer-open .app-content{overflow:hidden}
 #page-relatorios .relatorios-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
 #page-relatorios .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
 /* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
-#page-relatorios .rel-card,#page-relatorios .rel-totais,#page-relatorios .rel-tabela{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+#page-relatorios .rel-card,#page-relatorios .rel-totais,#page-relatorios .rel-tabela{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #page-relatorios .rel-card,#page-relatorios .rel-totais,#page-relatorios .rel-tabela{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
-  #page-relatorios .rel-totais{background:rgba(255,255,255,0.16)}
+  /* repete o var(--vidro-refl) junto da cor de base, senão o reflexo some calado */
+  #page-relatorios .rel-card,#page-relatorios .rel-totais,#page-relatorios .rel-tabela{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.12)}
+  #page-relatorios .rel-totais{background:var(--vidro-refl),rgba(255,255,255,0.16)}
 }
-#page-relatorios .rel-card::before,#page-relatorios .rel-totais::before,#page-relatorios .rel-tabela::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+/* a ::before de 1px no topo saiu dos elementos refinados (mesmo critério do protótipo) */
 #page-relatorios .rel-card:hover{border-color:rgba(255,255,255,0.65);transform:translateX(3px)}
 #page-relatorios .rel-card-titulo,#page-relatorios .rel-nome,#page-relatorios .rel-total-n,#page-relatorios .rel-v{color:var(--white)}
 #page-relatorios .rel-card-desc,#page-relatorios .rel-card-seta,#page-relatorios .rel-total-l,#page-relatorios .rel-head,#page-relatorios .rel-m-lbl{color:rgba(255,255,255,0.7)}
@@ -507,13 +561,15 @@ body.drawer-open .app-content{overflow:hidden}
 #page-rodizio .rodizio-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
 #page-rodizio .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
 /* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
-#page-rodizio .rodo-card{background:rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.25),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
-#page-rodizio .rodo-card.rodo-next{background:rgba(43,22,8,0.7);border-color:rgba(255,255,255,0.55)}
+#page-rodizio .rodo-card{background:var(--vidro-refl),rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.4);border-radius:16px;position:relative;overflow:hidden;box-shadow:var(--vidro-borda),var(--vidro-sombra)}
+#page-rodizio .rodo-card.rodo-next{background:var(--vidro-refl),rgba(43,22,8,0.7);border-color:rgba(255,255,255,0.55)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #page-rodizio .rodo-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.10)}
-  #page-rodizio .rodo-card.rodo-next{background:rgba(255,255,255,0.14)}
+  /* os dois repetem o var(--vidro-refl): sem ele, a troca de cor de base apagaria
+     o reflexo em silêncio — e o .rodo-next é justamente o card em destaque */
+  #page-rodizio .rodo-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.10)}
+  #page-rodizio .rodo-card.rodo-next{background:var(--vidro-refl),rgba(255,255,255,0.14)}
 }
-#page-rodizio .rodo-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+/* a ::before de 1px no topo saiu dos elementos refinados (mesmo critério do protótipo) */
 #page-rodizio .rodo-week{color:var(--white);font-size:13px;font-weight:600}
 #page-rodizio .rodo-person{border-color:rgba(255,255,255,0.3)}
 #page-rodizio .rodo-name{color:var(--white)}
@@ -632,35 +688,8 @@ body.drawer-open .app-content{overflow:hidden}
 #page-planejamento{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
 #page-planejamento .plan-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
 #page-planejamento .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
-/* ---------- REFINO DA BASE DE VIDRO — PROTÓTIPO, SÓ NESTA ABA (2026-08-10) ----------
-   Aprovado visualmente pelo Felipe para avaliar aqui ANTES de propagar. Login,
-   Config, Treinos, Agenda, Calendário e Rodízio continuam na base antiga de
-   propósito — divergência temporária e consciente, não esquecimento.
-
-   Blur, saturate, raio e cor de base seguem os MESMOS tokens de antes; o refino
-   só acrescenta três camadas. Elas vivem em custom properties por dois motivos:
-   é um protótipo feito para ser ajustado no visual real (um lugar só para mexer),
-   e o `.plan-atrasado` sobrescreve o `background` inteiro — sem o token ele
-   perderia os reflexos em silêncio.
-
-   O brilho fica SEMPRE no superior-esquerdo (fonte de luz) e no inferior-direito,
-   mesmo quando o glow do fundo daquela tela está em outro canto: é consistência
-   entre telas, não espelho do gradiente de cada uma. */
-#page-planejamento{
-  /* reflexo ESTICADO ao longo da aresta (não circular): um radial na horizontal e
-     outro na vertical por canto. Inferior-direito é quente e mais discreto que o
-     superior-esquerdo — em tom ESCURO ele sumiria sobre o fundo escuro. */
-  --vidro-refl:
-    radial-gradient(100px 14px at 0 0,rgba(255,255,255,0.95),rgba(255,255,255,0) 80%),
-    radial-gradient(14px 100px at 0 0,rgba(255,255,255,0.95),rgba(255,255,255,0) 80%),
-    radial-gradient(85px 13px at 100% 100%,rgba(255,220,180,0.85),rgba(255,255,255,0) 80%),
-    radial-gradient(13px 85px at 100% 100%,rgba(255,220,180,0.85),rgba(255,255,255,0) 80%);
-  /* contorno de 2px nos mesmos dois cantos, por cima do border de 1px */
-  --vidro-borda:inset 2px 2px 0 rgba(255,255,255,0.75),inset -2px -2px 0 rgba(255,220,180,0.6);
-  /* sombra de flutuação em tom QUENTE escuro: preto puro sobre o gradiente laranja
-     parece colado, sem naturalidade */
-  --vidro-sombra:0 14px 28px rgba(20,6,2,0.55);
-}
+/* Refino da base de vidro: os três tokens vivem no :root desde 2026-08-10 (antes
+   eram declarados aqui, quando o Planejamento era o protótipo). */
 /* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
 #page-planejamento .plan-quadro-card,#page-planejamento .plan-col{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
@@ -714,11 +743,14 @@ body.drawer-open .app-content{overflow:hidden}
 #screen-login .login-heading span{color:#ffce9e}
 #screen-login .login-sub{color:rgba(255,255,255,0.75)}
 /* card do formulário — vidro (fallback escuro sem blur), mesma base do Calendário/Agenda */
-#screen-login .login-card{background:rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.32);border-radius:18px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.28),inset 0 1px 1px rgba(255,255,255,0.18),inset 0 -10px 26px rgba(255,255,255,0.05)}
+/* SÓ o card externo recebe o refino. Os inputs logo abaixo continuam SÓLIDOS
+   (brancos opacos) — é onde se digita a senha, e ali legibilidade vem antes de
+   estética. Não aplicar reflexo nem sombra neles. */
+#screen-login .login-card{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.32);border-radius:18px;position:relative;overflow:hidden;box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #screen-login .login-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.12)}
+  #screen-login .login-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.12)}
 }
-#screen-login .login-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+/* a ::before de 1px no topo saiu do card refinado (mesmo critério do protótipo) */
 #screen-login .flabel{color:rgba(255,255,255,0.7)}
 /* inputs: SÓLIDOS por legibilidade — sem vidro onde se digita (mesma regra da Config) */
 #screen-login .finput{background:rgba(255,255,255,0.92);color:#2b1608;border-color:transparent}
@@ -733,11 +765,12 @@ body.drawer-open .app-content{overflow:hidden}
 #page-config{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
 #page-config .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
 /* cards de seção — vidro (fallback escuro sem blur) */
-#page-config .cfg-card{background:rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.3);border-radius:18px;position:relative;overflow:hidden}
+/* só os cards de seção. Os inputs continuam SÓLIDOS, como no Login. */
+#page-config .cfg-card{background:var(--vidro-refl),rgba(43,22,8,0.55);border:1px solid rgba(255,255,255,0.3);border-radius:18px;position:relative;overflow:hidden;box-shadow:var(--vidro-borda),var(--vidro-sombra)}
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  #page-config .cfg-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:rgba(255,255,255,0.10)}
+  #page-config .cfg-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.10)}
 }
-#page-config .cfg-card::before{content:'';position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.75),transparent);pointer-events:none}
+/* a ::before de 1px no topo saiu dos cards refinados (mesmo critério do protótipo) */
 #page-config .cfg-card-title{color:var(--white);font-size:13px;font-weight:600;border-bottom-color:rgba(255,255,255,0.25)}
 #page-config .flabel{color:rgba(255,255,255,0.7)}
 #page-config .cfg-note{color:rgba(255,255,255,0.7)}

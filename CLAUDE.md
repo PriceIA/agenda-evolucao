@@ -373,36 +373,12 @@ não agora.
 **Pendência de teste (ver backlog):** falta confirmar que a trava não atrapalha a edição de
 tema/nome/datas do mesmo modal por um não-criador.
 
-### Refino da base de vidro (2026-08-10) — PROTÓTIPO, só nesta aba
-Três camadas sobre os elementos de vidro **apenas do Planejamento**. Blur, saturate, raio e cor de
-base são os **mesmos tokens de antes**; o refino só acrescenta. Aprovado no celular físico.
-
-1. **Reflexo de borda esticado ao longo da aresta** (não circular): dois `radial-gradient` por
-   canto, um achatado na horizontal e outro na vertical. Superior-esquerdo branco forte (fonte de
-   luz), inferior-direito quente e mais discreto. **Quente e não escuro:** sobre fundo escuro um
-   tom escuro some.
-2. **Contorno de 2px** nos mesmos dois cantos, por `box-shadow: inset`, por cima do `border` de 1px.
-3. **Sombra de flutuação em tom quente escuro** — preto puro sobre o gradiente laranja parece
-   colado, sem naturalidade.
-
-**A posição do brilho é FIXA** (superior-esquerdo / inferior-direito) em todo elemento, mesmo
-quando o glow do fundo daquela tela está em outro canto. É consistência entre telas, não espelho
-do gradiente de cada uma. **Não "corrigir" para acompanhar o glow local.**
-
-Os valores vivem em `--vidro-refl`, `--vidro-borda` e `--vidro-sombra`, declarados no
-`#page-planejamento`. **Não são enfeite de organização:** o `.plan-atrasado` sobrescreve o
-`background` inteiro, e sem o token ele seria o único card sem reflexo — falha silenciosa. Regra
-nova que troque `background` nesses elementos **tem que repetir o `var(--vidro-refl)`**.
-
-O que ficou de fora, de propósito: os **cartões continuam sólidos** (os reflexos entram por cima
-do `var(--g1)`, sem blur — a exceção abaixo segue valendo) e o **`#quadro-modal` não foi tocado**
-(é branco e usa a `.modal-box` compartilhada por todos os modais do app).
-
-A `::before` de 1px no topo **saiu destes dois elementos**: o inset branco de 2px é a mesma
-refração, mais forte e na largura inteira.
-
-**⚠️ Isto é uma divergência temporária assumida:** as outras seis telas continuam na base antiga.
-Ver o backlog antes de propagar.
+### Refino da base de vidro
+O Planejamento foi o **protótipo** do refino (2026-08-10), hoje propagado para o app inteiro —
+ver a seção "Refino da base de vidro (liquid glass)" mais abaixo. Aqui valem duas particularidades:
+os **cartões continuam sólidos** (os reflexos entram por cima do `var(--g1)`, sem blur — ver a
+exceção logo abaixo) e o **`#quadro-modal` não foi tocado**, por ser branco e usar a `.modal-box`
+compartilhada por todos os modais do app.
 
 ### Regra visual (exceção deliberada — não "corrigir")
 - **Os cartões são SÓLIDOS escuros (`var(--g1)`), nunca vidro, nunca na cor da lista.** Só levam uma
@@ -488,6 +464,54 @@ continua no desktop, no splash e no login. É isso que mantém a topbar mobile e
 (51px)** e o que torna correto o `min-height:calc(100vh - 56px)` das telas de vidro — a
 compensação de `100px`, que existia por causa da segunda linha, foi removida.
 
+## Refino da base de vidro (liquid glass) — vale no app inteiro
+Três camadas sobre **todo elemento de vidro** do app. Blur, saturate, raio e cor de base são os
+**mesmos tokens de sempre**; o refino só acrescenta. Prototipado no Planejamento e propagado para
+as 7 telas + o drawer em 2026-08-10, validado no celular físico a cada etapa.
+
+1. **Reflexo de borda esticado ao longo da aresta** (não circular): dois `radial-gradient` por
+   canto, um achatado na horizontal e outro na vertical. Superior-esquerdo branco forte (a fonte
+   de luz), inferior-direito quente e mais discreto. **Quente e não escuro:** sobre fundo escuro
+   um tom escuro simplesmente some.
+2. **Contorno de 2px** nos mesmos dois cantos, por `box-shadow: inset`, por cima do `border` de 1px.
+3. **Sombra de flutuação em tom quente escuro** — preto puro sobre o gradiente laranja parece
+   colado, sem naturalidade.
+
+Os valores são `--vidro-refl`, `--vidro-borda` e `--vidro-sombra`, **no `:root`**. Ficam lá e não
+por página porque três valores repetidos em sete telas seriam sete fontes de verdade — a mesma
+armadilha que o `PLAN_CORES` evita nas cores de lista.
+
+### As quatro regras que não podem ser quebradas
+1. **A posição do brilho é FIXA** (superior-esquerdo / inferior-direito) em todo elemento, mesmo
+   quando o glow do fundo daquela tela está em outro canto. É consistência entre telas, não
+   espelho do gradiente de cada uma. **Não "corrigir" para acompanhar o glow local.**
+2. **Só em elemento que JÁ era vidro** (tem `backdrop-filter`). **Nunca** em sólido opaco: inputs
+   do Login/Config, cartões do Kanban, itens do drawer, botões brancos, badges e pills. Essa
+   distinção já existia no projeto e não mudou.
+3. **Regra que troca o `background` de um elemento de vidro TEM QUE repetir o `var(--vidro-refl)`**,
+   senão o reflexo some **em silêncio**. Não é hipótese: hoje são 9 regras nessa situação —
+   as de dentro do `@supports`, onde cada elemento redefine a própria opacidade, mais o
+   `.plan-atrasado` e o `.rodo-next`.
+4. **Nenhuma terceira fonte de luz.** A `::before` de 1px no topo saiu de todos os elementos
+   refinados (o inset branco de 2px é a mesma refração, mais forte e na largura inteira), e o glow
+   decorativo do `.cal-day-panel::after`, que ficava no canto superior-**direito**, foi removido:
+   era a única luz num terceiro canto no app todo e competia com a fonte principal. **Não recriar.**
+
+### A exceção: destaque de STATUS ganha do refino
+`#page-agenda .ev-card.cat-reuniao` e `#page-treinos .treino-card.st-pendente` **ficam fora do
+refino** — sem reflexo de canto e sem contorno de 2px, mantendo o `box-shadow` original (borda
+esquerda branca de 3px + glow interno). Decisão do Felipe em 2026-08-10, depois de ver as duas
+versões na tela.
+
+Motivo: os dois efeitos disputam a mesma aresta esquerda. O destaque ali é **informação** ("isto é
+uma reunião", "isto pede ação"), o refino é **acabamento** — e com o refino aplicado a hierarquia
+chegava a inverter: o cartão pendente ficava com menos contorno que os já montados e cancelados.
+
+**Cuidado ao mexer:** a exclusão precisa ser nos DOIS lugares — o `box-shadow` da regra de
+destaque **e** o `background` dentro do `@supports`. Tirar só o contorno deixa o reflexo de canto
+vivo, competindo do mesmo jeito. Um `.ev-card`/`.treino-card` sem esses modificadores segue com o
+refino completo.
+
 ## Incidente conhecido (jul/2026)
 - Supabase free tier pausa após 7 dias de inatividade. O app engolia o erro de conexão
   silenciosamente (catch(e){return null}) e mostrava "0 eventos" em vez de avisar — parecia que
@@ -500,13 +524,9 @@ compensação de `100px`, que existia por causa da segunda linha, foi removida.
   se uma nova chamada falhar depois.
 
 ## Pendências (backlog)
-- **Propagar o refino do vidro para as outras seis telas — decidido, não feito (2026-08-10).**
-  Hoje só o Planejamento tem as três camadas novas; Login, Config, Treinos, Agenda, Calendário e
-  Rodízio seguem na base antiga. **A divergência é assumida, não esquecimento** — o Planejamento
-  é o protótipo. Ao propagar, subir os três valores para o `:root` em vez de duplicar o bloco de
-  custom properties em cada `#page-*`, e conferir em cada tela se alguma regra sobrescreve
-  `background` (como o `.plan-atrasado` faz aqui) — essas precisam repetir o `var(--vidro-refl)`.
-- **⚠️ Achado aberto do refino: nas COLUNAS o reflexo superior-esquerdo fica invisível.** O
+- ~~Propagar o refino do vidro para as outras telas~~ — **feito em 2026-08-10.** As 7 telas e o
+  drawer usam as três camadas, com os tokens no `:root`. Ver a seção "Refino da base de vidro".
+- **⚠️ Achado aberto do refino: nas COLUNAS do Kanban o reflexo superior-esquerdo fica invisível.** O
   `.plan-col-hd` é faixa sólida opaca na cor da lista e ocupa exatamente o topo da coluna,
   cobrindo o reflexo branco e o inset de 2px. Sobra só o brilho quente inferior-direito, então o
   efeito fica pela metade **e assimétrico em relação aos cartões**, onde os dois cantos aparecem
