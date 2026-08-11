@@ -110,6 +110,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--off);color
 .role-badge.gestor{background:var(--orange);color:var(--white)}
 .role-badge.professor{background:var(--blue);color:var(--white)}
 .role-badge.recepcao{background:var(--green);color:var(--white)}
+/* sem a classe o badge fica sem fundo e o texto branco some sobre a topbar branca */
+.role-badge.administracao{background:var(--purple);color:var(--white)}
 .tb-btn{padding:6px 12px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--g3);background:none;font-family:'Inter',sans-serif;transition:all 0.15s}
 .tb-btn:hover{border-color:var(--g4);color:var(--black)}
 /* menu "mais opções" — só existe no mobile; no desktop os 3 botões ficam visíveis */
@@ -510,6 +512,9 @@ body.drawer-open .app-content{overflow:hidden}
 .rel-tabela{border-radius:16px;padding:4px 18px 10px;position:relative;overflow:hidden;animation:cardIn 0.32s ease both}
 .rel-head,.rel-linha{display:grid;grid-template-columns:minmax(0,1fr) 86px 112px 86px;align-items:center;gap:10px}
 .rel-head{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;padding:12px 0 8px}
+/* relatório com 2 métricas em vez de 3 (Chamados por Pessoa). O grid base tem 4
+   colunas; sem isto a última ficaria vazia e os números desalinhariam do cabeçalho. */
+.rel-tabela.rel-3col .rel-head,.rel-tabela.rel-3col .rel-linha{grid-template-columns:minmax(0,1fr) 112px 86px}
 .rel-linha{padding:11px 0}
 .rel-linha+.rel-linha{border-top:1px solid rgba(255,255,255,0.14)}
 .rel-prof{display:flex;align-items:center;gap:10px;min-width:0}
@@ -551,6 +556,7 @@ body.drawer-open .app-content{overflow:hidden}
   /* cabeçalho some e as três métricas empilham sob o nome, como os cards de treino */
   .rel-head{display:none}
   .rel-linha{grid-template-columns:repeat(3,1fr);gap:8px 10px;padding:13px 0}
+  .rel-tabela.rel-3col .rel-linha{grid-template-columns:repeat(2,1fr)}
   .rel-prof{grid-column:1/-1}
   .rel-v{text-align:left}
   .rel-m-lbl{display:block}
@@ -735,6 +741,82 @@ body.drawer-open .app-content{overflow:hidden}
 #page-planejamento .empty{color:rgba(255,255,255,0.75)}
 #page-planejamento .loading-state{color:rgba(255,255,255,0.75)}
 #page-planejamento .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
+
+/* CHAMADOS — liquid glass (mesma base de Treinos; nenhum valor de vidro novo).
+   Os badges seguem a semântica já registrada no projeto: BRANCO SÓLIDO = pede
+   atenção (.treino-status.st-pendente), VIDRO CONTORNADO = encerrado/neutro
+   (.treino-status.st-montado), VERMELHO TRANSLÚCIDO = alerta (os 3 valores do
+   .cfg-danger). O amarelo da prioridade média usa a MESMA estrutura de 3 valores
+   do .cfg-danger, trocando o vermelho pelo #ffd68a que a Agenda já usa para
+   rodízio sobre vidro — nenhum tom novo entrou. */
+.chamados-grid{display:flex;flex-direction:column;gap:8px}
+.chamado-card{border-radius:16px;padding:14px 16px;position:relative;overflow:hidden;animation:cardIn 0.32s ease both;cursor:pointer;transition:all 0.18s}
+.chamado-topo{display:flex;align-items:flex-start;gap:12px}
+.chamado-body{flex:1;min-width:0}
+.chamado-titulo{font-size:14px;font-weight:700;letter-spacing:-0.2px;word-break:break-word}
+.chamado-meta{font-size:11.5px;margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
+.chamado-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:7px}
+.chamado-badge{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:0.4px;text-transform:uppercase;white-space:nowrap}
+.chamado-seta{font-size:18px;flex-shrink:0;transition:transform 0.2s}
+.chamado-card.aberto-det .chamado-seta{transform:rotate(90deg)}
+/* mesmo 0.6 do .treino-card.st-cancelado: item encerrado sai de foco */
+.chamado-card.st-resolvido,.chamado-card.st-cancelado{opacity:0.6}
+.chamado-det{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.14)}
+.chamado-desc{font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.and-titulo{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin:14px 0 7px}
+.and-lista{display:flex;flex-direction:column;gap:7px}
+.and-item{border-radius:10px;padding:9px 11px}
+.and-quem{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.and-texto{font-size:12.5px;line-height:1.45;margin-top:3px;white-space:pre-wrap;word-break:break-word}
+.and-form{display:flex;gap:7px;margin-top:10px;align-items:flex-start}
+.and-form .finput{margin-bottom:0;flex:1;resize:vertical}
+.chamado-acoes{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.chamado-acao{padding:6px 12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;border:none;transition:all 0.15s}
+#page-chamados{margin:-22px -24px;padding:24px;min-height:calc(100vh - 56px);background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
+#page-chamados .chamados-kicker{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,0.25)}
+#page-chamados .sec-title{font-size:22px;font-weight:500;color:var(--white);text-shadow:0 1px 6px rgba(0,0,0,0.3)}
+/* vidro — fallback sem backdrop-filter: fundo semi-opaco escuro, legível sem blur */
+#page-chamados .chamado-card{background:var(--vidro-refl),rgba(43,22,8,0.62);border:1px solid rgba(255,255,255,0.4);box-shadow:var(--vidro-borda),var(--vidro-sombra)}
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  /* repete o var(--vidro-refl) junto da cor de base, senão o reflexo some calado */
+  #page-chamados .chamado-card{-webkit-backdrop-filter:blur(3px) saturate(180%);backdrop-filter:blur(3px) saturate(180%);background:var(--vidro-refl),rgba(255,255,255,0.12)}
+}
+#page-chamados .chamado-titulo{color:var(--white)}
+#page-chamados .chamado-meta,#page-chamados .chamado-seta,#page-chamados .chamado-desc{color:rgba(255,255,255,0.7)}
+#page-chamados .and-titulo{color:rgba(255,255,255,0.7)}
+#page-chamados .and-item{background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.25)}
+#page-chamados .and-quem{color:rgba(255,255,255,0.7)}
+#page-chamados .and-texto{color:var(--white)}
+/* input SÓLIDO — onde se digita não leva vidro (mesma regra do Login/Config) */
+#page-chamados .finput{background:rgba(255,255,255,0.92);color:#2b1608;border-color:transparent}
+#page-chamados .finput:focus{border-color:var(--white)}
+#page-chamados .finput::placeholder{color:rgba(60,30,10,0.5)}
+#page-chamados .chamado-acao{background:var(--white);color:#8a3400;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+#page-chamados .chamado-acao:hover:not(:disabled){background:#ffe9d6}
+#page-chamados .chamado-acao:disabled{opacity:0.6;cursor:not-allowed}
+/* cancelar é destrutivo (some da lista padrão): vermelho translúcido do .cfg-danger */
+#page-chamados .chamado-acao.acao-cancelar{background:rgba(180,30,20,0.18);border:1.5px solid rgba(255,90,70,0.7);color:#ffb4ab;box-shadow:none}
+#page-chamados .chamado-acao.acao-cancelar:hover:not(:disabled){background:rgba(180,30,20,0.3);border-color:#ff5a46;color:#ffd0cb}
+/* PRIORIDADE */
+#page-chamados .chamado-badge.pr-urgente{background:rgba(180,30,20,0.18);border:1.5px solid rgba(255,90,70,0.7);color:#ffb4ab}
+#page-chamados .chamado-badge.pr-media{background:rgba(255,214,138,0.16);border:1.5px solid rgba(255,214,138,0.7);color:#ffd68a}
+#page-chamados .chamado-badge.pr-fraca{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.4)}
+/* PRAZO — mesmos 3 estilos do prazo do Kanban, mesma semântica */
+#page-chamados .chamado-badge.pz-vence{background:var(--white);color:#8a3400}
+#page-chamados .chamado-badge.pz-neutro{background:rgba(255,255,255,0.12);color:var(--white);border:1px solid rgba(255,255,255,0.4)}
+#page-chamados .chamado-badge.pz-atrasado{background:rgba(180,30,20,0.18);border:1.5px solid rgba(255,90,70,0.7);color:#ffb4ab}
+/* atrasado: destaque duplo (borda E fundo), mesma razão registrada no Planejamento —
+   sobre o gradiente laranja a borda vermelha sozinha não se distingue da branca */
+#page-chamados .chamado-card.chamado-atrasado{border:1.5px solid rgba(255,90,70,0.7);background:var(--vidro-refl),rgba(180,30,20,0.18)}
+#page-chamados .btn-add{background:var(--white);color:#8a3400;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+#page-chamados .btn-add:hover{background:#ffe9d6}
+#page-chamados .filter-chips .chip{background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.9)}
+#page-chamados .filter-chips .chip:hover{border-color:rgba(255,255,255,0.7);color:var(--white)}
+#page-chamados .filter-chips .chip.on{background:var(--white);border-color:var(--white);color:#8a3400}
+#page-chamados .empty{color:rgba(255,255,255,0.75)}
+#page-chamados .loading-state{color:rgba(255,255,255,0.75)}
+#page-chamados .spinner{border-color:rgba(255,255,255,0.3);border-top-color:var(--white)}
+@media(max-width:640px){#page-chamados{margin:-16px -14px;padding:18px 14px 32px}.and-form{flex-direction:column}.and-form .chamado-acao{width:100%}}
 
 /* LOGIN — liquid glass (somente tela de entrada; splash e app intactos) */
 #screen-login{background:radial-gradient(420px 300px at 88% 0%,rgba(255,255,255,0.16),transparent 70%),radial-gradient(130% 100% at 18% 0%,#ffb066 0%,#ff7a1a 26%,#b8410a 52%,#2b1608 78%,#000 100%)}
@@ -1101,6 +1183,21 @@ body.drawer-open .app-content{overflow:hidden}
         </div>
       </div>
 
+      <!-- CHAMADOS -->
+      <div class="page" id="page-chamados">
+        <div class="sec-head">
+          <div><div class="chamados-kicker">Fila compartilhada</div><div class="sec-title">Chamados</div></div>
+          <button class="btn-add" id="btn-novo-chamado" onclick="openChamadoModal()" style="display:none">+ Novo chamado</button>
+        </div>
+        <!-- 'cancelado' fica OCULTO por padrão, mas nunca é apagado do banco
+             (decisão do Felipe). O segundo chip é a única forma de vê-los. -->
+        <div class="filter-chips">
+          <div class="chip on" onclick="filtrarChamados(false,this)">Abertos e resolvidos</div>
+          <div class="chip" onclick="filtrarChamados(true,this)">Incluir cancelados</div>
+        </div>
+        <div class="chamados-grid" id="chamados-container"></div>
+      </div>
+
       <!-- CONFIG -->
       <div class="page" id="page-config">
         <div class="sec-head"><div class="sec-title">Configurações</div></div>
@@ -1279,6 +1376,50 @@ body.drawer-open .app-content{overflow:hidden}
           </div>
         </div>
         <div class="modal-ft"><button class="btn-cancel" onclick="closeTreinoModal()">Cancelar</button><button class="btn-save" id="btn-save-treino" onclick="saveTreino()">Criar treino</button></div>
+      </div>
+    </div>
+
+    <!-- NOVO CHAMADO (padrão branco dos demais modais) -->
+    <div class="modal-bg" id="chamado-modal" onclick="if(event.target===this)closeChamadoModal()">
+      <div class="modal-box" style="width:420px">
+        <div class="modal-hd"><div class="modal-ttl">Novo chamado</div><button class="modal-cls" onclick="closeChamadoModal()">✕</button></div>
+        <div class="modal-bd">
+          <div class="form-msg" id="chamado-msg"></div>
+          <label class="flabel" for="chamado-titulo">Título</label>
+          <input class="finput" id="chamado-titulo" type="text" placeholder="Ex: Ar-condicionado da sala 2 pingando">
+          <label class="flabel" for="chamado-descricao">Descrição</label>
+          <textarea class="finput" id="chamado-descricao" rows="4" placeholder="O que está acontecendo, onde, desde quando..." style="resize:vertical"></textarea>
+          <label class="flabel" for="chamado-prioridade">Prioridade</label>
+          <select class="finput" id="chamado-prioridade" onchange="atualizarPrazoPrevisto()" style="margin-bottom:8px">
+            <option value="urgente">🔴 Urgente — prazo de 24 horas</option>
+            <option value="media" selected>🟡 Média — prazo de 3 dias</option>
+            <option value="fraca">⚪ Fraca — prazo de 7 dias</option>
+          </select>
+          <!-- o prazo é calculado no JS na hora de criar (sem trigger no banco, mesmo
+               padrão do resto do app); aqui só mostramos o que vai ser gravado -->
+          <div class="cfg-note" id="chamado-prazo-previsto" style="margin-bottom:0"></div>
+        </div>
+        <div class="modal-ft"><button class="btn-cancel" onclick="closeChamadoModal()">Cancelar</button><button class="btn-save" id="btn-save-chamado" onclick="saveChamado()">Abrir chamado</button></div>
+      </div>
+    </div>
+
+    <!-- CANCELAR CHAMADO — modal em vez de confirm() simples: cancelar TIRA o
+         chamado da lista padrão, então a intenção precisa ser explícita. -->
+    <div class="modal-bg" id="cancelar-chamado-modal" onclick="if(event.target===this)closeCancelarChamado()">
+      <div class="modal-box" style="width:400px">
+        <div class="modal-hd"><div class="modal-ttl">Cancelar chamado</div><button class="modal-cls" onclick="closeCancelarChamado()">✕</button></div>
+        <div class="modal-bd">
+          <div class="form-msg" id="cancelar-chamado-msg"></div>
+          <div class="cfg-note" style="margin-bottom:0">
+            Cancelar marca o chamado como <b>cancelado</b> e ele sai da lista padrão — continua no
+            banco e reaparece pelo filtro “Incluir cancelados”. <b>Nada é apagado.</b><br><br>
+            Chamado: <b id="cancelar-chamado-nome"></b>
+          </div>
+        </div>
+        <div class="modal-ft">
+          <button class="btn-cancel" onclick="closeCancelarChamado()">Voltar</button>
+          <button class="btn-save plan-btn-apagar" id="btn-confirma-cancelar" onclick="confirmarCancelarChamado()">Cancelar o chamado</button>
+        </div>
       </div>
     </div>
 
@@ -1470,7 +1611,10 @@ const TYPE_EMOJI={reuniao:'👥',entrevista:'🤝',rodizio:'🔄',outro:'📌'};
 const AV_COLORS=[{bg:'#FEF0EB',fg:'#C24510',bd:'#F5622D'},{bg:'#E6F1FB',fg:'#0C447C',bd:'#378ADD'},{bg:'#EAF3DE',fg:'#27500A',bd:'#639922'},{bg:'#EEEDFE',fg:'#3C3489',bd:'#7F77DD'},{bg:'#FAEEDA',fg:'#633806',bd:'#EF9F27'},{bg:'#FBEAF0',fg:'#72243E',bd:'#D4537E'}];
 
 const AUTH_DOMAIN='@equipe.evolucaofit.app';      // domínio interno: o usuário nunca digita nem vê email
-const PERFIS_VALIDOS=['professor','recepcao','gestor'];
+// Perfis que conseguem ENTRAR no app. 'administracao' entrou em 2026-08-10 (Chamados).
+// ⚠️ Precisa bater com o CHECK da coluna `equipe.perfil` no banco: perfil que não
+// passa no CHECK não pode nem ser gravado, e quem não está nesta lista não loga.
+const PERFIS_VALIDOS=['professor','recepcao','gestor','administracao'];
 const STATUS_TREINO_ORDEM={pendente:0,montado:1,cancelado:2}; // pendente sempre no topo
 let currentRole='',currentUserName='',currentEquipeId='';
 let companyName='Evolução Fit',companyShort='Evolução',configId=null;
@@ -1597,23 +1741,34 @@ function closeTbMore(){const m=document.getElementById('tb-more-menu');if(m)m.cl
 // página nova = uma entrada aqui, sem mexer em CSS nem no goPage().
 // Vale no desktop E no mobile — é o mesmo componente, não duas navegações.
 //
-// ACESSO: `soGestor` espelha exatamente a regra que o enterApp() já aplica nas abas
-// (Relatórios e Config. só para gestor). Isso é CONVENIÊNCIA DE INTERFACE, não
-// segurança — igual ao podeCadastrarTreino() e ao podeEditarPlanejamento(). Quem
-// garante é o RLS.
+// ACESSO: `perfis` é uma LISTA de quem enxerga o item. Ausente = todos veem.
+// Substituiu o antigo `soGestor:true` (booleano), que só sabia expressar "gestor ou
+// ninguém" e não comportava um quarto perfil. `perfis:['gestor']` é exatamente o que
+// o soGestor fazia — a troca não muda comportamento nenhum dos itens antigos.
+//
+// Isso é CONVENIÊNCIA DE INTERFACE, não segurança — igual ao podeCadastrarTreino()
+// e ao podeEditarPlanejamento(). Quem garante é o RLS.
 const NAV_GRUPOS=[
   {titulo:'Agenda',itens:[
     {pagina:'agenda',rotulo:'Agenda',icone:'📅'},
     {pagina:'calendario',rotulo:'Calendário',icone:'🗓️'},
     {pagina:'rodizio',rotulo:'Rodízio',icone:'🔄'}]},
   {titulo:'Operação',itens:[
-    {pagina:'treinos',rotulo:'Treinos',icone:'🏋️'},
-    {pagina:'planejamento',rotulo:'Planejamento',icone:'🗂️'}]},
+    // Treinos e Planejamento listam os três perfis ANTIGOS de propósito: o que se
+    // quer é esconder as duas da 'administracao', porque para ela o RLS devolve
+    // zero linhas e a tela pareceria quebrada em vez de bloqueada (a
+    // montagem_treinos só entrega a gestor/recepção/professor-dono, e o
+    // cards_select só a gestor ou a quem está no card_visibilidade — que nem
+    // oferece o perfil novo). Para o PROFESSOR o RLS libera: ele é quem confirma a
+    // montagem e enxerga os cartões marcados para ele. Não tirar 'professor' daqui.
+    {pagina:'treinos',rotulo:'Treinos',icone:'🏋️',perfis:['gestor','recepcao','professor']},
+    {pagina:'planejamento',rotulo:'Planejamento',icone:'🗂️',perfis:['gestor','recepcao','professor']},
+    {pagina:'chamados',rotulo:'Chamados',icone:'🛠️',perfis:['gestor','recepcao','administracao']}]},
   {titulo:'Gestão',itens:[
-    {pagina:'relatorios',rotulo:'Relatórios',icone:'📊',soGestor:true},
-    {pagina:'config',rotulo:'Config.',icone:'⚙️',soGestor:true}]},
+    {pagina:'relatorios',rotulo:'Relatórios',icone:'📊',perfis:['gestor']},
+    {pagina:'config',rotulo:'Config.',icone:'⚙️',perfis:['gestor']}]},
 ];
-function podeVerNavItem(it){return !it.soGestor||currentRole==='gestor';}
+function podeVerNavItem(it){return !it.perfis||it.perfis.includes(currentRole);}
 
 // O nome que aparece na topbar sai DAQUI, não de um texto solto no HTML: é o mesmo
 // rótulo do item do drawer. Página nova ganha nome nos dois lugares de uma vez.
@@ -1788,8 +1943,12 @@ async function enterApp(role){
   document.getElementById('screen-login').classList.remove('visible');document.getElementById('screen-login').classList.add('hidden-up');
   document.getElementById('screen-app').classList.remove('hidden-up');document.getElementById('screen-app').classList.add('visible');
   const badge=document.getElementById('role-badge');
-  badge.textContent={gestor:'Gestor',professor:'Professor',recepcao:'Recepção'}[role]||role;
+  badge.textContent={gestor:'Gestor',professor:'Professor',recepcao:'Recepção',administracao:'Administração'}[role]||role;
   badge.className='role-badge '+role;
+  // isG abaixo é `role==='gestor'` puro: 'administracao' cai como false e por isso
+  // NÃO ganha os botões de criar/editar da Agenda nem do Rodízio. Ela é visualizadora
+  // nessas duas telas — o mesmo vale para os botões dentro de renderEvents(),
+  // renderRodizio() e renderCalendar(), que checam currentRole==='gestor'.
   document.getElementById('tb-user').textContent=currentUserName;
   document.getElementById('agenda-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
   const isG=role==='gestor';
@@ -1797,7 +1956,7 @@ async function enterApp(role){
   document.getElementById('btn-nova-escala').style.display=isG?'flex':'none';
   document.getElementById('lock-rodizio').style.display=isG?'none':'flex';
   document.getElementById('btn-novo-treino').style.display=podeCadastrarTreino()?'flex':'none';
-  // Quem esconde Relatórios e Config. de quem não é gestor agora é o `soGestor` do
+  // Quem esconde Relatórios e Config. de quem não é gestor agora é o `perfis` do
   // NAV_GRUPOS — não há mais botão de aba para ocultar aqui. Continua sendo decisão
   // de produto, não barreira de segurança (ver o bloco RELATÓRIOS).
   renderDrawer();   // depois do currentRole: é ele que decide quais grupos existem
@@ -1825,6 +1984,9 @@ async function logout(){
   // idem para o Planejamento: quadro aberto e cartões do usuário anterior saem da memória
   quadros=[];planPendentes={};fecharQuadro();
   document.getElementById('plan-quadros').innerHTML='';
+  // idem para os Chamados: nada do usuário anterior fica em memória nem no DOM
+  chamados=[];chamadoAndamentos=[];chamadoExpandido=null;chamadoCancelando=null;
+  document.getElementById('chamados-container').innerHTML='';
   updateTreinosBadge();
   document.getElementById('tb-user').textContent='';
   document.getElementById('login-user').value='';document.getElementById('login-pass').value='';
@@ -1838,7 +2000,8 @@ function goPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.
   closeDrawer();
   if(name==='treinos')loadTreinos();
   if(name==='relatorios')loadRelatorios();
-  if(name==='planejamento')loadQuadros();}
+  if(name==='planejamento')loadQuadros();
+  if(name==='chamados')loadChamados();}
 function goPageDirect(name){goPage(name);}
 
 function showNotif(){
@@ -2299,12 +2462,336 @@ async function saveTreino(){
   }finally{btn.disabled=false;btn.textContent='Criar treino';}
 }
 
+// ---------- CHAMADOS ----------
+// Fila COMPARTILHADA de manutenção/apoio. Não existe "assumir" o chamado: qualquer
+// um dos três perfis registra andamento em qualquer chamado aberto, mesmo que outra
+// pessoa já tenha mexido antes. Isso é decisão de produto, não limitação.
+//
+// ACESSO: mesmo desvio deliberado das abas Treinos e Planejamento — usa
+// `sbClient.from()` AUTENTICADO, nunca os helpers sbGet/sbPost/sbPatch. Os helpers
+// mandam a anon key, e estas tabelas só concedem grant ao role `authenticated`
+// (verificado: com a anon key a resposta é 42501 permission denied).
+//
+// Os pode*() abaixo são CONVENIÊNCIA DE INTERFACE, não segurança — igual ao
+// podeCadastrarTreino() e ao podeEditarPlanejamento(). Quem garante é o RLS: pelo
+// DevTools o INSERT/UPDATE é recusado, e o app mostra o erro na tela.
+const PERFIS_CHAMADO=['gestor','recepcao','administracao'];
+function podeVerChamados(){return PERFIS_CHAMADO.includes(currentRole);}
+function podeCriarChamado(){return PERFIS_CHAMADO.includes(currentRole);}
+function podeResolverChamado(){return PERFIS_CHAMADO.includes(currentRole);}
+
+// Prazo calculado no CLIENTE na hora de criar, sem trigger no banco — mesmo padrão
+// do resto do app. Consequência assumida: quem criar por fora do app (DevTools, SQL)
+// não ganha prazo automático.
+const HORAS_PRAZO_CHAMADO={urgente:24,media:72,fraca:168};
+const PRIORIDADE_ROTULO={urgente:'Urgente',media:'Média',fraca:'Fraca'};
+const STATUS_CHAMADO_ORDEM={aberto:0,resolvido:1,cancelado:2};   // aberto sempre no topo
+
+const CAMPOS_CHAMADO='id,titulo,descricao,prioridade,status,prazo_limite,resolvido_em,criado_por,criado_em';
+const EMBED_CHAMADO=',autor:criado_por(nome)';
+const CAMPOS_ANDAMENTO='id,chamado_id,equipe_id,texto,criado_em';
+const EMBED_ANDAMENTO=',autor:equipe_id(nome)';
+
+let chamados=[],chamadoAndamentos=[];
+let chamadoExpandido=null,chamadosVerCancelados=false,chamadoCancelando=null;
+
+// STATUS DO PRAZO — calculado no cliente, mesmo padrão do statusPrazoQuadro() do
+// Kanban. Diferença: lá o prazo é uma DATA (string YYYY-MM-DD, comparável como
+// texto); aqui prazo_limite é um INSTANTE (timestamptz), então a conta é em
+// milissegundos e o resultado muda ao longo do dia.
+function statusPrazoChamado(c){
+  if(c.status!=='aberto')return null;              // resolvido/cancelado não têm prazo correndo
+  const lim=new Date(c.prazo_limite);
+  if(isNaN(lim))return null;                       // sem prazo (ou inválido): nenhum badge
+  const ms=lim.getTime()-Date.now();
+  if(ms<0)return{classe:'pz-atrasado',rotulo:'⚠️ Atrasado',atrasado:true};
+  const horas=ms/3600000;
+  if(horas<48)return{classe:'pz-vence',rotulo:'Vence em '+Math.max(1,Math.round(horas))+'h'};
+  const dias=Math.round(horas/24);
+  return{classe:'pz-vence',rotulo:'Vence em '+dias+' dias'};
+}
+
+async function loadChamados(){
+  const c=document.getElementById('chamados-container');
+  if(!sbClient){c.innerHTML='<div class="empty">O componente de login não carregou. Recarregue a página.</div>';return;}
+  document.getElementById('btn-novo-chamado').style.display=podeCriarChamado()?'flex':'none';
+  c.innerHTML='<div class="loading-state"><div class="spinner"></div> Carregando...</div>';
+  // embedding com fallback: mesma estratégia do loadTreinos(), porque o embed
+  // depende de a FK estar exposta no schema cache do PostgREST
+  let{data,error}=await sbClient.from('chamados').select(CAMPOS_CHAMADO+EMBED_CHAMADO).order('criado_em',{ascending:false});
+  if(error){
+    console.warn('Embedding falhou nos chamados, tentando consulta simples:',error);
+    const r=await sbClient.from('chamados').select(CAMPOS_CHAMADO).order('criado_em',{ascending:false});
+    data=r.data;error=r.error;
+  }
+  if(error){
+    console.error('Erro ao carregar chamados:',error);
+    chamados=[];chamadoAndamentos=[];
+    c.innerHTML='<div class="empty">Não foi possível carregar os chamados. Tente recarregar a página em alguns instantes.</div>';
+    showConnError();
+    return;
+  }
+  chamados=data||[];
+  await loadAndamentos();
+  renderChamados();
+}
+
+// Os andamentos de TODOS os chamados vêm numa consulta só, e não um SELECT por
+// chamado ao expandir: são poucas linhas num app interno, e evita N idas ao banco.
+async function loadAndamentos(){
+  let{data,error}=await sbClient.from('chamado_andamentos').select(CAMPOS_ANDAMENTO+EMBED_ANDAMENTO).order('criado_em',{ascending:true});
+  if(error){
+    console.warn('Embedding falhou nos andamentos, tentando consulta simples:',error);
+    const r=await sbClient.from('chamado_andamentos').select(CAMPOS_ANDAMENTO).order('criado_em',{ascending:true});
+    data=r.data;error=r.error;
+  }
+  if(error){
+    // Não derruba a tela: a lista de chamados ainda é útil sem o histórico. O
+    // detalhe avisa que o histórico não carregou, em vez de fingir "nenhum andamento".
+    console.error('Erro ao carregar andamentos:',error);
+    chamadoAndamentos=null;
+    return;
+  }
+  chamadoAndamentos=data||[];
+}
+
+function filtrarChamados(verCancelados,el){
+  chamadosVerCancelados=verCancelados;
+  document.querySelectorAll('#page-chamados .filter-chips .chip').forEach(x=>x.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderChamados();
+}
+
+function renderChamados(){
+  const c=document.getElementById('chamados-container');
+  const lista=chamados.filter(x=>chamadosVerCancelados||x.status!=='cancelado');
+  if(!lista.length){
+    c.innerHTML='<div class="empty">'+(chamados.length?'Nenhum chamado neste filtro.':'Nenhum chamado aberto.')+'</div>';
+    return;
+  }
+  // Aberto primeiro. Dentro dos ABERTOS, quem vence antes fica no topo — então o
+  // atrasado sobe sozinho. Ordenar por data de criação punha o urgente vencido
+  // embaixo de dois tranquilos, que é o oposto do que uma fila por prazo serve.
+  // Chamado aberto sem prazo vai para o fim dos abertos (nunca some).
+  // Já resolvido/cancelado não têm prazo correndo: ali vale o mais recente no topo.
+  const ordenados=[...lista].sort((a,b)=>{
+    const pa=STATUS_CHAMADO_ORDEM[a.status]??9,pb=STATUS_CHAMADO_ORDEM[b.status]??9;
+    if(pa!==pb)return pa-pb;
+    if(a.status==='aberto'){
+      const ta=Date.parse(a.prazo_limite),tb=Date.parse(b.prazo_limite);
+      const va=isNaN(ta)?Infinity:ta,vb=isNaN(tb)?Infinity:tb;
+      if(va!==vb)return va-vb;
+    }
+    return String(b.criado_em||'').localeCompare(String(a.criado_em||''));
+  });
+  c.innerHTML=ordenados.map((ch,i)=>{
+    const pz=statusPrazoChamado(ch);
+    const pr=ch.prioridade||'fraca';
+    const aberto=chamadoExpandido===ch.id;
+    return`<div class="chamado-card st-${esc(ch.status)}${pz&&pz.atrasado?' chamado-atrasado':''}${aberto?' aberto-det':''}"
+        style="animation-delay:${Math.min(i,12)*35}ms" onclick="toggleChamado('${esc(ch.id)}',event)">
+      <div class="chamado-topo">
+        <div class="chamado-body">
+          <div class="chamado-titulo">${esc(ch.titulo)||'Sem título'}</div>
+          <div class="chamado-meta">
+            <span>👤 ${esc(nomeEquipe(ch.autor,ch.criado_por))}</span>
+            <span>📅 ${fmtDataHora(ch.criado_em)}</span>
+            ${ch.status==='resolvido'&&ch.resolvido_em?`<span>✅ Resolvido ${fmtDataHora(ch.resolvido_em)}</span>`:''}
+          </div>
+          <div class="chamado-badges">
+            <span class="chamado-badge pr-${esc(pr)}">${esc(PRIORIDADE_ROTULO[pr]||pr)}</span>
+            ${pz?`<span class="chamado-badge ${pz.classe}">${esc(pz.rotulo)}</span>`:
+                 `<span class="chamado-badge pz-neutro">${esc(ch.status)}</span>`}
+          </div>
+        </div>
+        <div class="chamado-seta">›</div>
+      </div>
+      ${aberto?renderChamadoDetalhe(ch):''}
+    </div>`;
+  }).join('');
+}
+
+function renderChamadoDetalhe(ch){
+  const ands=chamadoAndamentos===null?null:chamadoAndamentos.filter(a=>a.chamado_id===ch.id);
+  let hist;
+  if(ands===null){
+    // falha de carga NUNCA vira "nenhum andamento" — mesma disciplina do prazo do Kanban
+    hist='<div class="and-item"><div class="and-texto">Não foi possível carregar o histórico. Recarregue a página.</div></div>';
+  }else if(!ands.length){
+    hist='<div class="and-item"><div class="and-texto">Nenhum andamento registrado ainda.</div></div>';
+  }else{
+    hist=ands.map(a=>`<div class="and-item">
+        <div class="and-quem">${esc(nomeEquipe(a.autor,a.equipe_id))} · ${esc(fmtDataHora(a.criado_em))}</div>
+        <div class="and-texto">${esc(a.texto)}</div>
+      </div>`).join('');
+  }
+  const podeMexer=ch.status==='aberto'&&podeResolverChamado();
+  return`<div class="chamado-det" onclick="event.stopPropagation()">
+    ${ch.descricao?`<div class="chamado-desc">${esc(ch.descricao)}</div>`:''}
+    <div class="and-titulo">Andamentos</div>
+    <div class="and-lista">${hist}</div>
+    ${podeMexer?`<div class="and-form">
+      <textarea class="finput" id="and-texto-${esc(ch.id)}" rows="2" placeholder="O que foi feito ou descoberto..."></textarea>
+      <button class="chamado-acao" onclick="addAndamento('${esc(ch.id)}',this)">Registrar andamento</button>
+    </div>
+    <div class="chamado-acoes">
+      <button class="chamado-acao" onclick="resolverChamado('${esc(ch.id)}',this)">✓ Marcar como resolvido</button>
+      <button class="chamado-acao acao-cancelar" onclick="openCancelarChamado('${esc(ch.id)}')">Cancelar chamado</button>
+    </div>`:''}
+  </div>`;
+}
+
+function toggleChamado(id,e){
+  if(e)e.stopPropagation();
+  chamadoExpandido=chamadoExpandido===id?null:id;
+  renderChamados();
+}
+
+// ---- NOVO CHAMADO ----
+function openChamadoModal(){
+  if(!podeCriarChamado()){toast('❌ Seu perfil não abre chamados.',3500);return;}
+  document.getElementById('chamado-titulo').value='';
+  document.getElementById('chamado-descricao').value='';
+  document.getElementById('chamado-prioridade').value='media';
+  limparMsg('chamado-msg');
+  atualizarPrazoPrevisto();
+  document.getElementById('chamado-modal').classList.add('open');
+}
+function closeChamadoModal(){document.getElementById('chamado-modal').classList.remove('open');}
+function atualizarPrazoPrevisto(){
+  const p=document.getElementById('chamado-prioridade').value;
+  const el=document.getElementById('chamado-prazo-previsto');
+  if(el)el.textContent='Prazo limite: '+fmtDataHora(prazoLimiteDe(p))+'.';
+}
+function prazoLimiteDe(prioridade){
+  const h=HORAS_PRAZO_CHAMADO[prioridade];
+  if(!h)return null;
+  return new Date(Date.now()+h*3600000).toISOString();
+}
+function limparMsg(id){const el=document.getElementById(id);if(el){el.textContent='';el.className='form-msg';}}
+function mostrarMsg(id,texto,ok){const el=document.getElementById(id);if(el){el.textContent=texto;el.className='form-msg '+(ok?'ok':'err');}}
+
+// Versão própria em vez de reusar o traduzErroPlan(): lá a mensagem de CHECK fala em
+// "cor da lista ou visibilidade", que não existe aqui e confundiria. Aqui o CHECK que
+// pode estourar é o de `prioridade` ou `status`.
+function traduzErroChamado(error){
+  const m=((error&&error.message)||'')+' '+((error&&error.code)||'');
+  if(/row-level security|violates row|42501|permission denied/i.test(m))return'Você não tem permissão para esta ação. Fale com o gestor.';
+  if(/check constraint/i.test(m))return'Prioridade ou status inválido. Recarregue a página e tente de novo.';
+  if(/foreign key/i.test(m))return'O chamado ou a pessoa referenciada não existe mais. Recarregue a página.';
+  return'Não foi possível salvar. Tente de novo em alguns instantes.';
+}
+
+async function saveChamado(){
+  if(!sbClient){mostrarMsg('chamado-msg','O componente de login não carregou. Recarregue a página.',false);return;}
+  if(!currentEquipeId){mostrarMsg('chamado-msg','Sua conta não está vinculada à equipe — avise o gestor.',false);return;}
+  const titulo=document.getElementById('chamado-titulo').value.trim();
+  const descricao=document.getElementById('chamado-descricao').value.trim();
+  const prioridade=document.getElementById('chamado-prioridade').value;
+  if(!titulo){mostrarMsg('chamado-msg','Escreva um título para o chamado.',false);return;}
+  if(!HORAS_PRAZO_CHAMADO[prioridade]){mostrarMsg('chamado-msg','Escolha uma prioridade válida.',false);return;}
+  const btn=document.getElementById('btn-save-chamado');btn.disabled=true;btn.textContent='Abrindo...';
+  try{
+    // .select('id') encadeado: sem ele o PostgREST responde 204 vazio e um INSERT
+    // recusado pelo RLS pareceria sucesso. Com ele, bloqueio vem como zero linhas.
+    const{data,error}=await sbClient.from('chamados').insert({
+      titulo,descricao:descricao||null,prioridade,status:'aberto',
+      prazo_limite:prazoLimiteDe(prioridade),
+      criado_por:currentEquipeId
+    }).select('id');
+    if(error){console.error('Erro ao abrir chamado:',error);mostrarMsg('chamado-msg',traduzErroChamado(error),false);return;}
+    if(!data||!data.length){mostrarMsg('chamado-msg','O chamado não foi criado — seu perfil não tem permissão para abrir chamados.',false);return;}
+    closeChamadoModal();
+    toast('✅ Chamado aberto.');
+    await loadChamados();
+  }catch(err){
+    console.error('Erro inesperado ao abrir chamado:',err);
+    mostrarMsg('chamado-msg','Não foi possível conectar. Verifique sua internet e tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent='Abrir chamado';}
+}
+
+// ---- ANDAMENTO ----
+// Fila compartilhada: qualquer um dos três perfis registra em qualquer chamado
+// aberto, mesmo que outra pessoa já tenha mexido. Não existe "assumir".
+async function addAndamento(chamadoId,btn){
+  if(!sbClient){toast('❌ Componente de login não carregou. Recarregue a página.',4000);return;}
+  if(!currentEquipeId){toast('❌ Sua conta não está vinculada à equipe — avise o gestor.',4500);return;}
+  const campo=document.getElementById('and-texto-'+chamadoId);
+  const texto=campo?campo.value.trim():'';
+  if(!texto){toast('Escreva o andamento antes de registrar.',3000);return;}
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    const{data,error}=await sbClient.from('chamado_andamentos').insert({
+      chamado_id:chamadoId,equipe_id:currentEquipeId,texto
+    }).select('id');
+    if(error){
+      console.error('Erro ao registrar andamento:',error);
+      toast('❌ '+traduzErroChamado(error),4500);
+      return;
+    }
+    if(!data||!data.length){toast('❌ O andamento não foi salvo — sem permissão para este chamado.',4500);return;}
+    toast('✅ Andamento registrado.');
+    await loadChamados();
+  }catch(err){
+    console.error('Erro inesperado ao registrar andamento:',err);
+    toast('❌ Não foi possível conectar. Tente de novo.',4500);
+  }finally{if(btn){btn.disabled=false;btn.textContent='Registrar andamento';}}
+}
+
+// ---- RESOLVER ----
+async function resolverChamado(id,btn){
+  if(!sbClient){toast('❌ Componente de login não carregou. Recarregue a página.',4000);return;}
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    const{data,error}=await sbClient.from('chamados').update({
+      status:'resolvido',resolvido_em:new Date().toISOString()
+    }).eq('id',id).select('id');
+    if(error){console.error('Erro ao resolver chamado:',error);toast('❌ '+traduzErroChamado(error),4500);return;}
+    if(!data||!data.length){toast('❌ Não foi possível resolver — sem permissão para este chamado.',4500);return;}
+    toast('✅ Chamado resolvido.');
+    await loadChamados();
+  }catch(err){
+    console.error('Erro inesperado ao resolver chamado:',err);
+    toast('❌ Não foi possível conectar. Tente de novo.',4500);
+  }finally{if(btn){btn.disabled=false;btn.textContent='✓ Marcar como resolvido';}}
+}
+
+// ---- CANCELAR (com modal de confirmação, nunca confirm() simples) ----
+function openCancelarChamado(id){
+  const ch=chamados.find(c=>c.id===id);
+  if(!ch)return;
+  chamadoCancelando=id;
+  limparMsg('cancelar-chamado-msg');
+  document.getElementById('cancelar-chamado-nome').textContent=ch.titulo||'Sem título';
+  document.getElementById('cancelar-chamado-modal').classList.add('open');
+}
+function closeCancelarChamado(){
+  chamadoCancelando=null;
+  document.getElementById('cancelar-chamado-modal').classList.remove('open');
+}
+async function confirmarCancelarChamado(){
+  if(!chamadoCancelando)return;
+  if(!sbClient){mostrarMsg('cancelar-chamado-msg','O componente de login não carregou.',false);return;}
+  const btn=document.getElementById('btn-confirma-cancelar');btn.disabled=true;btn.textContent='Cancelando...';
+  try{
+    const{data,error}=await sbClient.from('chamados').update({status:'cancelado'}).eq('id',chamadoCancelando).select('id');
+    if(error){console.error('Erro ao cancelar chamado:',error);mostrarMsg('cancelar-chamado-msg',traduzErroChamado(error),false);return;}
+    if(!data||!data.length){mostrarMsg('cancelar-chamado-msg','Não foi possível cancelar — sem permissão para este chamado.',false);return;}
+    closeCancelarChamado();
+    toast('Chamado cancelado. Ele continua no banco, sob o filtro “Incluir cancelados”.',4500);
+    await loadChamados();
+  }catch(err){
+    console.error('Erro inesperado ao cancelar chamado:',err);
+    mostrarMsg('cancelar-chamado-msg','Não foi possível conectar. Tente de novo.',false);
+  }finally{btn.disabled=false;btn.textContent='Cancelar o chamado';}
+}
+
 // RELATÓRIOS
 // PASTA EXTENSÍVEL: cada relatório é uma entrada em RELATORIOS. Para acrescentar
 // um novo, basta um objeto aqui + a função de render — sem mexer em navbar,
 // goPage() ou CSS.
 //
-// ACESSO: o item só aparece para gestor (`soGestor` no NAV_GRUPOS). Isso é CONVENIÊNCIA DE
+// ACESSO: o item só aparece para gestor (`perfis:['gestor']` no NAV_GRUPOS). Isso é CONVENIÊNCIA DE
 // INTERFACE, não segurança — igual ao podeCadastrarTreino(). Quem garante é o
 // RLS: treinos_select_gestor_recepcao entrega todas as linhas a gestor/recepção
 // e treinos_select_professor entrega só as dele ao professor. Recepção não vê a
@@ -2312,7 +2799,9 @@ async function saveTreino(){
 // que a policy já autoriza. Não tratar essa ocultação como barreira.
 const RELATORIOS=[
   {id:'treinos-por-professor',icone:'📊',titulo:'Treinos por Professor',
-   desc:'Montados, tempo médio de montagem e pendentes',render:renderRelTreinosProf}
+   desc:'Montados, tempo médio de montagem e pendentes',render:renderRelTreinosProf},
+  {id:'chamados-por-pessoa',icone:'🛠️',titulo:'Chamados por Pessoa',
+   desc:'Quantos andamentos cada pessoa registrou na fila',render:renderRelChamadosPessoa}
 ];
 let relatorioAberto=null;
 
@@ -2507,6 +2996,80 @@ async function renderRelTreinosProf(box){
     </div>`;
 }
 
+// CHAMADOS POR PESSOA
+// Conta ANDAMENTOS REGISTRADOS, não "quem fechou o chamado sozinho". A fila é
+// compartilhada: um chamado com três pessoas participando conta para as três, e é
+// isso que a métrica quer mostrar — participação, não autoria exclusiva.
+// Consequência assumida: duas pessoas com o mesmo número de andamentos podem ter
+// feito trabalho bem diferente. É contagem de participação, não de esforço.
+async function renderRelChamadosPessoa(box){
+  if(!sbClient){box.innerHTML='<div class="empty">O componente de login não carregou. Recarregue a página.</div>';return;}
+  // count:'exact' pelo mesmo motivo do outro relatório: detectar truncamento da API
+  let{data,error,count}=await sbClient.from('chamado_andamentos')
+    .select('equipe_id,chamado_id,autor:equipe_id(nome)',{count:'exact'});
+  if(error){
+    console.warn('Embedding falhou no relatório de chamados, tentando consulta simples:',error);
+    const r=await sbClient.from('chamado_andamentos').select('equipe_id,chamado_id',{count:'exact'});
+    data=r.data;error=r.error;count=r.count;
+  }
+  if(error)throw error;
+  const linhas=data||[];
+
+  const mapa=new Map();
+  const ativos=new Set(equipe.filter(e=>PERFIS_CHAMADO.includes(e.perfil)).map(e=>e.id));
+  const pega=(id,nome)=>{
+    if(!mapa.has(id))mapa.set(id,{id,nome:nome||null,inativo:!ativos.has(id),andamentos:0,chamados:new Set()});
+    const r=mapa.get(id);
+    if(!r.nome&&nome)r.nome=nome;
+    return r;
+  };
+  // quem pode mexer em chamado entra na lista mesmo sem nenhum andamento:
+  // "não registrou nada" é informação, não ausência (mesmo critério do outro relatório)
+  equipe.filter(e=>PERFIS_CHAMADO.includes(e.perfil)).forEach(p=>pega(p.id,p.nome));
+  for(const a of linhas){
+    if(!a.equipe_id)continue;
+    const r=pega(a.equipe_id,(a.autor||{}).nome);
+    r.andamentos++;
+    if(a.chamado_id)r.chamados.add(a.chamado_id);
+  }
+  const pessoas=[...mapa.values()].sort((a,b)=>b.andamentos-a.andamentos||
+    (a.nome||'').localeCompare(b.nome||'','pt-BR'));
+
+  const avisos=[];
+  if(count!=null&&count>linhas.length){
+    avisos.push(`⚠️ Números incompletos: o banco tem ${count} andamentos, mas esta consulta trouxe apenas ${linhas.length} (limite da API). Os totais abaixo estão subestimados — avise o desenvolvedor para paginar a busca.`);
+  }
+  if(!pessoas.length){
+    box.innerHTML='<div class="empty">Ninguém com perfil de chamados cadastrado ainda.</div>';
+    return;
+  }
+  const totAnd=pessoas.reduce((s,p)=>s+p.andamentos,0);
+  // total de chamados DISTINTOS tocados: a soma por pessoa contaria em duplicidade
+  // um chamado em que duas pessoas mexeram
+  const totChamados=new Set(linhas.map(a=>a.chamado_id).filter(Boolean)).size;
+
+  box.innerHTML=
+    avisos.map(a=>`<div class="rel-aviso">${esc(a)}</div>`).join('')+
+    `<div class="rel-totais">
+      <div><div class="rel-total-n">${totAnd}</div><div class="rel-total-l">Andamentos</div></div>
+      <div><div class="rel-total-n">${totChamados}</div><div class="rel-total-l">Chamados com andamento</div></div>
+    </div>
+    <div class="rel-tabela rel-3col">
+      <div class="rel-head">
+        <div>Pessoa</div><div style="text-align:right">Andamentos</div><div style="text-align:right">Chamados</div>
+      </div>
+      ${pessoas.map(p=>`<div class="rel-linha">
+        <div class="rel-prof">
+          <div class="rel-avatar">${esc(getInitials(p.nome))}</div>
+          <div class="rel-nome">${esc(p.nome||'—')}</div>
+          ${p.inativo?'<div class="rel-tag-inativo">sem perfil</div>':''}
+        </div>
+        <div><div class="rel-v${p.andamentos?'':' zero'}">${p.andamentos}</div><div class="rel-m-lbl">Andamentos</div></div>
+        <div><div class="rel-v${p.chamados.size?'':' zero'}">${p.chamados.size}</div><div class="rel-m-lbl">Chamados</div></div>
+      </div>`).join('')}
+    </div>`;
+}
+
 // ============================================================================
 // PLANEJAMENTO (Kanban) — Fase 4
 // ============================================================================
@@ -2544,6 +3107,9 @@ const TEMPLATES_QUADRO=[
   {id:'branco',colunas:[]}
 ];
 const PERFIL_ROTULO={professor:'Professores',recepcao:'Recepção',gestor:'Gestores'};
+// Perfis que o modal do cartão oferece e que a `card_visibilidade` guarda. NÃO é o
+// mesmo que PERFIS_VALIDOS (quem loga no app) — ver o aviso em rotuloVisibilidade().
+const PERFIS_CARD=['professor','recepcao','gestor'];
 
 let quadros=[],quadroAberto=null,planColunas=[],planCards=[],planVis=[];
 // Quantos cartões estão FORA da última lista, por quadro. Preenchido só para os
@@ -2871,12 +3437,19 @@ function renderCardHTML(card,col,ehUltima){
 // Label curto do cadeado. Sem nenhuma linha em card_visibilidade = só gestor vê
 // (é assim que a policy cards_select se comporta, não é convenção da interface).
 // Com os três perfis marcados não há restrição nenhuma — aí o cadeado some.
+//
+// ⚠️ Usa PERFIS_CARD, e NÃO PERFIS_VALIDOS. As duas listas eram idênticas até
+// 2026-08-10, quando 'administracao' entrou no login — mas o Planejamento é
+// anterior a ela: o modal do cartão só oferece três chips e a `card_visibilidade`
+// só guarda esses três. Se esta linha voltasse a usar PERFIS_VALIDOS, todo cartão
+// hoje marcado "para os três perfis" passaria a exibir cadeado, porque nunca
+// conteria 'administracao'. Listas com significados diferentes, não duplicatas.
 function rotuloVisibilidade(cardId){
   const linhas=planVis.filter(v=>v.card_id===cardId);
   if(!linhas.length)return'Só Gestor';
   const perfis=linhas.filter(v=>v.perfil).map(v=>v.perfil);
   const pessoas=linhas.filter(v=>v.equipe_id).length;
-  if(!pessoas&&PERFIS_VALIDOS.every(p=>perfis.includes(p)))return null;
+  if(!pessoas&&PERFIS_CARD.every(p=>perfis.includes(p)))return null;
   const partes=perfis.map(p=>PERFIL_ROTULO[p]||p);
   if(pessoas)partes.push(pessoas===1?'1 pessoa':pessoas+' pessoas');
   return partes.join(' · ');

@@ -11,6 +11,48 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [Unreleased]
 
 ### Adicionado
+- **Aba Chamados e perfil `administracao` (2026-08-10).** Fila **compartilhada** de pendências
+  administrativas: gestor, recepção e administração abrem chamados, registram andamentos,
+  resolvem e cancelam. Professor não vê a aba. Banco e RLS (`chamados`, `chamado_andamentos`)
+  foram criados e validados **antes** desta etapa — o `index.html` só consome, não criou nem
+  alterou policy, função ou tabela. Validado de ponta a ponta com conta real.
+  - **Sem "assumir" o chamado:** qualquer um dos três perfis registra andamento em qualquer
+    chamado aberto, mesmo que outra pessoa já tenha mexido. Decisão de produto.
+  - **`cancelado` some da lista padrão mas nunca é apagado** (decisão do Felipe). Um chip traz os
+    cancelados de volta, e o modal de cancelamento diz isso em texto — por isso é modal, e não
+    `confirm()` simples.
+  - **Prazo calculado no cliente ao criar**, sem trigger: urgente +24h, média +3 dias, fraca
+    +7 dias. Mesmo padrão do resto do app. Consequência assumida: chamado criado por fora do app
+    não ganha prazo automático.
+  - Badge de prazo com a mesma semântica já registrada no projeto — branco sólido = pede atenção,
+    vidro contornado = encerrado, vermelho translúcido = alerta. O amarelo da prioridade média
+    reusa o `#ffd68a` que a Agenda já usa para rodízio sobre vidro; nenhum tom novo entrou.
+  - **Os abertos ordenam por `prazo_limite`, não por data de criação.** Ordenar por criação punha
+    o urgente vencido embaixo de dois tranquilos — o oposto do que uma fila por prazo serve.
+  - Acesso pelo padrão das telas novas: `sbClient.from()` autenticado (as tabelas só concedem
+    grant a `authenticated`; com a anon key a resposta é `42501`) e `.select('id')` encadeado nas
+    4 escritas, com checagem de `data.length` — RLS que barra devolve `200` com zero linhas.
+  - `traduzErroChamado()` em vez de reusar o `traduzErroPlan()`, cuja mensagem de CHECK fala em
+    "cor da lista ou visibilidade" — inexistente aqui.
+- **Relatório "Chamados por Pessoa"**, nova entrada no registry `RELATORIOS`. Conta **andamentos
+  registrados**, não "quem fechou sozinho": um chamado com três pessoas participando conta para as
+  três. O total de "chamados com andamento" usa distintos, senão um chamado tocado por duas
+  pessoas seria contado duas vezes.
+- **`NAV_GRUPOS` generalizado: `soGestor:true` virou `perfis:[...]` (2026-08-10).** Lista de quem
+  enxerga o item; ausente = todos veem. O booleano só sabia expressar "gestor ou ninguém" e não
+  comportava um quarto perfil. `perfis:['gestor']` em Relatórios/Config é equivalente exato ao que
+  havia antes. Treinos e Planejamento ganharam `['gestor','recepcao','professor']` para sumirem
+  para a `administracao`, que veria zero linhas e acharia o app quebrado — **o professor continua
+  na lista de propósito**, porque para ele o RLS libera.
+
+### Segurança / armadilha evitada
+- **`PERFIS_VALIDOS` e `PERFIS_CARD` foram separados (2026-08-10).** Eram a mesma lista e pareciam
+  duplicata; têm significados diferentes. `PERFIS_VALIDOS` é quem **loga** (ganhou
+  `administracao`); `PERFIS_CARD` são os perfis que o modal do cartão do Kanban oferece e que a
+  `card_visibilidade` guarda (seguem três). O `rotuloVisibilidade()` usa a segunda para decidir se
+  o cadeado some. **Se tivesse continuado a usar `PERFIS_VALIDOS`, todo cartão hoje marcado para
+  os três perfis passaria a exibir cadeado**, porque nunca conteria `administracao` — regressão
+  silenciosa no Planejamento, sem erro em lugar nenhum.
 - **Menu lateral (drawer) substituindo a barra de abas, 2026-08-10.** A navegação passou a ser
   um único drawer que desliza da esquerda, aberto por um chip escuro no canto superior esquerdo
   da topbar. **Feito em duas etapas, com validação do Felipe no celular entre elas:** a etapa 1

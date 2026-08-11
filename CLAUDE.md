@@ -44,8 +44,8 @@
   **não existe "esqueci minha senha" para o usuário**. Ver "Operação de contas" abaixo.
 - O papel vem da tabela `equipe`: `select perfil, nome from equipe where auth_user_id = <auth.uid()>`,
   feita **autenticada** via supabase-js (não pela anon key). Valores de `perfil`:
-  `professor` / `recepcao` / `gestor` — minúsculos, sem acento, batendo com as strings que o
-  `currentRole` já usava.
+  `professor` / `recepcao` / `gestor` / `administracao` — minúsculos, sem acento, batendo com as
+  strings que o `currentRole` usa. O quarto entrou em 2026-08-10 com a tela de Chamados.
 - **`perfil` ≠ `cargo`.** `cargo` (`Professor`/`Recepção`/`Outro`) é função no rodízio e na tela
   de Config; `perfil` é acesso. Ex.: o Felipe tem `cargo = Recepção` e `perfil = gestor`.
 - Sessão persistente (`persistSession` + `autoRefreshToken`, storageKey `agenda-evolucao-auth`).
@@ -88,8 +88,11 @@
 - `auth_user_id uuid unique references auth.users(id) on delete set null` — vínculo com o login.
   `unique` para um login não apontar pra duas pessoas; `on delete set null` para apagar um usuário
   no painel não travar por chave estrangeira.
-- `perfil text check (perfil in ('professor','recepcao','gestor'))` — **aceita NULL de propósito**:
-  quem não tem perfil não loga. Um `default` daria acesso por acidente.
+- `perfil text check (perfil in ('professor','recepcao','gestor','administracao'))` — **aceita NULL
+  de propósito**: quem não tem perfil não loga. Um `default` daria acesso por acidente.
+  `administracao` foi acrescentado ao CHECK em 2026-08-10 (Chamados). **Perfil novo exige os dois
+  lados:** ampliar o CHECK no banco E entrar em `PERFIS_VALIDOS` no JS — sem o CHECK a linha nem
+  grava, sem o `PERFIS_VALIDOS` a pessoa não loga.
 - Policy `anon_all_equipe_authenticated` (ALL para `authenticated`, `USING (true) WITH CHECK (true)`),
   criada **sem tocar** na `anon_all_equipe` original. Necessária porque depois do login o usuário
   deixa de ser `anon` e vira `authenticated`.
@@ -220,6 +223,65 @@ de quem chamou** (`where auth_user_id = auth.uid()`). Ou seja, quando a Fase 2 a
 para cada pessoa ler só a própria linha, **nenhuma destas policies quebra**. Isso não foi sorte e
 não deve ser desfeito: qualquer policy nova que precise varrer a `equipe` inteira cria uma
 dependência que trava justamente o aperto que a gente quer fazer.
+
+## Aba Chamados (2026-08-10) — perfil `administracao`
+Fila **compartilhada** de pendências administrativas. Gestor, recepção e administração veem,
+abrem, registram andamento, resolvem e cancelam. Professor não vê a aba.
+
+Banco e RLS foram criados e validados **antes** desta etapa (contas reais: gestor/recepção veem e
+inserem, professor barrado); o `index.html` só consome — não criou nem alterou policy, função ou
+tabela. Validado de ponta a ponta com conta real em 2026-08-10.
+
+### Schema (confirmado com o Felipe antes de escrever qualquer código)
+| tabela | colunas |
+|---|---|
+| `chamados` | `id`, `titulo`, `descricao`, `prioridade` (`urgente`/`media`/`fraca`), `status` (`aberto`/`resolvido`/`cancelado`), `prazo_limite` timestamptz, `resolvido_em` timestamptz, `criado_por` → `equipe.id`, `criado_em` |
+| `chamado_andamentos` | `id`, `chamado_id` → `chamados.id`, `equipe_id` → `equipe.id`, `texto`, `criado_em` |
+
+### Acesso — mesmo desvio deliberado de Treinos e Planejamento
+- Usa **`sbClient.from()` (autenticado)**, nunca `sbGet`/`sbPost`/`sbPatch`. As duas tabelas só
+  concedem grant ao role `authenticated` — verificado: com a anon key a resposta é `42501
+  permission denied`. **Não copiar o padrão das telas antigas aqui.**
+- Toda escrita encadeia **`.select('id')`**, e o código checa `data.length`: RLS que barra devolve
+  `200` com zero linhas, não erro. São 4 escritas (abrir, andamento, resolver, cancelar).
+- `podeVerChamados()` / `podeCriarChamado()` / `podeResolverChamado()` são **conveniência de
+  interface, não segurança**. Quem garante é a policy.
+
+### Decisões que não são detalhe
+- **Fila compartilhada, sem "assumir".** Qualquer um dos três perfis registra andamento em
+  qualquer chamado aberto, mesmo que outra pessoa já tenha mexido. É decisão de produto.
+- **`cancelado` some da lista padrão mas NUNCA é apagado** (decisão do Felipe). O chip "Incluir
+  cancelados" é a única forma de ver. O modal de cancelamento diz isso em texto.
+- **O prazo é calculado no CLIENTE ao criar**, sem trigger: urgente +24h, média +3 dias, fraca
+  +7 dias (`HORAS_PRAZO_CHAMADO`). Mesmo padrão do resto do app. Consequência assumida: chamado
+  criado por fora do app (DevTools, SQL) não ganha prazo automático.
+- **Os abertos são ordenados por `prazo_limite`, não por data de criação.** Ordenar por criação
+  punha o urgente vencido embaixo de dois tranquilos, que é o oposto do que uma fila por prazo
+  serve. Aberto sem prazo vai para o fim dos abertos, nunca some.
+- `statusPrazoChamado()` espelha o `statusPrazoQuadro()` do Kanban, com uma diferença: lá o prazo é
+  uma **data** (string `YYYY-MM-DD`, comparável como texto); aqui é um **instante** (timestamptz),
+  então a conta é em milissegundos e o badge muda ao longo do dia.
+- Falha ao carregar o histórico **nunca vira "nenhum andamento"** — o detalhe avisa que não
+  carregou. Mesma disciplina do prazo do Kanban.
+- `traduzErroChamado()` existe em vez de reusar o `traduzErroPlan()`: lá a mensagem de CHECK fala
+  em "cor da lista ou visibilidade", que não existe aqui.
+
+### ⚠️ `PERFIS_VALIDOS` ≠ `PERFIS_CARD` — não voltar a juntar
+As duas listas eram idênticas até 2026-08-10 e é fácil achar que são duplicata. **Não são:**
+- `PERFIS_VALIDOS` = quem **loga** no app. Ganhou `administracao`.
+- `PERFIS_CARD` = os perfis que o modal do cartão do Kanban oferece e que a `card_visibilidade`
+  guarda. Continua com três.
+
+O `rotuloVisibilidade()` usa `PERFIS_CARD` para decidir se o cadeado some ("marcado para todos os
+perfis = sem restrição"). Se voltasse a usar `PERFIS_VALIDOS`, **todo cartão hoje marcado para os
+três perfis passaria a exibir cadeado**, porque nunca conteria `administracao` — regressão
+silenciosa no Planejamento, sem erro em lugar nenhum.
+
+### Alcance da `administracao`
+Enxerga Agenda, Calendário, Rodízio e Chamados. Em Chamados lê e escreve; em Agenda e Rodízio é
+**visualizadora** — todos os botões de criar/editar/apagar dessas telas checam `=== 'gestor'`, e
+ela cai como `false` por construção. **O RLS de `eventos` e `rodizios` continua aberto** (pendência
+da Fase 2): ali a restrição é só de interface, como para os demais perfis.
 
 ## Aba Planejamento — Kanban (Fase 4, 2026-08-06)
 Quadros com listas coloridas e cartões. Gestor cria e move; professor e recepção só leem, e só
@@ -412,20 +474,31 @@ app cresce.
 
 ### `NAV_GRUPOS` é a fonte única dos itens
 Página nova = **uma entrada no `NAV_GRUPOS`**, sem tocar em CSS nem no `goPage()`. Mesmo
-precedente do registry `RELATORIOS`. Três grupos com rótulo visual, **sem accordion** (com 7 itens
-cabe tudo visível; accordion só somaria um clique e esconderia opção):
+precedente do registry `RELATORIOS`. Três grupos com rótulo visual, **sem accordion** (com 8 itens
+cabe tudo visível; accordion só somaria um clique e esconderia opção).
 
-| grupo | itens |
-|---|---|
-| Agenda | Agenda, Calendário, Rodízio |
-| Operação | Treinos, Planejamento |
-| Gestão | Relatórios, Config. — os dois com `soGestor:true` |
+O campo `perfis` é uma **lista de quem enxerga o item; ausente = todos veem**. Substituiu o
+booleano `soGestor:true` em 2026-08-10, quando entrou o quarto perfil — `soGestor` só sabia
+expressar "gestor ou ninguém".
+
+| grupo | item | `perfis` |
+|---|---|---|
+| Agenda | Agenda, Calendário, Rodízio | (ausente — todos) |
+| Operação | Treinos, Planejamento | gestor, recepcao, **professor** |
+| Operação | Chamados | gestor, recepcao, **administracao** |
+| Gestão | Relatórios, Config. | gestor |
+
+**⚠️ Não tirar `professor` de Treinos/Planejamento.** A lista existe ali para esconder as duas da
+`administracao`, que veria zero linhas e acharia o app quebrado (a `montagem_treinos` só entrega a
+gestor/recepção/professor-dono, e o `cards_select` só a gestor ou a quem está no
+`card_visibilidade` — que nem oferece o perfil novo). Para o professor o RLS faz o oposto:
+**libera**. Ele é quem confirma a montagem e enxerga os cartões marcados para ele.
 
 **Grupo sem nenhum item visível para o perfil não é renderizado — o título junto.** Não é regra
-teórica: "Gestão" só tem itens de gestor, então **some inteiro para professor e recepção**.
+teórica: "Gestão" só tem itens de gestor, então **some inteiro para os outros três perfis**.
 Título de grupo sozinho, sem item embaixo, é bug visual.
 
-O `soGestor` substituiu os `style.display` que o `enterApp()` fazia nos botões de aba. Como antes,
+O `perfis` substituiu os `style.display` que o `enterApp()` fazia nos botões de aba. Como antes,
 **é conveniência de interface, não segurança** — igual ao `podeCadastrarTreino()` e ao
 `podeEditarPlanejamento()`. Quem garante é o RLS.
 
