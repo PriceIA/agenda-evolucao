@@ -1649,7 +1649,7 @@ function renderDateCal(key){
   const today=new Date();today.setHours(0,0,0,0);
   const sel=dpDates[key];
   const first=new Date(y,m,1);const last=new Date(y,m+1,0);
-  let html=`<div class="cal-drop-head"><button class="cal-drop-arr" onclick="moveDpCal('${key}',-1)">‹</button><div class="cal-drop-month">${MONTHS[m]} ${y}</div><button class="cal-drop-arr" onclick="moveDpCal('${key}',1)">›</button></div>`;
+  let html=`<div class="cal-drop-head"><button class="cal-drop-arr" onclick="moveDpCal('${key}',-1,event)">‹</button><div class="cal-drop-month">${MONTHS[m]} ${y}</div><button class="cal-drop-arr" onclick="moveDpCal('${key}',1,event)">›</button></div>`;
   html+=`<div class="cal-drop-grid">${DAYS.map(d=>`<div class="cal-drop-dh">${d[0]}</div>`).join('')}`;
   for(let i=0;i<first.getDay();i++)html+=`<div class="cal-drop-d dim"></div>`;
   for(let d=1;d<=last.getDate();d++){
@@ -1661,7 +1661,7 @@ function renderDateCal(key){
   html+='</div>';
   cal.innerHTML=html;
 }
-function moveDpCal(key,dir){dpCals[key]=new Date(dpCals[key].getFullYear(),dpCals[key].getMonth()+dir,1);renderDateCal(key);}
+function moveDpCal(key,dir,ev){if(ev)ev.stopPropagation();dpCals[key]=new Date(dpCals[key].getFullYear(),dpCals[key].getMonth()+dir,1);renderDateCal(key);}
 function selectDpDate(key,y,m,d){
   const dt=new Date(y,m,d);
   dpDates[key]=dateToStr(dt);
