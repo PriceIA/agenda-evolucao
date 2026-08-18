@@ -321,14 +321,18 @@ O **cadeado** no cartão só aparece para o gestor, porque só ele lê `card_vis
 consultar traria zero linhas em silêncio, sem erro. Para professor/recepção o cadeado não faz falta:
 todo cartão que eles enxergam é, por definição, um cartão liberado para eles.
 
-### RLS — 7 policies e 4 funções `security definer`
-Todas para `authenticated`. `quadros_select` e `colunas_select` são `using (true)` **de propósito**:
-a estrutura do quadro não é segredo, o conteúdo é. Quem filtra é o `cards_select`:
+### RLS — 9 policies e 4 funções `security definer`
+Todas para `authenticated`. Eram 7 policies até 07/08; em 18/08 as duas policies de `quadros`
+(`quadros_select` e `quadros_write`) viraram quatro (`quadros_select`, `quadros_insert`,
+`quadros_update`, `quadros_delete`) — ver "Bug de RLS em quadros — INSERT bloqueado" logo abaixo.
+`colunas_select` continua `using (true)` **de propósito**: a estrutura do quadro não é segredo, o
+conteúdo é. Quem filtra o conteúdo é o `cards_select`:
 ```sql
 eh_gestor() OR pode_ver_card(cards.id)
 ```
-As demais (`quadros_write`, `colunas_write`, `cards_write`, `vis_all`) são `ALL` com
-`using eh_gestor()` e `with check eh_gestor()`.
+`colunas_write`, `cards_write` e `vis_all` são `ALL` com `using eh_gestor()` e
+`with check eh_gestor()`, sem alteração. `quadros` **não tem mais uma policy `ALL` genérica** —
+ver o SQL completo abaixo.
 
 As 4 funções (`eh_gestor()`, `meu_equipe_id()`, `meu_perfil()`, `pode_ver_card(uuid)`) são
 `security definer`, `STABLE` e `SET search_path TO 'public'`. **Não removê-las nem trocá-las por
@@ -417,8 +421,9 @@ linha do tema, e `privado` nos dois payloads. No UPDATE o campo vai **mesmo quan
 que permite voltar o quadro a público. Não há refiltro por `privado` no JS: quadro privado alheio
 nem chega no array, quem filtra é a `quadros_select`.
 
-**⚠️ TRAVA: só o CRIADOR mexe no `privado`.** A `quadros_write` é
-`eh_gestor() AND posso_ver_quadro(id)`, então qualquer gestor pode editar quadro público alheio —
+**⚠️ TRAVA: só o CRIADOR mexe no `privado`.** A `quadros_update` (chamava-se `quadros_write` até
+18/08 — ver correção abaixo) é `eh_gestor() AND posso_ver_quadro(id)`, então qualquer gestor pode
+editar quadro público alheio —
 e marcá-lo privado faria o quadro **sumir da lista dele no instante do save**, sem desfazer,
 porque perderia o acesso junto. Por isso `souCriadorDoQuadro(q)` (compara `criado_por` com
 `currentEquipeId`): para não-criador o checkbox fica **desabilitado e explicado** (não escondido) e
@@ -428,12 +433,77 @@ voltaria a escapar. Cuidado ao mexer: o `!!` da função existe para impedir que
 case com `currentEquipeId` nulo e libere a trava para quem não deveria.
 
 **É conveniência de interface, não segurança** — igual ao `podeEditarPlanejamento()`. Pelo DevTools
-ainda dá para marcar privado um quadro alheio. Fechar exigiria `WITH CHECK` na `quadros_write`
+ainda dá para marcar privado um quadro alheio. Fechar exigiria `WITH CHECK` na `quadros_update`
 (`criado_por = meu_equipe_id()` quando `privado = true`); **decisão do Felipe: avaliar na Fase 2**,
 não agora.
 
 **Pendência de teste (ver backlog):** falta confirmar que a trava não atrapalha a edição de
 tema/nome/datas do mesmo modal por um não-criador.
+
+### Bug de RLS em quadros — INSERT bloqueado (corrigido em 2026-08-18)
+Um gestor (Leonardo Neves) tentou criar um quadro novo — público ou privado, tanto faz — e levou
+`42501 permission denied`. **Corrigido direto no banco via SQL Editor** (ver SQL abaixo);
+`index.html` não mudou nesta correção.
+
+**Causa raiz:** `posso_ver_quadro(p_quadro_id uuid)` busca a própria linha por id
+(`select exists (select 1 from quadros q where q.id = p_quadro_id and ...)`). Funciona bem em
+UPDATE/DELETE, onde a linha já existe, mas quebra em dois pontos do INSERT:
+1. O `with check` da antiga `quadros_write` chamava `posso_ver_quadro(id)` sobre uma linha que
+   está sendo criada **na mesma instrução** — a sub-consulta ainda não a enxerga, `exists` sempre
+   `false`, todo INSERT era recusado.
+2. Mesmo corrigindo isso, o app sempre encadeia `.select('id')` (RETURNING) em toda escrita —
+   regra do projeto para detectar bloqueio silencioso de RLS (ver "Acesso — mesmo desvio
+   deliberado da aba Treinos" acima). O RETURNING dispara a policy de SELECT dentro do mesmo
+   comando, e a antiga `quadros_select` (`using (true)` até 07/08, depois reescrita em cima de
+   `posso_ver_quadro(id)` na Fase 4.1) tinha o mesmo problema de sub-consulta self-referencial.
+
+**Isto não é o mesmo bug da regra "policy que consulta outra tabela com RLS precisa de
+`security definer`" registrada acima.** Aquele quebra pelo RLS de uma **tabela diferente**; este
+quebra pela **visibilidade de snapshot dentro do mesmo comando, na mesma tabela** — a linha sendo
+inserida não existe ainda para uma sub-consulta que busca por `id`. **Categoria diferente, lição
+nova:** quando a policy pode usar as colunas da própria linha diretamente (`criado_por`,
+`privado`), preferir isso a uma função com sub-consulta por `id`; reservar sub-consulta/
+`security definer` para quando a checagem depende de fato de **outra** tabela.
+
+Não era bug de "quadro privado" nem "dado do Leonardo" — era estrutural, afetava qualquer criação
+de quadro (público ou privado) por qualquer gestor desde que essa versão das policies entrou em
+produção na Fase 4.1 (07/08). Passou despercebido porque a Fase 4.1 só testou edição de quadro já
+existente, nunca criação depois da mudança de policy.
+
+```sql
+-- INSERT ganhou policy própria, sem sub-consulta por id — usa as
+-- colunas da própria linha sendo inserida
+drop policy quadros_write on public.quadros;
+
+create policy quadros_insert on public.quadros
+  for insert to authenticated
+  with check (eh_gestor() and criado_por = meu_equipe_id());
+
+-- UPDATE/DELETE mantiveram a lógica original — aqui a linha já existe,
+-- posso_ver_quadro() funciona normalmente
+create policy quadros_update on public.quadros
+  for update to authenticated
+  using (eh_gestor() and posso_ver_quadro(id))
+  with check (eh_gestor() and posso_ver_quadro(id));
+
+create policy quadros_delete on public.quadros
+  for delete to authenticated
+  using (eh_gestor() and posso_ver_quadro(id));
+
+-- SELECT também trocou a sub-consulta por id pelas colunas da própria linha
+drop policy quadros_select on public.quadros;
+
+create policy quadros_select on public.quadros
+  for select to authenticated
+  using (privado = false or criado_por = meu_equipe_id());
+```
+
+**Validado via simulação de sessão no SQL Editor, com rollback (nada gravado fora do teste):**
+INSERT de quadro público com RETURNING passou; INSERT de quadro privado com RETURNING passou;
+UPDATE marcando como privado um quadro que não era do Leonardo deu `42501` como esperado (a trava
+de "só o criador mexe em privado" continua funcionando — comportamento correto, não bug).
+**Pendente:** teste real na interface do app, com a conta do Leonardo — ele estava sem acesso à
+própria conta no momento da correção. Fazer assim que possível (ver backlog).
 
 ### Refino da base de vidro
 O Planejamento foi o **protótipo** do refino (2026-08-10), hoje propagado para o app inteiro —
@@ -615,9 +685,16 @@ refino completo.
   segundo gestor, antes de confiar 100% na Fase 4.1 em uso real por quem não criou o quadro.
   A leitura do código sugere que **não** interfere (o `disabled` age só no próprio checkbox; os
   demais campos são lidos à parte no `saveQuadro()`; e num quadro público a `posso_ver_quadro()`
-  devolve `true` para qualquer gestor, então a `quadros_write` aceita o UPDATE). **Mas isso é
+  devolve `true` para qualquer gestor, então a `quadros_update` aceita o UPDATE). **Mas isso é
   raciocínio sobre o código, não observação** — e aqui RLS que barra devolve zero linhas em
   silêncio, não erro. Só conta como testado depois de rodar com conta real.
+- **⚠️ NOVA E MAIS GRAVE que a de cima: criação de quadro esteve quebrada para TODO gestor entre
+  07/08 e 18/08, sem ninguém perceber.** Ver "Bug de RLS em quadros — INSERT bloqueado" na seção do
+  Planejamento. Corrigido no banco em 2026-08-18 e validado por simulação de sessão no SQL Editor
+  (com rollback), mas **ainda falta o teste real na interface do app com a conta do Leonardo
+  Neves** — ele estava sem acesso à própria conta no momento da correção. Fazer assim que possível:
+  logar como Leonardo, criar um quadro público e um privado pela tela normal, confirmar que ambos
+  aparecem na lista.
 - **Passo 6 da aba Treinos (PDF) — pausado em 2026-08-03, sem prazo de retomada.** Decisão do
   Felipe: outro projeto tem prioridade, e ele volta a este quando puder. **Não é urgência e não
   bloqueia nada** — a aba Treinos está completa e em uso até o Passo 5 (Relatórios).

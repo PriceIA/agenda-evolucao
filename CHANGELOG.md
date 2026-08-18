@@ -346,6 +346,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - Chamadas `sbGet`/`sbPost`/`sbPatch`/`sbDelete` que falham por erro de conexão agora exibem
   um banner fixo de aviso no topo da tela, em vez de silenciar o erro e mostrar "0 eventos"
   como se fosse dado real.
+- **Date picker (`dpDates`/`dpCals`) fechando sozinho ao trocar de mês, no modal "Nova Escala" do
+  Rodízio (2026-08-18).** Ao clicar na seta de próximo/anterior mês, `moveDpCal()` chamava
+  `renderDateCal()`, que reconstruía o `.cal-dropdown` inteiro via `innerHTML` — inclusive o botão
+  da seta que acabou de ser clicado. Isso desconectava o botão (o `e.target` do clique) da árvore
+  do DOM antes do evento terminar de borbulhar. O listener de outside-click em `document` então
+  chamava `e.target.closest('.cal-dropdown')` num nó já órfão, não encontrava nada, e interpretava
+  como "clique fora" — fechando o painel a cada troca de mês. Fix: as setas passam `event` para
+  `moveDpCal()`, que chama `event.stopPropagation()` antes de re-renderizar, então o clique nunca
+  chega ao listener de `document`. Testado em desktop e celular físico antes do commit.
+- **RLS de `quadros`: INSERT bloqueado para todo gestor, entre 07/08 e 18/08 (Planejamento).**
+  Corrigido direto no banco via SQL Editor — sem mudança em `index.html`. Ver detalhes completos na
+  seção **Segurança** logo abaixo.
 
 ### Segurança
 - **`montagem_treinos` é a primeira tabela do projeto com RLS de verdade (2026-08-02)** — habilitado,
@@ -548,6 +560,70 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   aberto; **o Felipe decidiu em 2026-08-06 não revogar agora** e deixar para a Fase 2, junto com o
   mesmo problema já registrado na `montagem_treinos`:
   `revoke truncate on quadros, colunas, cards, card_visibilidade from anon;`
+- **⚠️ Bug de RLS em `quadros`: INSERT bloqueado para todo gestor entre 07/08 e 18/08, corrigido em
+  2026-08-18.** A Fase 4.1 (quadro privado, 07/08) reescreveu `quadros_write` e `quadros_select`
+  em cima de `posso_ver_quadro(p_quadro_id uuid)`, uma função `security definer` que busca a
+  própria linha **por `id`**. Isso nunca foi documentado aqui — o CLAUDE.md e este changelog
+  continuaram descrevendo a versão antiga (`quadros_write` como `ALL` genérica, `quadros_select`
+  como `using(true)`) até esta correção.
+
+  **O sintoma:** um gestor (Leonardo Neves) tentou criar um quadro — público ou privado, tanto faz
+  — e levou `42501 permission denied`.
+
+  **A causa raiz — categoria diferente da lição de 2026-08-06 acima:** aquela era RLS de uma
+  **tabela diferente** vazando para dentro de uma policy via `EXISTS`. Esta é sobre **visibilidade
+  de snapshot dentro do mesmo comando, na mesma tabela**. `posso_ver_quadro()` busca a linha por
+  `id` — funciona em UPDATE/DELETE, onde a linha já existe, mas quebra em dois pontos do INSERT:
+  1. O `with check` da antiga `quadros_write` chamava `posso_ver_quadro(id)` sobre a linha sendo
+     criada **na mesma instrução** — a sub-consulta ainda não a enxerga, `exists` é sempre `false`,
+     todo INSERT era recusado.
+  2. Mesmo corrigindo isso, o app sempre encadeia `.select('id')` (RETURNING) em toda escrita —
+     regra do projeto para detectar bloqueio silencioso de RLS. O RETURNING dispara a policy de
+     SELECT dentro do mesmo comando, e a `quadros_select` da Fase 4.1 tinha o mesmo problema.
+
+  Não era bug específico de "quadro privado" — afetava criação de **qualquer** quadro, público ou
+  privado, por **qualquer** gestor. Passou despercebido porque a Fase 4.1 só testou edição de
+  quadro já existente, nunca criação depois da mudança de policy.
+
+  **Correção aplicada em produção via SQL Editor (sem mudança em `index.html`):**
+
+  ```sql
+  drop policy quadros_write on public.quadros;
+
+  create policy quadros_insert on public.quadros
+    for insert to authenticated
+    with check (eh_gestor() and criado_por = meu_equipe_id());
+
+  create policy quadros_update on public.quadros
+    for update to authenticated
+    using (eh_gestor() and posso_ver_quadro(id))
+    with check (eh_gestor() and posso_ver_quadro(id));
+
+  create policy quadros_delete on public.quadros
+    for delete to authenticated
+    using (eh_gestor() and posso_ver_quadro(id));
+
+  drop policy quadros_select on public.quadros;
+
+  create policy quadros_select on public.quadros
+    for select to authenticated
+    using (privado = false or criado_por = meu_equipe_id());
+  ```
+
+  UPDATE e DELETE mantiveram a lógica original (`posso_ver_quadro(id)`), porque ali a linha já
+  existe e a sub-consulta funciona. INSERT e SELECT passaram a usar as colunas da própria linha
+  (`criado_por`, `privado`) em vez de buscar por `id`.
+
+  **Lição para a Fase 2 e daqui pra frente:** quando a policy pode usar as colunas da própria linha
+  diretamente, preferir isso a uma função com sub-consulta por `id`; reservar sub-consulta/
+  `security definer` para quando a checagem depende de fato de **outra** tabela (caso da
+  `pode_ver_card()`, que continua correta).
+
+  **Validação:** simulação de sessão no SQL Editor, com rollback (nada gravado fora do teste) —
+  INSERT de quadro público com RETURNING passou, INSERT de quadro privado com RETURNING passou,
+  UPDATE marcando como privado um quadro alheio deu `42501` como esperado (a trava de "só o criador
+  mexe em privado" continua funcionando). **Pendente:** teste real na interface do app com a conta
+  do Leonardo — ele estava sem acesso à própria conta no momento da correção.
 - **`docs/schema.sql` não contém `montagem_treinos` nem as 4 tabelas da Fase 4; conferir no Table
   Editor antes de confiar nele.** O arquivo também declara `equipe.id` como
   `bigint generated by default as identity`, enquanto as chaves em uso são UUID. Atualizá-lo é
